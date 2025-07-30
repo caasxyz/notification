@@ -75,14 +75,17 @@ export default {
       messageCount: batch.messages.length,
     });
 
-    if (queueName === 'retry-queue' || queueName === 'retry-queue-dev') {
-      await this.handleRetryQueue(batch, env);
-    } else if (queueName === 'failed-notifications-dlq' || queueName === 'failed-notifications-dlq-dev') {
-      await this.handleDLQQueue(batch, env);
-    } else {
-      logger.warn('Unknown queue', { queueName });
-      batch.ackAll();
-    }
+    // Wrap queue processing with database initialization
+    await withDatabaseInit(env, async () => {
+      if (queueName === 'retry-queue' || queueName === 'retry-queue-dev') {
+        await this.handleRetryQueue(batch, env);
+      } else if (queueName === 'failed-notifications-dlq' || queueName === 'failed-notifications-dlq-dev') {
+        await this.handleDLQQueue(batch, env);
+      } else {
+        logger.warn('Unknown queue', { queueName });
+        batch.ackAll();
+      }
+    });
   },
 
   async scheduled(event: ScheduledEvent, env: Env, ctx: ExecutionContext): Promise<void> {

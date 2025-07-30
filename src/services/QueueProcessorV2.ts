@@ -34,6 +34,13 @@ export class QueueProcessorV2 {
   ): Promise<void> {
     const { logId, retryCount } = message.body;
 
+    this.logger.info('processRetryQueue called', {
+      logId,
+      retryCount,
+      messageBody: message.body,
+      timestamp: new Date().toISOString(),
+    });
+
     try {
       this.logger.info('Processing retry message', {
         logId,

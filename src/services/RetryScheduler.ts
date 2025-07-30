@@ -68,6 +68,13 @@ export class RetryScheduler {
       }
       
       await env.RETRY_QUEUE.send(retryMessage, sendOptions as any);
+      
+      this.logger.info('Retry message sent to queue', {
+        logId,
+        retryCount: retryCount + 1,
+        delaySeconds,
+        queueName: 'RETRY_QUEUE',
+      });
 
       await this.updateRetryStatus(logId, retryCount + 1, errorMessage, env);
       
