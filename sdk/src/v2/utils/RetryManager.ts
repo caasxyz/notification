@@ -5,12 +5,12 @@ export class RetryManager {
 
   constructor(options?: RetryOptions) {
     this.options = {
-      maxRetries: options?.maxRetries || 3,
-      retryDelay: options?.retryDelay || 1000,
-      backoffMultiplier: options?.backoffMultiplier || 2,
-      maxRetryDelay: options?.maxRetryDelay || 30000,
-      retryableStatuses: options?.retryableStatuses || [429, 502, 503, 504],
-      retryableErrors: options?.retryableErrors || ['ECONNRESET', 'ETIMEDOUT', 'ENOTFOUND']
+      maxRetries: options?.maxRetries ?? 3,
+      retryDelay: options?.retryDelay ?? 1000,
+      backoffMultiplier: options?.backoffMultiplier ?? 2,
+      maxRetryDelay: options?.maxRetryDelay ?? 30000,
+      retryableStatuses: options?.retryableStatuses ?? [429, 502, 503, 504],
+      retryableErrors: options?.retryableErrors ?? ['ECONNRESET', 'ETIMEDOUT', 'ENOTFOUND']
     };
   }
 
@@ -20,7 +20,7 @@ export class RetryManager {
     }
 
     // Check if it's a retryable status code
-    if (error instanceof SDKError && error.statusCode) {
+    if (error instanceof SDKError && error.statusCode !== undefined) {
       return this.options.retryableStatuses.includes(error.statusCode);
     }
 

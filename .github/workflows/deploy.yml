@@ -379,22 +379,7 @@ jobs:
           npm publish
           echo "✅ SDK v${{ steps.new_version.outputs.new_version }} published to GitHub Packages"
           
-      - name: Commit version change
-        run: |
-          git add sdk/package.json sdk/package-lock.json
-          git commit -m "chore: bump SDK version to ${{ steps.new_version.outputs.new_version }}
 
-          Automated version bump after successful deployment and integration tests.
-          " || echo "No changes to commit"
-          
-      - name: Push changes
-        run: |
-          git push origin main
-          
-      - name: Create Git tag
-        run: |
-          git tag -a "sdk-v${{ steps.new_version.outputs.new_version }}" -m "SDK Release v${{ steps.new_version.outputs.new_version }}"
-          git push origin "sdk-v${{ steps.new_version.outputs.new_version }}"
           
       - name: Update deployment summary
         run: |

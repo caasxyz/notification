@@ -15,7 +15,7 @@ import { EventEmitter } from './utils/EventEmitter';
 import { createHmacSignature } from './utils/signature';
 
 export interface ApiClientEvents {
-  debug: { message: string; data?: any };
+  debug: { message: string; data?: unknown };
 }
 
 export class ApiClient extends EventEmitter<ApiClientEvents> {
@@ -32,12 +32,12 @@ export class ApiClient extends EventEmitter<ApiClientEvents> {
     this.config = {
       baseUrl: config.baseUrl.replace(/\/$/, ''),
       apiKey: config.apiKey,
-      timeout: config.timeout || 30000,
-      environment: config.environment || 'production'
+      timeout: config.timeout ?? 30000,
+      environment: config.environment ?? 'production'
     };
 
     this.options = options;
-    this.debugMode = options.debug || false;
+    this.debugMode = options.debug ?? false;
 
     // Set up interceptors
     if (options.interceptors?.request) {
@@ -79,35 +79,35 @@ export class ApiClient extends EventEmitter<ApiClientEvents> {
     this.debugMode = false;
   }
 
-  async get<T = any>(path: string, options?: RequestInit): Promise<T> {
+  async get<T = unknown>(path: string, options?: RequestInit): Promise<T> {
     return this.request<T>(path, 'GET', undefined, options);
   }
 
-  async post<T = any>(path: string, data?: any, options?: RequestInit): Promise<T> {
+  async post<T = unknown>(path: string, data?: unknown, options?: RequestInit): Promise<T> {
     return this.request<T>(path, 'POST', data, options);
   }
 
-  async put<T = any>(path: string, data?: any, options?: RequestInit): Promise<T> {
+  async put<T = unknown>(path: string, data?: unknown, options?: RequestInit): Promise<T> {
     return this.request<T>(path, 'PUT', data, options);
   }
 
-  async patch<T = any>(path: string, data?: any, options?: RequestInit): Promise<T> {
+  async patch<T = unknown>(path: string, data?: unknown, options?: RequestInit): Promise<T> {
     return this.request<T>(path, 'PATCH', data, options);
   }
 
-  async delete<T = any>(path: string, options?: RequestInit): Promise<T> {
+  async delete<T = unknown>(path: string, options?: RequestInit): Promise<T> {
     return this.request<T>(path, 'DELETE', undefined, options);
   }
 
   private async request<T>(
     path: string,
     method: string,
-    data?: any,
+    data?: unknown,
     options?: RequestInit
   ): Promise<T> {
     const url = `${this.config.baseUrl}${path}`;
     const timestamp = Date.now().toString();
-    const body = data ? JSON.stringify(data) : '';
+    const body = data !== undefined ? JSON.stringify(data) : '';
 
     // Create signature
     const signature = await createHmacSignature(
@@ -125,7 +125,7 @@ export class ApiClient extends EventEmitter<ApiClientEvents> {
         'X-Timestamp': timestamp,
         'X-Signature': signature,
         ...this.options.headers,
-        ...(options?.headers as any)
+        ...(options?.headers as HeadersInit ?? {})
       },
       body: method !== 'GET' && body ? body : undefined,
       signal: this.createAbortSignal(),
@@ -140,7 +140,7 @@ export class ApiClient extends EventEmitter<ApiClientEvents> {
     this.debug('Request', {
       method,
       url,
-      headers: Object.fromEntries([...request.headers as any]),
+      headers: Object.fromEntries([...request.headers]),
       body: data
     });
 
@@ -157,7 +157,7 @@ export class ApiClient extends EventEmitter<ApiClientEvents> {
 
         this.debug('Response', {
           status: response.status,
-          headers: Object.fromEntries([...response.headers as any])
+          headers: Object.fromEntries([...response.headers])
         });
 
         // Handle non-ok responses
@@ -196,10 +196,10 @@ export class ApiClient extends EventEmitter<ApiClientEvents> {
         );
       }
 
-      return json.data || json as any;
+      return (json.data ?? json) as T;
     }
 
-    return response.text() as any;
+    return response.text() as T;
   }
 
   private createAbortSignal(): AbortSignal {
@@ -210,12 +210,12 @@ export class ApiClient extends EventEmitter<ApiClientEvents> {
 
   private async createError(response: Response): Promise<SDKError> {
     const contentType = response.headers.get('content-type');
-    let errorData: any;
+    let errorData: { message?: string; code?: string; details?: unknown } = {};
 
     if (contentType?.includes('application/json')) {
       try {
-        const json = await response.json();
-        errorData = (json as any).error || json;
+        const json = await response.json() as { error?: { message?: string; code?: string; details?: unknown } };
+        errorData = json.error ?? json;
       } catch {
         errorData = { message: 'Unknown error' };
       }
@@ -223,19 +223,22 @@ export class ApiClient extends EventEmitter<ApiClientEvents> {
       errorData = { message: await response.text() };
     }
 
-    const message = errorData.message || response.statusText;
+    const message = errorData.message ?? response.statusText;
     const code = errorData.code;
     const details = errorData.details;
 
     switch (response.status) {
       case 400:
-        return new ValidationError(message, details?.fields);
+        return new ValidationError(message, details as Record<string, string[]> | undefined);
       case 401:
         return new AuthenticationError(message);
       case 404:
-        return new NotFoundError(details?.resource || 'Resource', details?.id);
+        return new NotFoundError(
+          (details as { resource?: string; id?: string })?.resource ?? 'Resource', 
+          (details as { resource?: string; id?: string })?.id
+        );
       case 429: {
-        const retryAfter = parseInt(response.headers.get('Retry-After') || '60');
+        const retryAfter = parseInt(response.headers.get('Retry-After') ?? '60');
         return new RateLimitError(retryAfter);
       }
       default:
@@ -243,7 +246,7 @@ export class ApiClient extends EventEmitter<ApiClientEvents> {
     }
   }
 
-  private debug(message: string, data?: any): void {
+  private debug(message: string, data?: unknown): void {
     if (this.debugMode) {
       // EventEmitter expects event name and single data parameter
       this.emit('debug', { message, data });

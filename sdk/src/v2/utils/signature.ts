@@ -50,14 +50,14 @@ export async function verifyWebhookSignature(
     maxAge?: number;
   }
 ): Promise<boolean> {
-  const timestampHeader = options?.timestampHeader || 'X-Webhook-Timestamp';
-  const signatureHeader = options?.signatureHeader || 'X-Webhook-Signature';
-  const maxAge = options?.maxAge || 300000; // 5 minutes
+  const timestampHeader = options?.timestampHeader ?? 'X-Webhook-Timestamp';
+  const signatureHeader = options?.signatureHeader ?? 'X-Webhook-Signature';
+  const maxAge = options?.maxAge ?? 300000; // 5 minutes
 
   const timestamp = headers.get(timestampHeader);
   const signature = headers.get(signatureHeader);
 
-  if (!timestamp || !signature) {
+  if (timestamp === null || signature === null) {
     return false;
   }
 

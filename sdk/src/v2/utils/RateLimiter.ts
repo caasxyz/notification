@@ -7,15 +7,15 @@ export class RateLimiter {
 
   constructor(options?: RateLimitOptions) {
     this.options = {
-      maxRequests: options?.maxRequests || 100,
-      windowMs: options?.windowMs || 60000, // 1 minute
-      throttleMs: options?.throttleMs || 1000 // 1 second between requests when throttled
+      maxRequests: options?.maxRequests ?? 100,
+      windowMs: options?.windowMs ?? 60000, // 1 minute
+      throttleMs: options?.throttleMs ?? 1000 // 1 second between requests when throttled
     };
   }
 
   async checkLimit(): Promise<void> {
     // Check if we're throttled
-    if (this.throttledUntil && this.throttledUntil > new Date()) {
+    if (this.throttledUntil !== null && this.throttledUntil > new Date()) {
       const waitTime = this.throttledUntil.getTime() - Date.now();
       await this.sleep(waitTime);
       this.throttledUntil = null;
@@ -29,6 +29,9 @@ export class RateLimiter {
     // Check if we've exceeded the limit
     if (this.requests.length >= this.options.maxRequests) {
       const oldestRequest = this.requests[0];
+      if (oldestRequest === undefined) {
+        throw new Error('Rate limit calculation error');
+      }
       const waitTime = oldestRequest + this.options.windowMs - now;
       throw new Error(`Rate limit exceeded. Please wait ${Math.ceil(waitTime / 1000)} seconds.`);
     }
@@ -51,9 +54,9 @@ export class RateLimiter {
     const reset = headers.get('X-RateLimit-Reset');
     const retryAfter = headers.get('Retry-After');
 
-    if (retryAfter) {
+    if (retryAfter !== null) {
       this.setThrottled(parseInt(retryAfter));
-    } else if (remaining === '0' && reset) {
+    } else if (remaining === '0' && reset !== null) {
       const resetTime = parseInt(reset) * 1000;
       const waitTime = Math.max(0, resetTime - Date.now());
       this.setThrottled(Math.ceil(waitTime / 1000));

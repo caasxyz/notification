@@ -17,7 +17,7 @@ module.exports = {
     node: true,
     jest: true,
   },
-  ignorePatterns: ['.eslintrc.js', 'jest.config.js', 'dist', 'node_modules', 'src/v2/**/*'],
+  ignorePatterns: ['.eslintrc.js', 'jest.config.js', 'dist', 'node_modules'],
   rules: {
     // 严格的类型检查规则
     '@typescript-eslint/no-explicit-any': 'error',

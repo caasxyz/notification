@@ -1,13 +1,16 @@
-type EventListener<T = any> = (data: T) => void;
+type EventListener<T = unknown> = (data: T) => void;
 
-export class EventEmitter<Events extends Record<string, any>> {
+export class EventEmitter<Events extends Record<string, unknown>> {
   private listeners: Map<keyof Events, Set<EventListener>> = new Map();
 
   on<K extends keyof Events>(event: K, listener: EventListener<Events[K]>): void {
     if (!this.listeners.has(event)) {
       this.listeners.set(event, new Set());
     }
-    this.listeners.get(event)!.add(listener);
+    const listeners = this.listeners.get(event);
+    if (listeners !== undefined) {
+      listeners.add(listener);
+    }
   }
 
   off<K extends keyof Events>(event: K, listener: EventListener<Events[K]>): void {
@@ -21,7 +24,7 @@ export class EventEmitter<Events extends Record<string, any>> {
   }
 
   once<K extends keyof Events>(event: K, listener: EventListener<Events[K]>): void {
-    const onceListener = (data: Events[K]) => {
+    const onceListener = (data: Events[K]): void => {
       listener(data);
       this.off(event, onceListener);
     };
@@ -35,14 +38,14 @@ export class EventEmitter<Events extends Record<string, any>> {
         try {
           listener(data);
         } catch (error) {
-          console.error(`Error in event listener for ${String(event)}:`, error);
+          // console.error(`Error in event listener for ${String(event)}:`, error);
         }
       });
     }
   }
 
   removeAllListeners<K extends keyof Events>(event?: K): void {
-    if (event) {
+    if (event !== undefined) {
       this.listeners.delete(event);
     } else {
       this.listeners.clear();
@@ -50,7 +53,7 @@ export class EventEmitter<Events extends Record<string, any>> {
   }
 
   listenerCount<K extends keyof Events>(event: K): number {
-    return this.listeners.get(event)?.size || 0;
+    return this.listeners.get(event)?.size ?? 0;
   }
 
   getListeners<K extends keyof Events>(event: K): EventListener<Events[K]>[] {
