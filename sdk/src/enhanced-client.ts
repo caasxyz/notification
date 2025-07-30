@@ -44,6 +44,80 @@ export class EnhancedNotificationClient extends NotificationClient {
   }
 
   /**
+   * 智能发送通知 - 自动获取用户配置
+   * @param userId 用户ID
+   * @param content 通知内容
+   * @param options 可选参数
+   */
+  async smartSend(
+    userId: string,
+    content: string,
+    options?: {
+      subject?: string;
+      channels?: ChannelType[];
+      template?: string;
+      variables?: Record<string, unknown>;
+    }
+  ): Promise<NotificationResponse> {
+    // 如果没有指定渠道，获取用户的所有活跃配置
+    let targetChannels = options?.channels;
+    
+    if (!targetChannels || targetChannels.length === 0) {
+      try {
+        const configsResponse = await this.configs.list(userId);
+        if (configsResponse.success && configsResponse.data) {
+          // 过滤出活跃的渠道
+          const activeChannels = configsResponse.data
+            .filter(config => config.is_active !== false)
+            .map(config => config.channel_type);
+          
+          if (activeChannels.length > 0) {
+            targetChannels = activeChannels;
+          } else {
+            throw new NotificationError('No active channels found for user');
+          }
+        } else {
+          throw new NotificationError('Failed to fetch user configurations');
+        }
+      } catch (error) {
+        // 如果获取配置失败，使用智能渠道选择
+        targetChannels = await this.smartChannel.selectChannels(userId, {
+          preferredChannels: ['email', 'lark'],
+          maxChannels: 2
+        });
+      }
+    }
+
+    // 确保有渠道
+    if (!targetChannels || targetChannels.length === 0) {
+      throw new NotificationError('No channels available for notification');
+    }
+
+    // 构建请求
+    const request: NotificationRequest = {
+      user_id: userId,
+      channels: targetChannels,
+    };
+
+    // 处理模板或自定义内容
+    if (options?.template !== undefined && options.template !== null && options.template !== '') {
+      request.template_key = options.template;
+      if (options.variables) {
+        request.variables = options.variables;
+      }
+    } else {
+      request.custom_content = {
+        content,
+        ...(options?.subject !== undefined && options.subject !== null && options.subject !== '' 
+          ? { subject: options.subject } 
+          : {}),
+      };
+    }
+
+    return this.sendNotification(request);
+  }
+
+  /**
    * 发送通知（增强版，支持智能重试和渠道降级）
    */
   override async sendNotification(request: NotificationRequest): Promise<NotificationResponse> {

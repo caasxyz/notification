@@ -278,6 +278,33 @@ async function runTests() {
     recordTest('智能渠道选择', '自动选择用户配置的渠道', startTime, false, error instanceof Error ? error.message : 'Unknown error');
   }
 
+  // 4.8 智能发送（新功能）
+  console.log('\n🎯 测试智能发送功能...');
+  startTime = Date.now();
+  try {
+    // 最简单的调用方式 - 只需要用户ID和内容
+    await client.smartSend(
+      config.testUserId,
+      '🚀 智能发送测试：SDK 自动获取用户配置并发送到所有活跃渠道！'
+    );
+    recordTest('智能发送', '自动获取配置并发送', startTime, true);
+  } catch (error) {
+    recordTest('智能发送', '自动获取配置并发送', startTime, false, error instanceof Error ? error.message : 'Unknown error');
+  }
+
+  // 4.9 智能发送带主题
+  startTime = Date.now();
+  try {
+    await client.smartSend(
+      config.testUserId,
+      '📧 这是一条带主题的智能通知，SDK 会自动处理渠道配置！',
+      { subject: '智能通知测试' }
+    );
+    recordTest('智能发送带主题', '自动配置 + 主题', startTime, true);
+  } catch (error) {
+    recordTest('智能发送带主题', '自动配置 + 主题', startTime, false, error instanceof Error ? error.message : 'Unknown error');
+  }
+
   // 5. 查询和统计
   console.log('\n📋 第五步: 查询和统计\n');
 

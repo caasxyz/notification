@@ -311,7 +311,38 @@ The SDK supports the following notification channels:
 
 ## Enhanced Features (增强功能)
 
-### 1. 链式调用 API
+### 1. 智能发送 (Smart Send) 🎯
+
+最简单的发送方式 - SDK 自动获取用户配置：
+
+```typescript
+// 只需要用户ID和内容
+await client.smartSend('user123', '这是一条智能通知！');
+
+// 带主题
+await client.smartSend('user123', '重要通知内容', {
+  subject: '系统通知'
+});
+
+// 使用模板
+await client.smartSend('user123', '', {
+  template: 'welcome',
+  variables: { name: 'John' }
+});
+
+// 指定特定渠道（覆盖自动检测）
+await client.smartSend('user123', '紧急通知', {
+  channels: ['lark', 'email']
+});
+```
+
+**特点：**
+- 自动获取用户的所有活跃渠道配置
+- 无需手动指定渠道，减少代码量
+- 支持渠道降级和智能选择
+- 适合大多数通知场景
+
+### 2. 链式调用 API
 
 使用流畅的链式调用简化代码：
 
@@ -341,7 +372,25 @@ await client
   .send();
 ```
 
-### 2. 预设通知模板
+### 3. 快速通知助手
+
+一行代码发送通知：
+
+```typescript
+// Lark 通知
+await client.quick.lark('user123', '这是一条飞书通知！');
+
+// 邮件通知
+await client.quick.email('user123', '邮件主题', '邮件内容');
+
+// Telegram 通知
+await client.quick.telegram('user123', '这是一条 Telegram 消息');
+
+// 使用模板
+await client.quick.fromTemplate('user123', 'welcome', { name: 'John' });
+```
+
+### 4. 预设通知模板
 
 内置常用业务场景，无需自己构造请求：
 
