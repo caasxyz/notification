@@ -33,6 +33,8 @@ yarn add @caasxyz/notification-sdk
 
 ## Quick Start
 
+### 基础用法
+
 ```typescript
 import { NotificationClient } from '@caasxyz/notification-sdk';
 
@@ -51,16 +53,46 @@ const response = await client.sendNotification({
 });
 ```
 
+### 增强版用法（推荐）
+
+```typescript
+import { EnhancedNotificationClient } from '@caasxyz/notification-sdk';
+
+// 使用增强版客户端
+const client = new EnhancedNotificationClient({
+  baseUrl: 'https://your-notification-api.com',
+  apiKey: 'your-api-key',
+});
+
+// 方式1: 链式调用（最简单）
+await client
+  .notify()
+  .to('user123')
+  .via('email', 'lark')
+  .content('Your order has been shipped!', 'Order Update')
+  .send();
+
+// 方式2: 快速发送
+await client.quick.email('user123', 'Welcome!', 'Thanks for signing up!');
+
+// 方式3: 使用预设模板
+await client.presets.welcome('user123', 'John Doe');
+```
+
 ## Features
 
 - 🚀 **Simple API** - Intuitive methods for all notification operations
+- 🔗 **链式调用** - 流畅的 API 设计，减少代码量
 - 📦 **TypeScript Support** - Full type definitions for better IDE support
+- 🎯 **预设模板** - 内置常用通知场景，开箱即用
+- 🧠 **智能渠道选择** - 自动选择最佳渠道，支持降级
 - 🔄 **Automatic Retry** - Built-in retry logic for failed requests
 - 🔐 **Webhook Validation** - HMAC signature validation utilities
 - 📝 **Template Support** - Manage and render notification templates
 - 👥 **User Management** - Create and manage users and their configurations
 - 📊 **Logging & Analytics** - Query notification logs and statistics
 - ⚡ **Batch Operations** - Send multiple notifications efficiently
+- 🎭 **会话模式** - 为同一用户连续发送多个通知
 
 ## Configuration
 
@@ -276,6 +308,131 @@ The SDK supports the following notification channels:
 - **telegram** - Telegram bot messages
 - **webhook** - Custom HTTP webhooks
 - **sms** - SMS messages
+
+## Enhanced Features (增强功能)
+
+### 1. 链式调用 API
+
+使用流畅的链式调用简化代码：
+
+```typescript
+// 传统方式
+await client.sendNotification({
+  user_id: 'user123',
+  channels: ['email', 'lark'],
+  template_key: 'order_shipped',
+  variables: {
+    order_id: '12345',
+    tracking: 'TRK-67890'
+  },
+  idempotency_key: 'order-12345-shipped'
+});
+
+// 链式调用方式（更简洁）
+await client
+  .notify()
+  .to('user123')
+  .via('email', 'lark')
+  .useTemplate('order_shipped', {
+    order_id: '12345',
+    tracking: 'TRK-67890'
+  })
+  .idempotent('order-12345-shipped')
+  .send();
+```
+
+### 2. 预设通知模板
+
+内置常用业务场景，无需自己构造请求：
+
+```typescript
+// 欢迎通知
+await client.presets.welcome('user123', 'John Doe');
+
+// 密码重置
+await client.presets.passwordReset('user123', 'https://reset-link.com');
+
+// 订单更新
+await client.presets.orderUpdate('user123', 'ORD-12345', 'shipped', {
+  tracking_number: 'TRK-67890',
+  carrier: 'FedEx'
+});
+
+// 支付成功
+await client.presets.paymentSuccess('user123', 99.99, 'USD', 'TXN-12345');
+
+// 安全警告
+await client.presets.securityAlert('user123', 'suspicious_activity', {
+  ip: '192.168.1.1',
+  location: 'New York, US'
+});
+
+// 验证码
+await client.presets.verificationCode('user123', '123456', 'login');
+```
+
+### 3. 智能渠道选择
+
+自动根据用户配置和场景选择最佳渠道：
+
+```typescript
+// 不指定渠道，SDK 会自动选择
+await client
+  .notify()
+  .to('user123')
+  .content('Important message')
+  .send();
+// SDK 会自动获取用户配置的活跃渠道并发送
+
+// 渠道降级：如果主渠道失败，自动尝试备用渠道
+// 例如：email 失败 -> 尝试 lark -> 尝试 telegram
+```
+
+### 4. 会话模式
+
+为同一用户连续发送多个相关通知：
+
+```typescript
+const session = client.createSession('user123', ['email', 'lark']);
+
+// 连续发送多个通知
+await session.send('订单已创建');
+await session.send('支付处理中...');
+await session.send('支付成功！', { subject: '支付确认' });
+await session.fromTemplate('order_confirmed', { order_id: '12345' });
+```
+
+### 5. 批量发送优化
+
+支持并发控制和错误处理：
+
+```typescript
+await client.sendBatchNotifications(notifications, {
+  concurrency: 5,      // 同时发送5个
+  stopOnError: false   // 遇到错误继续发送其他
+});
+```
+
+### 6. 发送确认
+
+等待通知送达确认（适用于重要通知）：
+
+```typescript
+const { response, confirmed } = await client.sendAndConfirm({
+  user_id: 'user123',
+  channels: ['email'],
+  content: 'Critical update'
+}, {
+  timeout: 30000,      // 等待30秒
+  checkInterval: 5000  // 每5秒检查一次
+});
+
+if (confirmed) {
+  console.log('通知已确认送达');
+} else {
+  console.log('未能确认送达，可能需要重试');
+}
+```
 
 ## Advanced Usage
 
