@@ -1,0 +1,47 @@
+# Source files
+src/
+tests/
+examples/
+
+# Config files
+.eslintrc*
+jest.config.js
+tsconfig.json
+.prettierrc*
+
+# Development files
+*.log
+*.tgz
+.DS_Store
+node_modules/
+coverage/
+.nyc_output/
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Git files
+.git/
+.gitignore
+
+# Build artifacts (keep dist/)
+# dist/
+
+# Documentation source
+docs/
+*.md
+!README.md
+
+# CI/CD
+.github/
+.travis.yml
+.circleci/
+
+# Test files
+__tests__/
+test/
+*.test.ts
+*.spec.ts

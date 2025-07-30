@@ -1,0 +1,52 @@
+{
+  "name": "@caasxyz/notification-sdk",
+  "version": "1.0.0",
+  "description": "TypeScript SDK for Notification System API",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "test": "jest",
+    "lint": "eslint src --ext .ts",
+    "clean": "rm -rf dist",
+    "prebuild": "npm run clean",
+    "prepublishOnly": "npm run lint && npm run build"
+  },
+  "keywords": [
+    "notification",
+    "sdk",
+    "typescript",
+    "api",
+    "cloudflare-workers",
+    "notification-system"
+  ],
+  "author": "Notification System Team",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/caasxyz/notification.git"
+  },
+  "bugs": {
+    "url": "https://github.com/caasxyz/notification/issues"
+  },
+  "homepage": "https://github.com/caasxyz/notification#readme",
+  "devDependencies": {
+    "@types/jest": "^29.5.0",
+    "@types/node": "^20.0.0",
+    "@typescript-eslint/eslint-plugin": "^6.0.0",
+    "@typescript-eslint/parser": "^6.0.0",
+    "eslint": "^8.0.0",
+    "jest": "^29.5.0",
+    "ts-jest": "^29.1.0",
+    "typescript": "^5.0.0"
+  },
+  "files": [
+    "dist"
+  ],
+  "engines": {
+    "node": ">=14.0.0"
+  },
+  "publishConfig": {
+    "registry": "https://npm.pkg.github.com"
+  }
+}

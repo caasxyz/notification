@@ -1,0 +1,60 @@
+{
+  "name": "notification-system",
+  "version": "1.0.0",
+  "description": "High-performance notification system built on Cloudflare Workers",
+  "type": "module",
+  "main": "dist/index.js",
+  "scripts": {
+    "dev": "wrangler dev --port 8788",
+    "test": "vitest run",
+    "test:watch": "vitest --watch",
+    "test:local": "tsx scripts/testing/test-local.ts",
+    "test:integration": "tsx scripts/testing/integration-test.ts",
+    "typecheck": "tsc --noEmit -p tsconfig.prod.json",
+    "db:setup": "./scripts/database/smart-db-setup.sh",
+    "db:reset": "./scripts/database/drizzle-reset-database.sh",
+    "db:seed": "tsx scripts/database/seed-database.ts",
+    "db:generate": "drizzle-kit generate",
+    "db:migrate": "drizzle-kit migrate",
+    "db:push": "drizzle-kit push",
+    "db:studio": "drizzle-kit studio",
+    "db:check": "drizzle-kit check",
+    "deploy:check": "tsx scripts/deployment/deploy-helper.ts check",
+    "deploy:verify": "tsx scripts/deployment/deploy-helper.ts verify",
+    "test:performance": "tsx scripts/testing/performance-test.ts",
+    "test:perf": "tsx scripts/testing/performance-test.ts",
+    "test:grafana": "tsx scripts/testing/test-grafana-webhook.ts",
+    "test:integration": "tsx scripts/testing/integration-test.ts",
+    "test:integration-sdk": "cd sdk && npm run build && cd .. && tsx scripts/testing/integration-test-sdk.ts"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.20241127.0",
+    "@types/node": "^20.14.10",
+    "@typescript-eslint/eslint-plugin": "^6.21.0",
+    "@typescript-eslint/parser": "^6.21.0",
+    "@vitest/coverage-v8": "^1.6.0",
+    "@vitest/ui": "^1.6.0",
+    "eslint": "^8.57.0",
+    "miniflare": "^3.20240610.1",
+    "prettier": "^3.3.3",
+    "tsx": "^4.7.0",
+    "typescript": "^5.5.3",
+    "vitest": "^1.6.0",
+    "vitest-environment-miniflare": "^2.14.4",
+    "wrangler": "^4.1.0"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "better-sqlite3": "^12.2.0",
+    "chalk": "^5.3.0",
+    "cli-table3": "^0.6.3",
+    "commander": "^12.0.0",
+    "drizzle-kit": "^0.31.4",
+    "drizzle-orm": "^0.44.2",
+    "itty-router": "^4.2.2",
+    "ora": "^8.0.1",
+    "prompts": "^2.4.2"
+  }
+}

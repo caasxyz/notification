@@ -1,0 +1,89 @@
+name = "notification-system"
+main = "src/index.ts"
+compatibility_date = "2024-01-01"
+compatibility_flags = ["nodejs_compat"]
+
+# Account ID will be replaced by GitHub Actions
+account_id = "PLACEHOLDER_ACCOUNT_ID"
+
+# Development environment
+[env.development]
+name = "notification-system-dev"
+
+[[env.development.d1_databases]]
+binding = "DB"
+database_name = "notification-system-dev"
+database_id = "PLACEHOLDER_DEV_DB_ID"
+
+[[env.development.kv_namespaces]]
+binding = "CONFIG_CACHE"
+id = "PLACEHOLDER_DEV_KV_ID"
+
+[[env.development.queues.producers]]
+queue = "retry-queue-dev"
+binding = "RETRY_QUEUE"
+
+[[env.development.queues.producers]]
+queue = "failed-queue-dev"
+binding = "FAILED_QUEUE"
+
+[[env.development.queues.consumers]]
+queue = "retry-queue-dev"
+max_batch_size = 10
+max_batch_timeout = 30
+
+[[env.development.queues.consumers]]
+queue = "failed-queue-dev"
+max_batch_size = 10
+max_batch_timeout = 30
+
+[env.development.vars]
+API_SECRET_KEY = "dev-secret-key-for-testing"
+ENCRYPT_KEY = "dev-encrypt-key-32-chars-secure!"
+ENVIRONMENT = "development"
+AUTO_MIGRATE = "true"
+FORCE_MIGRATE = "false"
+GRAFANA_WEBHOOK_USERNAME = "grafana"
+GRAFANA_WEBHOOK_PASSWORD = "test-password"
+
+# Production environment
+[env.production]
+name = "notification-system"
+
+[[env.production.d1_databases]]
+binding = "DB"
+database_name = "notification-system"
+database_id = "PLACEHOLDER_PROD_DB_ID"
+
+[[env.production.kv_namespaces]]
+binding = "CONFIG_CACHE"
+id = "PLACEHOLDER_PROD_KV_ID"
+
+[[env.production.queues.producers]]
+queue = "retry-queue"
+binding = "RETRY_QUEUE"
+
+[[env.production.queues.producers]]
+queue = "failed-queue"
+binding = "FAILED_QUEUE"
+
+[[env.production.queues.consumers]]
+queue = "retry-queue"
+max_batch_size = 25
+max_batch_timeout = 30
+
+[[env.production.queues.consumers]]
+queue = "failed-queue"
+max_batch_size = 25
+max_batch_timeout = 30
+
+[env.production.vars]
+# These should be set as secrets in GitHub
+API_SECRET_KEY = "PLACEHOLDER_API_SECRET"
+ENCRYPT_KEY = "PLACEHOLDER_ENCRYPT_KEY"
+ENVIRONMENT = "production"
+AUTO_MIGRATE = "true"
+FORCE_MIGRATE = "true"
+# Grafana webhook auth - should be set as secrets
+GRAFANA_WEBHOOK_USERNAME = "PLACEHOLDER_GRAFANA_USERNAME"
+GRAFANA_WEBHOOK_PASSWORD = "PLACEHOLDER_GRAFANA_PASSWORD"

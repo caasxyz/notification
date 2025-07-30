@@ -1,0 +1,55 @@
+# Claude Instructions for Notification System
+
+## Quick Context
+You're working on a Cloudflare Workers-based notification system with TypeScript. The system uses V2 architecture with multi-channel template support.
+
+## Key Commands
+- `npm run dev` - Start development server (port 8788)
+- `npm test` - Run tests
+- `npm run typecheck` - Check types (must pass before commit)
+- `npm run test:local` - Test local API
+
+## Important Rules
+1. **TypeScript Strict Mode**: Use bracket notation for index signatures (e.g., `result['id']`)
+2. **V2 Only**: We use `notification_templates_v2`, not the old `notification_templates`
+3. **No Archive**: Don't modify files in `/archive/` folders
+4. **Security**: Never commit secrets, use GitHub Secrets for sensitive data
+5. **Lark Signature**: Use seconds timestamp, not milliseconds
+6. **Test UI Functions**: Mount to window object (e.g., `window.functionName`)
+7. **Always Run**: `npm run typecheck` before committing
+
+## Common Mistakes to Avoid
+- ❌ Don't use `result.id` → Use `result['id']`
+- ❌ Don't use `Date.now()` for Lark → Use `Math.floor(Date.now() / 1000)`
+- ❌ Don't use `'` in template literals → Use `&apos;` or different quotes
+- ❌ Don't commit `notification.db` or `wrangler.toml`
+- ❌ Don't mix V1 and V2 template tables
+
+## Current Architecture
+- Core: `NotificationDispatcherV2` → `TemplateEngineV2` → Adapters
+- Templates: One template → Multiple channels
+- Database: D1 (SQLite) with V2 schema
+- Deployment: GitHub Actions → Cloudflare Workers
+
+## Common Tasks
+1. **Add Channel**: Create adapter in `src/adapters/`, extend BaseAdapter
+2. **Test API**: Visit http://localhost:8788/test-ui
+3. **Deploy**: Push to main branch (auto-deploy) or manual via Actions
+4. **Debug**: Check `/api/logs` or use `wrangler tail`
+
+## File Locations
+- API handlers: `src/api/handlers/`
+- Services: `src/services/` (use V2 versions)
+- Types: `src/types/index.ts`
+- Tests: `src/__tests__/`
+- Docs: `docs/` (especially `github-actions-setup.md`)
+
+## Testing
+- Always run `npm run typecheck` before committing
+- Test new features with `/test-ui`
+- Check logs with `/api/logs?user_id=test-user`
+
+## Remember
+- This is a production system - be careful with database migrations
+- All sensitive configs go through GitHub Secrets
+- The system supports: webhook, telegram, lark, slack, email, sms

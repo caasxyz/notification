@@ -1,0 +1,66 @@
+# Dependencies
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Build output
+dist/
+.wrangler/
+worker/
+
+# Environment files
+.env
+.env.local
+.env.*.local
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+
+# Logs
+logs/
+*.log
+error.log
+
+# Test coverage
+coverage/
+.nyc_output/
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+notification-db.sql
+test-*.js
+test-*.ts
+
+# Cloudflare
+.dev.vars
+wrangler.toml.backup
+
+# Database files
+*.db
+*.sqlite
+*.sqlite3
+.wrangler/state/
+local.db
+
+# Drizzle migrations (uncomment after initial setup)
+# drizzle/
+
+# Archive directories
+scripts/archive-*/
+
+# Sensitive configuration
+wrangler.toml
+*.local.toml
+wrangler.toml.production
+wrangler.toml.development
+
+# GitHub Actions
+.github/workflows/*.local.yml
+deployment-secrets.md

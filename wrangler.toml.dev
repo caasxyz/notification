@@ -1,0 +1,48 @@
+name = "notification-system"
+main = "src/index.ts"
+compatibility_date = "2024-01-01"
+compatibility_flags = ["nodejs_compat"]
+
+# Local development database
+[[d1_databases]]
+binding = "DB"
+database_name = "notification-system"
+database_id = "local"
+
+# Queues for local development
+[[queues.producers]]
+queue = "retry-queue"
+binding = "RETRY_QUEUE"
+
+[[queues.consumers]]
+queue = "retry-queue"
+max_batch_size = 10
+max_batch_timeout = 5
+max_retries = 3
+dead_letter_queue = "failed-notifications-dlq"
+
+[[queues.producers]]
+queue = "failed-notifications-dlq"
+binding = "FAILED_QUEUE"
+
+[[queues.consumers]]
+queue = "failed-notifications-dlq"
+max_batch_size = 5
+max_batch_timeout = 10
+
+# KV namespace for local development
+[[kv_namespaces]]
+binding = "CONFIG_CACHE"
+id = "local"
+
+# Cron triggers for scheduled tasks
+[[triggers.crons]]
+cron = "0 */4 * * *"
+
+# Environment variables
+[vars]
+API_SECRET_KEY = "dev-secret-key-change-in-production"
+ENCRYPT_KEY = "dev-encrypt-key-32-chars-change!"
+ENVIRONMENT = "development"
+AUTO_MIGRATE = "true"
+FORCE_MIGRATE = "false"
