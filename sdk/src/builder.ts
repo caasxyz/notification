@@ -48,7 +48,7 @@ export class NotificationBuilder {
   content(content: string, subject?: string): this {
     this.request.custom_content = {
       content,
-      ...(subject ? { subject } : {})
+      ...(subject !== undefined && subject !== null && subject !== '' ? { subject } : {})
     };
     return this;
   }
@@ -98,7 +98,7 @@ export class NotificationBuilder {
    */
   async send(): Promise<NotificationResponse> {
     // 验证必填字段
-    if (!this.request.user_id) {
+    if (this.request.user_id === undefined || this.request.user_id === null || this.request.user_id === '') {
       throw new Error('User ID is required. Use .to(userId) to set it.');
     }
 
@@ -106,7 +106,8 @@ export class NotificationBuilder {
       throw new Error('At least one channel is required. Use .via(...channels) to set channels.');
     }
 
-    if (!this.request.template_key && !this.request.custom_content) {
+    if ((this.request.template_key === undefined || this.request.template_key === null || this.request.template_key === '') && 
+        (this.request.custom_content === undefined || this.request.custom_content === null)) {
       throw new Error('Either template or content is required. Use .useTemplate() or .content().');
     }
 

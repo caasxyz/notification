@@ -68,7 +68,7 @@ export class SmartChannelSelector {
     }
 
     // 限制渠道数量
-    if (options?.maxChannels && selectedChannels.length > options.maxChannels) {
+    if (options?.maxChannels !== undefined && options.maxChannels !== null && options.maxChannels > 0 && selectedChannels.length > options.maxChannels) {
       selectedChannels = selectedChannels.slice(0, options.maxChannels);
     }
 
@@ -110,12 +110,12 @@ export class SmartChannelSelector {
     recommended.push('email');
 
     // Lark 支持 Markdown 和富文本
-    if (content.isMarkdown || content.hasImage) {
+    if ((content.isMarkdown === true) || (content.hasImage === true)) {
       recommended.push('lark');
     }
 
     // Telegram 支持 Markdown 但有长度限制
-    if (!content.hasAttachment && (!content.length || content.length < 4096)) {
+    if ((content.hasAttachment !== true) && (content.length === undefined || content.length === null || content.length === 0 || content.length < 4096)) {
       recommended.push('telegram');
     }
 

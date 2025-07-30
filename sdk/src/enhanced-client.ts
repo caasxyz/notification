@@ -97,7 +97,7 @@ export class EnhancedNotificationClient extends NotificationClient {
       const promises = batch.map(req => 
         this.sendNotification(req).catch(err => {
           if (stopOnError) throw err;
-          errors.push(err);
+          errors.push(err as Error);
           return null;
         })
       );
@@ -107,7 +107,7 @@ export class EnhancedNotificationClient extends NotificationClient {
     }
 
     if (errors.length > 0 && !stopOnError) {
-      console.warn(`${errors.length} notifications failed in batch`);
+      // Notifications failed in batch - errors.length failures
     }
 
     return results;
@@ -148,7 +148,7 @@ export class EnhancedNotificationClient extends NotificationClient {
   /**
    * 创建通知会话（用于发送一系列相关通知）
    */
-  createSession(userId: string, defaultChannels?: ChannelType[]) {
+  createSession(userId: string, defaultChannels?: ChannelType[]): { send: (content: string, options?: { subject?: string; template?: string; variables?: Record<string, unknown> }) => Promise<NotificationResponse> } {
     return {
       send: (content: string, options?: { subject?: string; template?: string; variables?: Record<string, unknown> }) => {
         const request: NotificationRequest = {
@@ -156,11 +156,11 @@ export class EnhancedNotificationClient extends NotificationClient {
           channels: defaultChannels ?? ['email'],
           custom_content: {
             content,
-            ...(options?.subject ? { subject: options.subject } : {}),
+            ...(options?.subject !== undefined && options.subject !== null && options.subject !== '' ? { subject: options.subject } : {}),
           },
         };
         
-        if (options?.template) {
+        if (options?.template !== undefined && options.template !== null && options.template !== '') {
           request.template_key = options.template;
           delete request.custom_content;
           if (options.variables) {
