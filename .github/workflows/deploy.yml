@@ -269,3 +269,110 @@ jobs:
             echo "Please check the logs above for error details." >> $GITHUB_STEP_SUMMARY
           fi
 
+  # 发布 SDK 到 GitHub Packages（仅在生产环境部署成功后）
+  publish-sdk:
+    name: Publish SDK to GitHub Packages
+    needs: deploy
+    if: success() && github.ref == 'refs/heads/main' && github.event_name == 'push'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      packages: write
+      
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          registry-url: 'https://npm.pkg.github.com'
+          
+      - name: Configure Git
+        run: |
+          git config user.name "kaito"
+          git config user.email "kaito@caas.xyz"
+          
+      - name: Install SDK dependencies
+        working-directory: ./sdk
+        run: npm ci
+        
+      - name: Get current version
+        id: current_version
+        working-directory: ./sdk
+        run: |
+          CURRENT_VERSION=$(node -p "require('./package.json').version")
+          echo "version=$CURRENT_VERSION" >> $GITHUB_OUTPUT
+          echo "Current SDK version: $CURRENT_VERSION"
+          
+      - name: Determine new version
+        id: new_version
+        run: |
+          # 从当前版本中提取主版本号、次版本号和补丁号
+          CURRENT_VERSION="${{ steps.current_version.outputs.version }}"
+          IFS='.' read -ra VERSION_PARTS <<< "$CURRENT_VERSION"
+          MAJOR=${VERSION_PARTS[0]}
+          MINOR=${VERSION_PARTS[1]}
+          PATCH=${VERSION_PARTS[2]}
+          
+          # 增加补丁号
+          NEW_PATCH=$((PATCH + 1))
+          NEW_VERSION="$MAJOR.$MINOR.$NEW_PATCH"
+          
+          echo "new_version=$NEW_VERSION" >> $GITHUB_OUTPUT
+          echo "New SDK version: $NEW_VERSION"
+          
+      - name: Update SDK version
+        working-directory: ./sdk
+        run: |
+          npm version ${{ steps.new_version.outputs.new_version }} --no-git-tag-version
+          
+      - name: Build SDK
+        working-directory: ./sdk
+        run: npm run build
+        
+      - name: Publish to GitHub Packages
+        working-directory: ./sdk
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          npm publish
+          echo "✅ SDK v${{ steps.new_version.outputs.new_version }} published to GitHub Packages"
+          
+      - name: Commit version change
+        run: |
+          git add sdk/package.json sdk/package-lock.json
+          git commit -m "chore: bump SDK version to ${{ steps.new_version.outputs.new_version }}
+
+          Automated version bump after successful deployment and integration tests.
+          " || echo "No changes to commit"
+          
+      - name: Push changes
+        run: |
+          git push origin main
+          
+      - name: Create Git tag
+        run: |
+          git tag -a "sdk-v${{ steps.new_version.outputs.new_version }}" -m "SDK Release v${{ steps.new_version.outputs.new_version }}"
+          git push origin "sdk-v${{ steps.new_version.outputs.new_version }}"
+          
+      - name: Update deployment summary
+        run: |
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### 📦 SDK Published" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Property | Value |" >> $GITHUB_STEP_SUMMARY
+          echo "|----------|-------|" >> $GITHUB_STEP_SUMMARY
+          echo "| **Version** | \`${{ steps.new_version.outputs.new_version }}\` |" >> $GITHUB_STEP_SUMMARY
+          echo "| **Package** | \`@caasxyz/notification-sdk\` |" >> $GITHUB_STEP_SUMMARY
+          echo "| **Registry** | GitHub Packages |" >> $GITHUB_STEP_SUMMARY
+          echo "| **Tag** | \`sdk-v${{ steps.new_version.outputs.new_version }}\` |" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Installation:**" >> $GITHUB_STEP_SUMMARY
+          echo "\`\`\`bash" >> $GITHUB_STEP_SUMMARY
+          echo "npm install @caasxyz/notification-sdk@${{ steps.new_version.outputs.new_version }}" >> $GITHUB_STEP_SUMMARY
+          echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+
