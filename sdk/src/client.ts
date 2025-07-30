@@ -84,8 +84,14 @@ export class NotificationClient {
    * Configuration management methods
    */
   configs = {
-    set: async (userId: string, _channelType: ChannelType, config: UserConfig): Promise<{ success: boolean }> => {
-      return this.request('/api/user-configs', 'POST', { user_id: userId, ...config });
+    set: async (userId: string, channelType: ChannelType, config: UserConfig): Promise<{ success: boolean }> => {
+      // API expects config_data field, not config
+      return this.request('/api/user-configs', 'POST', { 
+        user_id: userId,
+        channel_type: channelType,
+        config_data: config.config,
+        is_active: config.is_active ?? true
+      });
     },
 
     get: async (userId: string, channelType: ChannelType): Promise<{ success: boolean; data?: UserConfig }> => {
