@@ -33,21 +33,21 @@ export class NotificationService {
    * Get notification status
    * Note: This endpoint is not implemented in the actual API
    */
-  async getStatus(_notificationId: string): Promise<{
+  getStatus(_notificationId: string): Promise<{
     id: string;
     status: NotificationStatus;
     sentAt?: string;
     error?: string;
   }> {
-    throw new Error('Get notification status endpoint not implemented in the server');
+    return Promise.reject(new Error('Get notification status endpoint not implemented in the server'));
   }
 
   /**
    * Cancel a scheduled notification
    * Note: This endpoint is not implemented in the actual API
    */
-  async cancel(_notificationId: string): Promise<{ success: boolean }> {
-    throw new Error('Cancel notification endpoint not implemented in the server');
+  cancel(_notificationId: string): Promise<{ success: boolean }> {
+    return Promise.reject(new Error('Cancel notification endpoint not implemented in the server'));
   }
 
   /**
@@ -104,7 +104,7 @@ export class NotificationService {
   /**
    * Create a notification builder for fluent API
    */
-  builder() {
+  builder(): NotificationBuilder {
     return new NotificationBuilder(this);
   }
 
@@ -120,23 +120,29 @@ export class NotificationService {
 
     for (let index = 0; index < results.length; index++) {
       const result = results[index];
-      if (result.status === 'fulfilled') {
-        successful.push(result.value);
-      } else {
-        failed.push({
-          request: request.notifications[index],
-          error: result.reason?.message || 'Unknown error'
-        });
+      const notification = request.notifications[index];
+      if (result !== undefined && notification !== undefined) {
+        if (result.status === 'fulfilled') {
+          successful.push(result.value);
+        } else {
+          failed.push({
+            request: notification,
+            error: (result.reason as Error)?.message ?? 'Unknown error'
+          });
 
-        if (request.stopOnError) {
-          // Cancel remaining notifications
-          for (let i = index + 1; i < request.notifications.length; i++) {
-            failed.push({
-              request: request.notifications[i],
-              error: 'Cancelled due to previous error'
-            });
+          if (request.stopOnError === true) {
+            // Cancel remaining notifications
+            for (let i = index + 1; i < request.notifications.length; i++) {
+              const remainingNotification = request.notifications[i];
+              if (remainingNotification !== undefined) {
+                failed.push({
+                  request: remainingNotification,
+                  error: 'Cancelled due to previous error'
+                });
+              }
+            }
+            break;
           }
-          break;
         }
       }
     }
@@ -162,20 +168,23 @@ export class NotificationService {
       try {
         const response = await this.send(notification);
         successful.push(response);
-      } catch (error: any) {
+      } catch (error) {
         failed.push({
           request: notification,
-          error: error.message || 'Unknown error'
+          error: (error as Error).message ?? 'Unknown error'
         });
 
-        if (request.stopOnError) {
+        if (request.stopOnError === true) {
           // Add remaining notifications as failed
           const currentIndex = request.notifications.indexOf(notification);
           for (let i = currentIndex + 1; i < request.notifications.length; i++) {
-            failed.push({
-              request: request.notifications[i],
-              error: 'Cancelled due to previous error'
-            });
+            const remainingNotification = request.notifications[i];
+            if (remainingNotification !== undefined) {
+              failed.push({
+                request: remainingNotification,
+                error: 'Cancelled due to previous error'
+              });
+            }
           }
           break;
         }
@@ -217,7 +226,7 @@ export class NotificationBuilder {
     return this;
   }
 
-  variables(vars: Record<string, any>): this {
+  variables(vars: Record<string, unknown>): this {
     this.request.variables = vars;
     return this;
   }
@@ -237,20 +246,22 @@ export class NotificationBuilder {
     return this;
   }
 
-  metadata(data: Record<string, any>): this {
+  metadata(data: Record<string, unknown>): this {
     this.request.metadata = data;
     return this;
   }
 
   async send(): Promise<NotificationResponse> {
-    if (!this.request.userId || !this.request.templateKey || !this.request.channel) {
+    if (this.request.userId === undefined || this.request.userId === '' ||
+        this.request.templateKey === undefined || this.request.templateKey === '' ||
+        this.request.channel === undefined) {
       throw new Error('Missing required fields: userId, templateKey, and channel');
     }
 
     return this.service.send(this.request as NotificationRequest);
   }
 
-  async validate(): Promise<{ valid: boolean; errors?: any[] }> {
+  async validate(): Promise<{ valid: boolean; errors?: Array<{ field: string; message: string }> }> {
     return this.service.validate(this.request as NotificationRequest);
   }
 }

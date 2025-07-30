@@ -23,13 +23,13 @@ export class TemplateService {
     if (options?.isActive !== undefined) {
       params.set('isActive', options.isActive.toString());
     }
-    if (options?.channel) {
+    if (options?.channel !== undefined) {
       params.set('channel', options.channel);
     }
-    if (options?.limit) {
+    if (options?.limit !== undefined && options.limit !== 0) {
       params.set('limit', options.limit.toString());
     }
-    if (options?.offset) {
+    if (options?.offset !== undefined && options.offset !== 0) {
       params.set('offset', options.offset.toString());
     }
 
@@ -74,39 +74,39 @@ export class TemplateService {
    * Activate a template
    * Note: This endpoint is not implemented in the actual API
    */
-  async activate(_key: string): Promise<Template> {
-    throw new Error('Template activate endpoint not implemented in the server');
+  activate(_key: string): Promise<Template> {
+    return Promise.reject(new Error('Template activate endpoint not implemented in the server'));
   }
 
   /**
    * Deactivate a template
    * Note: This endpoint is not implemented in the actual API
    */
-  async deactivate(_key: string): Promise<Template> {
-    throw new Error('Template deactivate endpoint not implemented in the server');
+  deactivate(_key: string): Promise<Template> {
+    return Promise.reject(new Error('Template deactivate endpoint not implemented in the server'));
   }
 
   /**
    * Preview template rendering
    * Note: This endpoint is not implemented in the actual API
    */
-  async preview(
+  preview(
     _key: string,
-    _variables: Record<string, any>,
+    _variables: Record<string, unknown>,
     _channel?: ChannelType
   ): Promise<{
     subject?: string;
     content: string;
     contentType: string;
   }> {
-    throw new Error('Template preview endpoint not implemented in the server');
+    return Promise.reject(new Error('Template preview endpoint not implemented in the server'));
   }
 
   /**
    * Validate template syntax
    * Note: This endpoint is not implemented in the actual API
    */
-  async validate(_template: CreateTemplateRequest): Promise<{
+  validate(_template: CreateTemplateRequest): Promise<{
     valid: boolean;
     errors?: Array<{
       channel: ChannelType;
@@ -114,14 +114,14 @@ export class TemplateService {
       message: string;
     }>;
   }> {
-    throw new Error('Template validate endpoint not implemented in the server');
+    return Promise.reject(new Error('Template validate endpoint not implemented in the server'));
   }
 
   /**
    * Clone an existing template
    * Note: This endpoint is not implemented in the actual API
    */
-  async clone(
+  clone(
     _sourceKey: string,
     _targetKey: string,
     _options?: {
@@ -129,14 +129,14 @@ export class TemplateService {
       description?: string;
     }
   ): Promise<Template> {
-    throw new Error('Template clone endpoint not implemented in the server');
+    return Promise.reject(new Error('Template clone endpoint not implemented in the server'));
   }
 
   /**
    * Get template usage statistics
    * Note: This endpoint is not implemented in the actual API
    */
-  async getStats(_key: string, _options?: {
+  getStats(_key: string, _options?: {
     fromDate?: Date | string;
     toDate?: Date | string;
   }): Promise<{
@@ -152,7 +152,7 @@ export class TemplateService {
       failed: number;
     }>;
   }> {
-    throw new Error('Template stats endpoint not implemented in the server');
+    return Promise.reject(new Error('Template stats endpoint not implemented in the server'));
   }
 
   /**
@@ -162,7 +162,7 @@ export class TemplateService {
     /**
      * Create multiple templates at once
      */
-    create: async (_templates: CreateTemplateRequest[]): Promise<{
+    create: (_templates: CreateTemplateRequest[]): Promise<{
       created: Template[];
       failed: Array<{
         template: CreateTemplateRequest;
@@ -170,13 +170,13 @@ export class TemplateService {
       }>;
     }> => {
       // Note: Bulk create endpoint not implemented in the actual API
-      throw new Error('Template bulk create endpoint not implemented in the server');
+      return Promise.reject(new Error('Template bulk create endpoint not implemented in the server'));
     },
 
     /**
      * Update multiple templates at once
      */
-    update: async (_updates: Array<{
+    update: (_updates: Array<{
       key: string;
       updates: UpdateTemplateRequest;
     }>): Promise<{
@@ -187,13 +187,13 @@ export class TemplateService {
       }>;
     }> => {
       // Note: Bulk update endpoint not implemented in the actual API
-      throw new Error('Template bulk update endpoint not implemented in the server');
+      return Promise.reject(new Error('Template bulk update endpoint not implemented in the server'));
     },
 
     /**
      * Delete multiple templates at once
      */
-    delete: async (_keys: string[]): Promise<{
+    delete: (_keys: string[]): Promise<{
       deleted: string[];
       failed: Array<{
         key: string;
@@ -201,7 +201,7 @@ export class TemplateService {
       }>;
     }> => {
       // Note: Bulk delete endpoint not implemented in the actual API
-      throw new Error('Template bulk delete endpoint not implemented in the server');
+      return Promise.reject(new Error('Template bulk delete endpoint not implemented in the server'));
     }
   };
 }

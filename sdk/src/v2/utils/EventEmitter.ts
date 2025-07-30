@@ -1,7 +1,7 @@
 type EventListener<T = unknown> = (data: T) => void;
 
 export class EventEmitter<Events extends Record<string, unknown>> {
-  private listeners: Map<keyof Events, Set<EventListener>> = new Map();
+  private listeners: Map<keyof Events, Set<EventListener<unknown>>> = new Map();
 
   on<K extends keyof Events>(event: K, listener: EventListener<Events[K]>): void {
     if (!this.listeners.has(event)) {
@@ -9,14 +9,14 @@ export class EventEmitter<Events extends Record<string, unknown>> {
     }
     const listeners = this.listeners.get(event);
     if (listeners !== undefined) {
-      listeners.add(listener);
+      listeners.add(listener as EventListener<unknown>);
     }
   }
 
   off<K extends keyof Events>(event: K, listener: EventListener<Events[K]>): void {
     const eventListeners = this.listeners.get(event);
     if (eventListeners) {
-      eventListeners.delete(listener);
+      eventListeners.delete(listener as EventListener<unknown>);
       if (eventListeners.size === 0) {
         this.listeners.delete(event);
       }
@@ -58,6 +58,6 @@ export class EventEmitter<Events extends Record<string, unknown>> {
 
   getListeners<K extends keyof Events>(event: K): EventListener<Events[K]>[] {
     const eventListeners = this.listeners.get(event);
-    return eventListeners ? Array.from(eventListeners) : [];
+    return eventListeners ? Array.from(eventListeners) as EventListener<Events[K]>[] : [];
   }
 }

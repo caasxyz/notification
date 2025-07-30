@@ -33,13 +33,13 @@ export class ConfigService {
     );
   }
 
-  async activate(_userId: string, _channel: ChannelType): Promise<{ success: boolean }> {
+  activate(_userId: string, _channel: ChannelType): Promise<{ success: boolean }> {
     // Note: Activate endpoint not implemented in the actual API
-    throw new Error('Config activate endpoint not implemented in the server');
+    return Promise.reject(new Error('Config activate endpoint not implemented in the server'));
   }
 
-  async deactivate(_userId: string, _channel: ChannelType): Promise<{ success: boolean }> {
+  deactivate(_userId: string, _channel: ChannelType): Promise<{ success: boolean }> {
     // Note: Deactivate endpoint not implemented in the actual API
-    throw new Error('Config deactivate endpoint not implemented in the server');
+    return Promise.reject(new Error('Config deactivate endpoint not implemented in the server'));
   }
 }

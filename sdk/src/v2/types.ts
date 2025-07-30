@@ -41,7 +41,7 @@ export type ErrorHandler = (
   error: SDKError,
   request: Request,
   retry: () => Promise<Response>
-) => any;
+) => Promise<Response>;
 
 // Error types
 export class SDKError extends Error {
@@ -49,7 +49,7 @@ export class SDKError extends Error {
     message: string,
     public statusCode?: number,
     public code?: string,
-    public details?: any,
+    public details?: unknown,
     public retryAfter?: number
   ) {
     super(message);
@@ -72,7 +72,7 @@ export class AuthenticationError extends SDKError {
 export class NotFoundError extends SDKError {
   constructor(resource: string, id?: string) {
     super(
-      `${resource} not found${id ? `: ${id}` : ''}`,
+      `${resource} not found${id !== undefined ? `: ${id}` : ''}`,
       404,
       'NOT_FOUND',
       { resource, id }
@@ -122,11 +122,11 @@ export interface NotificationRequest {
   userId: string;
   templateKey: string;
   channel: ChannelType;
-  variables?: Record<string, any>;
+  variables?: Record<string, unknown>;
   priority?: NotificationPriority;
   scheduledFor?: Date | string;
   requestId?: string;
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
 }
 
 export interface BatchNotificationRequest {
@@ -192,7 +192,7 @@ export interface User {
   id: string;
   email?: string;
   phone?: string;
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
   channels: Array<{
     type: ChannelType;
     config: ChannelConfig;
@@ -206,7 +206,7 @@ export interface CreateUserRequest {
   id: string;
   email?: string;
   phone?: string;
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
 }
 
 export interface UpdateUserRequest extends Partial<CreateUserRequest> {}
@@ -273,7 +273,7 @@ export interface NotificationLog {
   templateKey: string;
   channel: ChannelType;
   status: NotificationStatus;
-  variables?: Record<string, any>;
+  variables?: Record<string, unknown>;
   error?: string;
   retryCount: number;
   sentAt?: string;
@@ -297,7 +297,7 @@ export interface LogQuery {
 export interface WebhookPayload {
   event: WebhookEvent;
   timestamp: string;
-  data: any;
+  data: unknown;
   signature?: string;
 }
 
@@ -310,13 +310,13 @@ export enum WebhookEvent {
 }
 
 // Response wrapper
-export interface ApiResponse<T = any> {
+export interface ApiResponse<T = unknown> {
   success: boolean;
   data?: T;
   error?: {
     code: string;
     message: string;
-    details?: any;
+    details?: unknown;
   };
   metadata?: {
     page?: number;

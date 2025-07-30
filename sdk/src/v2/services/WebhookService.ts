@@ -33,9 +33,10 @@ export class WebhookService {
    */
   parse(body: string): WebhookPayload {
     try {
-      const payload = JSON.parse(body);
+      const payload = JSON.parse(body) as unknown;
       
-      if (!payload.event || !payload.timestamp || !payload.data) {
+      if (typeof payload !== 'object' || payload === null ||
+          !('event' in payload) || !('timestamp' in payload) || !('data' in payload)) {
         throw new Error('Invalid webhook payload structure');
       }
 
@@ -49,7 +50,7 @@ export class WebhookService {
    * Create webhook handler with automatic verification
    */
   createHandler(
-    handlers: Partial<Record<WebhookEvent, (data: any) => void | Promise<void>>>,
+    handlers: Partial<Record<WebhookEvent, (data: unknown) => void | Promise<void>>>,
     options?: {
       onError?: (error: Error) => void;
       timestampHeader?: string;
@@ -98,7 +99,7 @@ export class WebhookService {
    * Express/Connect middleware for webhook handling
    */
   createMiddleware(
-    handlers: Partial<Record<WebhookEvent, (data: any) => void | Promise<void>>>,
+    handlers: Partial<Record<WebhookEvent, (data: unknown) => void | Promise<void>>>,
     options?: {
       onError?: (error: Error) => void;
       timestampHeader?: string;
@@ -106,10 +107,13 @@ export class WebhookService {
       maxAge?: number;
     }
   ) {
-    return async (req: any, res: any, _next: any) => {
+    // Type the middleware function properly
+    return async (req: { body?: string; headers: Record<string, string> }, 
+                  res: { status: (code: number) => { send: (data: string) => void; json: (data: unknown) => void } }, 
+                  _next: unknown) => {
       try {
         // Get raw body
-        const body = req.body || '';
+        const body = typeof req.body === 'string' ? req.body : '';
 
         // Verify signature
         const isValid = await this.verify(req.headers, body, options);
@@ -123,13 +127,13 @@ export class WebhookService {
 
         // Handle event
         const handler = handlers[payload.event];
-        if (handler) {
+        if (handler !== undefined) {
           await handler(payload.data);
         }
 
         res.status(200).send('OK');
       } catch (error) {
-        if (options?.onError) {
+        if (options?.onError !== undefined) {
           options.onError(error as Error);
         }
         

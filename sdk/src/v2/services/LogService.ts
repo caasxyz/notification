@@ -7,14 +7,14 @@ export class LogService {
   async query(query: LogQuery): Promise<NotificationLog[]> {
     const params = new URLSearchParams();
     
-    if (query.userId) params.set('userId', query.userId);
-    if (query.templateKey) params.set('templateKey', query.templateKey);
-    if (query.channel) params.set('channel', query.channel);
-    if (query.status) params.set('status', query.status);
-    if (query.fromDate) params.set('fromDate', query.fromDate.toString());
-    if (query.toDate) params.set('toDate', query.toDate.toString());
-    if (query.limit) params.set('limit', query.limit.toString());
-    if (query.offset) params.set('offset', query.offset.toString());
+    if (query.userId !== undefined) params.set('userId', query.userId);
+    if (query.templateKey !== undefined) params.set('templateKey', query.templateKey);
+    if (query.channel !== undefined) params.set('channel', query.channel);
+    if (query.status !== undefined) params.set('status', query.status);
+    if (query.fromDate !== undefined) params.set('fromDate', query.fromDate.toString());
+    if (query.toDate !== undefined) params.set('toDate', query.toDate.toString());
+    if (query.limit !== undefined) params.set('limit', query.limit.toString());
+    if (query.offset !== undefined) params.set('offset', query.offset.toString());
     if (query.sortBy) params.set('sortBy', query.sortBy);
     if (query.sortOrder) params.set('sortOrder', query.sortOrder);
 
@@ -27,6 +27,9 @@ export class LogService {
   }
 
   async cleanup(beforeDate: Date | string): Promise<{ deleted: number }> {
-    return this.client.delete('/api/notification-logs/cleanup', { body: JSON.stringify({ beforeDate }), headers: { 'Content-Type': 'application/json' } } as any);
+    return this.client.delete('/api/notification-logs/cleanup', { 
+      body: JSON.stringify({ beforeDate }), 
+      headers: { 'Content-Type': 'application/json' } 
+    });
   }
 }

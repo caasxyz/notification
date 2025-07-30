@@ -16,6 +16,7 @@ import { createHmacSignature } from './utils/signature';
 
 export interface ApiClientEvents {
   debug: { message: string; data?: unknown };
+  [key: string]: unknown;
 }
 
 export class ApiClient extends EventEmitter<ApiClientEvents> {
@@ -125,9 +126,9 @@ export class ApiClient extends EventEmitter<ApiClientEvents> {
         'X-Timestamp': timestamp,
         'X-Signature': signature,
         ...this.options.headers,
-        ...(options?.headers as HeadersInit ?? {})
+        ...(options?.headers !== undefined ? options.headers as Record<string, string> : {})
       },
-      body: method !== 'GET' && body ? body : undefined,
+      ...(method !== 'GET' && body !== null ? { body } : {}),
       signal: this.createAbortSignal(),
       ...options
     });
@@ -184,7 +185,7 @@ export class ApiClient extends EventEmitter<ApiClientEvents> {
 
     // Parse response
     const contentType = response.headers.get('content-type');
-    if (contentType?.includes('application/json')) {
+    if (contentType !== null && contentType.includes('application/json')) {
       const json = await response.json() as ApiResponse<T>;
       
       if (json.success === false && json.error) {
@@ -212,10 +213,14 @@ export class ApiClient extends EventEmitter<ApiClientEvents> {
     const contentType = response.headers.get('content-type');
     let errorData: { message?: string; code?: string; details?: unknown } = {};
 
-    if (contentType?.includes('application/json')) {
+    if (contentType !== null && contentType.includes('application/json')) {
       try {
         const json = await response.json() as { error?: { message?: string; code?: string; details?: unknown } };
-        errorData = json.error ?? json;
+        if (json.error !== undefined) {
+          errorData = json.error;
+        } else {
+          errorData = json as { message?: string; code?: string; details?: unknown };
+        }
       } catch {
         errorData = { message: 'Unknown error' };
       }

@@ -22,6 +22,7 @@ export interface SDKEvents {
   'request:error': Error;
   'rate:limited': number;
   'retry:attempt': { attempt: number; error: Error };
+  [key: string]: unknown;
 }
 
 /**
@@ -60,7 +61,7 @@ export class NotificationSDK extends EventEmitter<SDKEvents> {
     // Initialize services
     this.notifications = new NotificationService(this.apiClient);
     this.templates = new TemplateService(this.apiClient);
-    this.users = new UserService(this.apiClient);
+    this.users = new UserService();
     this.configs = new ConfigService(this.apiClient);
     this.logs = new LogService(this.apiClient);
     this.webhooks = new WebhookService(config.apiKey);
@@ -134,10 +135,10 @@ export class NotificationSDK extends EventEmitter<SDKEvents> {
     timestamp: Date;
   }> {
     try {
-      const response = await this.apiClient.get('/health');
+      const response = await this.apiClient.get<{ version?: string }>('/health');
       return {
-        status: 'healthy',
-        version: response.version,
+        status: 'healthy' as const,
+        ...(response.version !== undefined ? { version: response.version } : {}),
         timestamp: new Date()
       };
     } catch (error) {
@@ -172,7 +173,7 @@ export class NotificationSDK extends EventEmitter<SDKEvents> {
   ): ResponseInterceptor[] {
     const interceptors: ResponseInterceptor[] = [
       // Success tracking interceptor
-      async (response) => {
+      (response): Response => {
         if (response.ok) {
           this.emit('request:success', response);
         }
@@ -199,7 +200,7 @@ export class NotificationSDK extends EventEmitter<SDKEvents> {
 
       // Check if it's a rate limit error
       if (error.statusCode === 429) {
-        const retryAfter = error.retryAfter || 60;
+        const retryAfter = (error as { retryAfter?: number }).retryAfter ?? 60;
         this.emit('rate:limited', retryAfter);
         this.rateLimiter.setThrottled(retryAfter);
       }
@@ -224,8 +225,8 @@ export class NotificationSDK extends EventEmitter<SDKEvents> {
 
   private setupEventForwarding(): void {
     // Forward events from API client
-    this.apiClient.on('debug', (message) => {
-      this.emit('request:start', message as any);
+    this.apiClient.on('debug', (_message) => {
+      // Debug events are not request:start events, ignore this forwarding
     });
   }
 }
