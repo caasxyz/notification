@@ -6,9 +6,9 @@ compatibility_flags = ["nodejs_compat"]
 # Account ID will be replaced by GitHub Actions
 account_id = "PLACEHOLDER_ACCOUNT_ID"
 
-# Cron triggers - defined at root level for all environments
-[[triggers.crons]]
-cron = "*/5 * * * *"
+# Cron triggers - temporarily disabled due to API limitations
+# [[triggers.crons]]
+# cron = "*/5 * * * *"
 
 # Development environment
 [env.development]

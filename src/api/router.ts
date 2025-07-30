@@ -46,6 +46,7 @@ const PROTECTED_PATHS = [
   '/api/queue/clear-retries',
   '/api/queue/purge-test-data',
   '/api/queue/clear-messages',
+  '/api/scheduled-tasks/trigger',
   '/metrics',
 ];
 
@@ -144,6 +145,12 @@ export async function handleApiRequest(
     if (path === '/api/notifications/retry' && method === 'POST') {
       const { triggerRetryHandler } = await import('./handlers/triggerRetry');
       return withCORS(await triggerRetryHandler(request, env));
+    }
+    
+    // Manual trigger for scheduled tasks (temporary solution)
+    if (path === '/api/scheduled-tasks/trigger' && method === 'POST') {
+      const { triggerScheduledTaskHandler } = await import('./handlers/triggerScheduledTask');
+      return withCORS(await triggerScheduledTaskHandler(request, env));
     }
     
     // Queue management endpoints
