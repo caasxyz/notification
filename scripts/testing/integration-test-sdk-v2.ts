@@ -7,6 +7,7 @@
  */
 
 import { EnhancedNotificationClient } from '../../sdk/dist/index.js';
+import * as crypto from 'crypto';
 
 // 配置
 const config = {
@@ -100,7 +101,6 @@ async function directApiCall(
 
   if (config.apiSecret) {
     // 使用 SDK 的签名方法
-    const { createHmacSignature } = await import('../../sdk/dist/index.js');
     let payload: string;
     if (method === 'GET' || method === 'DELETE') {
       const urlObj = new URL(url);
@@ -110,7 +110,10 @@ async function directApiCall(
     }
     
     headers['X-Timestamp'] = timestamp;
-    headers['X-Signature'] = createHmacSignature(timestamp + payload, config.apiSecret);
+    headers['X-Signature'] = crypto
+      .createHmac('sha256', config.apiSecret)
+      .update(timestamp + payload)
+      .digest('hex');
   }
 
   const options: RequestInit = {
