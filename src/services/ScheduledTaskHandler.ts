@@ -58,7 +58,7 @@ export class ScheduledTaskHandler {
   }
 
   private static getTaskName(cron: string): string {
-    if (cron.includes('2 * * *') || cron.includes('*/4 * * *')) {
+    if (cron.includes('2 * * *') || cron.includes('*/4 * * *') || cron.includes('*/5 * * * *')) {
       return 'data_cleanup';
     }
     

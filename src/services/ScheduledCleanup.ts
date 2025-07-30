@@ -87,7 +87,11 @@ export class ScheduledCleanup {
     
     const deletedCount = toDelete[0]?.count ?? 0;
     
-    if (deletedCount > 0) {
+    // Only perform cleanup if there are more than 100 records to delete
+    // This prevents running DELETE queries too frequently
+    const CLEANUP_THRESHOLD = 100;
+    
+    if (deletedCount > CLEANUP_THRESHOLD) {
       await db
         .delete(notificationLogs)
         .where(
@@ -96,16 +100,22 @@ export class ScheduledCleanup {
             inArray(notificationLogs.status, ['sent', 'failed'])
           )
         );
-    }
-
-    if (deletedCount > 0) {
+      
       this.logger.info('Cleaned up old notification logs', {
         deletedCount,
         cutoffDate: cutoffDateStr,
       });
+      
+      return deletedCount;
+    } else if (deletedCount > 0) {
+      this.logger.info('Skipping cleanup - below threshold', {
+        pendingCount: deletedCount,
+        threshold: CLEANUP_THRESHOLD,
+        cutoffDate: cutoffDateStr,
+      });
     }
 
-    return deletedCount;
+    return 0;
   }
 
   private static async cleanupCacheStats(env: Env): Promise<number> {
