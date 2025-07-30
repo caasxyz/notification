@@ -68,10 +68,10 @@ export async function cleanupLogsHandler(
     // Count records to be deleted first
     const db = getDb(env);
     
-    // Only delete logs with status 'sent' or 'failed'
+    // Delete logs with various statuses (excluding active retries)
     const whereCondition = and(
       lt(notificationLogs.created_at, beforeDate.toISOString()),
-      inArray(notificationLogs.status, ['sent', 'failed'])
+      inArray(notificationLogs.status, ['sent', 'failed', 'pending', 'retry', 'retry_scheduled'])
     );
     
     const countResult = await db

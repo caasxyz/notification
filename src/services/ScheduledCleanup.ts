@@ -81,23 +81,23 @@ export class ScheduledCleanup {
       .where(
         and(
           lte(notificationLogs.created_at, cutoffDateStr),
-          inArray(notificationLogs.status, ['sent', 'failed'])
+          inArray(notificationLogs.status, ['sent', 'failed', 'pending', 'retry', 'retry_scheduled'])
         )
       );
     
     const deletedCount = toDelete[0]?.count ?? 0;
     
-    // Only perform cleanup if there are more than 100 records to delete
-    // This prevents running DELETE queries too frequently
-    const CLEANUP_THRESHOLD = 100;
+    // Only perform cleanup if there are records to delete
+    // Lower threshold to ensure cleanup happens even with small amounts of data
+    const CLEANUP_THRESHOLD = 10;
     
-    if (deletedCount > CLEANUP_THRESHOLD) {
+    if (deletedCount >= CLEANUP_THRESHOLD) {
       await db
         .delete(notificationLogs)
         .where(
           and(
             lte(notificationLogs.created_at, cutoffDateStr),
-            inArray(notificationLogs.status, ['sent', 'failed'])
+            inArray(notificationLogs.status, ['sent', 'failed', 'pending', 'retry', 'retry_scheduled'])
           )
         );
       
@@ -227,7 +227,7 @@ export class ScheduledCleanup {
       .where(
         and(
           lte(notificationLogs.created_at, logsCutoffStr),
-          inArray(notificationLogs.status, ['sent', 'failed'])
+          inArray(notificationLogs.status, ['sent', 'failed', 'pending', 'retry', 'retry_scheduled'])
         )
       );
     const logsCount = logsCountResult[0]?.count ?? 0;
