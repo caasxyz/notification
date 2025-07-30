@@ -7,7 +7,7 @@ import { ConfigCache } from './ConfigCache';
 
 export class ScheduledCleanup {
   private static logger = Logger.getInstance();
-  private static readonly DEFAULT_RETENTION_HOURS = 72;
+  private static readonly DEFAULT_RETENTION_HOURS = 168; // 7 days
 
   static async executeCleanup(env: Env): Promise<CleanupResult> {
     const startTime = Date.now();
