@@ -136,15 +136,15 @@ export class QuickNotification {
   }
 
   /**
-   * 发送邮件通知
+   * 发送 Webhook 通知
    */
-  async email(userId: string, subject: string, content: string): Promise<NotificationResponse> {
+  async webhook(userId: string, content: string, data?: Record<string, unknown>): Promise<NotificationResponse> {
     return this.client.sendNotification({
       user_id: userId,
-      channels: ['email'],
+      channels: ['webhook'],
       custom_content: {
-        subject,
         content,
+        ...(data ? { data } : {}),
       },
     });
   }
@@ -175,18 +175,6 @@ export class QuickNotification {
     });
   }
 
-  /**
-   * 发送 Webhook 通知
-   */
-  async webhook(userId: string, content: string): Promise<NotificationResponse> {
-    return this.client.sendNotification({
-      user_id: userId,
-      channels: ['webhook'],
-      custom_content: {
-        content,
-      },
-    });
-  }
 
   /**
    * 使用模板发送通知到所有配置的渠道
@@ -198,7 +186,7 @@ export class QuickNotification {
   ): Promise<NotificationResponse> {
     // 获取用户配置的所有渠道
     const configs = await this.client.configs.list(userId);
-    const channels = configs.data?.map(c => c.channel_type).filter(Boolean) ?? ['email'];
+    const channels = configs.data?.map(c => c.channel_type).filter(Boolean) ?? ['webhook'];
 
     return this.client.sendNotification({
       user_id: userId,

@@ -93,7 +93,8 @@ class SDKProductionTests {
     // 健康检查
     await runTest('健康检查', 'basic', async () => {
       const result = await client.health();
-      if (!result.success) throw new Error('Health check failed');
+      // API 返回的是 data 对象，不是 success 字段
+      if (!result || !(result as any).data) throw new Error('Health check failed');
       return result;
     });
 
@@ -127,12 +128,12 @@ class SDKProductionTests {
       });
     }
 
-    // 创建 Email 配置
-    await runTest('创建 Email 配置', 'config', async () => {
-      return await client.configs.set(config.testUserId, 'email', {
-        channel_type: 'email',
+    // 创建 Webhook 配置（替代 Email）
+    await runTest('创建 Webhook 配置', 'config', async () => {
+      return await client.configs.set(config.testUserId, 'webhook', {
+        channel_type: 'webhook',
         config: {
-          email: config.testEmail,
+          url: 'https://httpbin.org/post',
         },
         is_active: true,
       });
@@ -208,11 +209,11 @@ class SDKProductionTests {
       });
     }
 
-    await runTest('快速 Email 发送', 'quick', async () => {
-      return await client.quick.email(
+    // 快速 Webhook 发送
+    await runTest('快速 Webhook 发送', 'quick', async () => {
+      return await client.quick.webhook(
         config.testUserId,
-        'SDK 测试邮件',
-        '这是通过快速发送 API 发送的测试邮件'
+        '这是通过快速发送 API 发送的 Webhook 消息'
       );
     });
   }
@@ -276,12 +277,12 @@ class SDKProductionTests {
       const notifications = [
         {
           user_id: config.testUserId,
-          channels: ['email'] as any,
+          channels: ['webhook'] as any,
           custom_content: { content: '批量通知 1' },
         },
         {
           user_id: config.testUserId,
-          channels: ['email'] as any,
+          channels: ['webhook'] as any,
           custom_content: { content: '批量通知 2' },
         },
       ];
@@ -391,8 +392,8 @@ class SDKProductionTests {
       return await client.configs.delete(config.testUserId, 'lark');
     });
 
-    await runTest('删除 Email 配置', 'cleanup', async () => {
-      return await client.configs.delete(config.testUserId, 'email');
+    await runTest('删除 Webhook 配置', 'cleanup', async () => {
+      return await client.configs.delete(config.testUserId, 'webhook');
     });
 
     // 清理日志

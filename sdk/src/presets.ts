@@ -13,7 +13,7 @@ export class NotificationPresets {
   async welcome(userId: string, userName: string, extra?: Record<string, unknown>): Promise<NotificationResponse> {
     return this.client.sendNotification({
       user_id: userId,
-      channels: ['email', 'lark'],
+      channels: ['webhook', 'lark'],
       template_key: 'welcome',
       variables: {
         name: userName,
@@ -28,7 +28,7 @@ export class NotificationPresets {
   async passwordReset(userId: string, resetLink: string, expiresIn = '24 hours'): Promise<NotificationResponse> {
     return this.client.sendNotification({
       user_id: userId,
-      channels: ['email'],
+      channels: ['webhook'],
       template_key: 'password_reset',
       variables: {
         reset_link: resetLink,
@@ -48,7 +48,7 @@ export class NotificationPresets {
   ): Promise<NotificationResponse> {
     return this.client.sendNotification({
       user_id: userId,
-      channels: ['email', 'lark', 'telegram'],
+      channels: ['webhook', 'lark', 'telegram'],
       template_key: `order_${status}`,
       variables: {
         order_id: orderId,
@@ -69,7 +69,7 @@ export class NotificationPresets {
   ): Promise<NotificationResponse> {
     return this.client.sendNotification({
       user_id: userId,
-      channels: ['email', 'lark'],
+      channels: ['webhook', 'lark'],
       template_key: 'payment_success',
       variables: {
         amount,
@@ -95,7 +95,7 @@ export class NotificationPresets {
   ): Promise<NotificationResponse> {
     return this.client.sendNotification({
       user_id: userId,
-      channels: ['email', 'telegram'], // 安全通知优先使用可靠渠道
+      channels: ['webhook', 'telegram'], // 安全通知优先使用可靠渠道
       template_key: `security_${alertType}`,
       variables: {
         alert_type: alertType,
@@ -118,7 +118,7 @@ export class NotificationPresets {
   ): Promise<NotificationResponse> {
     return this.client.sendNotification({
       user_id: userId,
-      channels: ['email', 'lark', 'webhook'],
+      channels: ['webhook', 'lark', 'webhook'],
       template_key: 'system_maintenance',
       variables: {
         start_time: maintenanceWindow.start,
@@ -140,15 +140,15 @@ export class NotificationPresets {
   ): Promise<NotificationResponse> {
     // 根据严重程度选择渠道
     const channelsBySeverity: Record<string, ChannelType[]> = {
-      info: ['email'],
-      warning: ['email', 'lark'],
-      error: ['email', 'lark', 'telegram'],
-      critical: ['email', 'lark', 'telegram', 'webhook'],
+      info: ['webhook'],
+      warning: ['webhook', 'lark'],
+      error: ['webhook', 'lark', 'telegram'],
+      critical: ['webhook', 'lark', 'telegram', 'webhook'],
     };
 
     return this.client.sendNotification({
       user_id: userId,
-      channels: channelsBySeverity[severity] ?? ['email'],
+      channels: channelsBySeverity[severity] ?? ['webhook'],
       template_key: 'alert',
       variables: {
         severity,
@@ -170,7 +170,7 @@ export class NotificationPresets {
   ): Promise<NotificationResponse> {
     return this.client.sendNotification({
       user_id: userId,
-      channels: ['email', 'telegram'], // 验证码使用快速渠道
+      channels: ['webhook', 'telegram'], // 验证码使用快速渠道
       template_key: 'verification_code',
       variables: {
         code,
@@ -197,7 +197,7 @@ export class NotificationPresets {
   ): Promise<NotificationResponse> {
     return this.client.sendNotification({
       user_id: userId,
-      channels: ['email'],
+      channels: ['webhook'],
       template_key: `report_${reportType}`,
       variables: {
         report_type: reportType,

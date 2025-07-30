@@ -82,7 +82,7 @@ export class EnhancedNotificationClient extends NotificationClient {
       } catch (error) {
         // 如果获取配置失败，使用智能渠道选择
         targetChannels = await this.smartChannel.selectChannels(userId, {
-          preferredChannels: ['email', 'lark'],
+          preferredChannels: ['lark', 'webhook'],
           maxChannels: 2
         });
       }
@@ -224,7 +224,7 @@ export class EnhancedNotificationClient extends NotificationClient {
    */
   createSession(userId: string, defaultChannels?: ChannelType[]): {
     send: (content: string, options?: { subject?: string; template?: string; variables?: Record<string, unknown> }) => Promise<NotificationResponse>;
-    email: (subject: string, content: string) => Promise<NotificationResponse>;
+    webhook: (content: string) => Promise<NotificationResponse>;
     lark: (content: string) => Promise<NotificationResponse>;
     fromTemplate: (templateKey: string, variables?: Record<string, unknown>) => Promise<NotificationResponse>;
   } {
@@ -232,7 +232,7 @@ export class EnhancedNotificationClient extends NotificationClient {
       send: (content: string, options?: { subject?: string; template?: string; variables?: Record<string, unknown> }) => {
         const request: NotificationRequest = {
           user_id: userId,
-          channels: defaultChannels ?? ['email'],
+          channels: defaultChannels ?? ['webhook'],
           custom_content: {
             content,
             ...(options?.subject !== undefined && options.subject !== null && options.subject !== '' ? { subject: options.subject } : {}),
@@ -250,8 +250,8 @@ export class EnhancedNotificationClient extends NotificationClient {
         return this.sendNotification(request);
       },
 
-      email: (subject: string, content: string) => 
-        this.quick.email(userId, subject, content),
+      webhook: (content: string) => 
+        this.quick.webhook(userId, content),
 
       lark: (content: string) => 
         this.quick.lark(userId, content),

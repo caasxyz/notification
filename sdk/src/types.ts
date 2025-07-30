@@ -1,4 +1,4 @@
-export type ChannelType = 'lark' | 'webhook' | 'telegram' | 'email' | 'sms';
+export type ChannelType = 'lark' | 'webhook' | 'telegram' | 'slack';
 
 export interface NotificationRequest {
   user_id: string;

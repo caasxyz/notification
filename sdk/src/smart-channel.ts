@@ -7,19 +7,18 @@ import { ChannelType } from './types';
 export class SmartChannelSelector {
   // 渠道优先级配置
   private channelPriority: Record<string, ChannelType[]> = {
-    urgent: ['telegram', 'lark', 'email', 'webhook'],
-    normal: ['email', 'lark', 'telegram', 'webhook'],
-    marketing: ['email', 'webhook'],
-    transactional: ['email', 'telegram', 'lark'],
+    urgent: ['telegram', 'lark', 'slack', 'webhook'],
+    normal: ['lark', 'telegram', 'webhook', 'slack'],
+    marketing: ['webhook', 'slack'],
+    transactional: ['telegram', 'lark', 'webhook'],
   };
 
   // 渠道降级映射
   private fallbackMap: Record<ChannelType, ChannelType[]> = {
-    email: ['lark', 'telegram', 'webhook'],
-    lark: ['email', 'telegram', 'webhook'],
-    telegram: ['lark', 'email', 'webhook'],
-    webhook: ['email', 'lark', 'telegram'],
-    sms: ['telegram', 'email'],
+    lark: ['telegram', 'webhook', 'slack'],
+    telegram: ['lark', 'webhook', 'slack'],
+    webhook: ['lark', 'telegram', 'slack'],
+    slack: ['lark', 'telegram', 'webhook'],
   };
 
   constructor(private client: NotificationClient) {}
@@ -43,7 +42,7 @@ export class SmartChannelSelector {
 
     if (activeChannels.length === 0) {
       // 如果用户没有配置渠道，返回默认渠道
-      return ['email'];
+      return ['webhook'];
     }
 
     // 根据优先级排序渠道
@@ -72,7 +71,7 @@ export class SmartChannelSelector {
       selectedChannels = selectedChannels.slice(0, options.maxChannels);
     }
 
-    return selectedChannels.length > 0 ? selectedChannels : ['email'];
+    return selectedChannels.length > 0 ? selectedChannels : ['webhook'];
   }
 
   /**
@@ -107,7 +106,7 @@ export class SmartChannelSelector {
     const recommended: ChannelType[] = [];
 
     // 邮件适合所有类型的内容
-    recommended.push('email');
+    recommended.push('webhook');
 
     // Lark 支持 Markdown 和富文本
     if ((content.isMarkdown === true) || (content.hasImage === true)) {
@@ -133,13 +132,13 @@ export class SmartChannelSelector {
       case 'immediate':
         return ['telegram', 'lark', 'webhook']; // 实时渠道
       case 'high':
-        return ['telegram', 'lark', 'email'];
+        return ['telegram', 'lark', 'webhook'];
       case 'normal':
-        return ['email', 'lark'];
+        return ['webhook', 'lark'];
       case 'low':
-        return ['email']; // 非实时渠道
+        return ['webhook']; // 非实时渠道
       default:
-        return ['email'];
+        return ['webhook'];
     }
   }
 
