@@ -4,7 +4,7 @@
  * 自动生成的文件，请勿手动编辑！
  * 如需修改，请编辑 src/ui/testUI.html 然后运行 npm run build:testui
  * 
- * Generated at: 2025-07-30T09:01:38.014Z
+ * Generated at: 2025-07-30T09:12:59.697Z
  */
 
 /**
@@ -922,6 +922,7 @@ export function getTestUIHTML(): string {
                 { id: 'userconfig', name: '用户配置', icon: 'user-cog' },
                 { id: 'templates', name: '模板管理', icon: 'file-alt' },
                 { id: 'logs', name: '通知日志', icon: 'history' },
+                { id: 'queue', name: '队列管理', icon: 'tasks' },
                 { id: 'health', name: '健康检查', icon: 'heartbeat' },
                 { id: 'metrics', name: '系统指标', icon: 'chart-line' },
                 { id: 'grafana', name: 'Grafana', icon: 'chart-area' }
@@ -954,6 +955,7 @@ export function getTestUIHTML(): string {
                 userconfig: <UserConfigTab baseUrl={baseUrl} showResponse={showResponse} apiSecret={apiSecret} generateGetSignature={generateGetSignature} generateSignature={generateSignature} showToast={showToast} />,
                 templates: <TemplatesTab baseUrl={baseUrl} showResponse={showResponse} apiSecret={apiSecret} generateGetSignature={generateGetSignature} generateSignature={generateSignature} showToast={showToast} />,
                 logs: <LogsTab baseUrl={baseUrl} showResponse={showResponse} apiSecret={apiSecret} generateGetSignature={generateGetSignature} generateSignature={generateSignature} showToast={showToast} />,
+                queue: <QueueManagementTab baseUrl={baseUrl} apiSecret={apiSecret} generateGetSignature={generateGetSignature} generateSignature={generateSignature} showToast={showToast} />,
                 health: <HealthTab baseUrl={baseUrl} showResponse={showResponse} showToast={showToast} />,
                 metrics: <MetricsTab baseUrl={baseUrl} showResponse={showResponse} apiSecret={apiSecret} generateGetSignature={generateGetSignature} showToast={showToast} />,
                 grafana: <GrafanaTab baseUrl={baseUrl} showResponse={showResponse} environment={environment} showToast={showToast} />
@@ -2117,6 +2119,176 @@ export function getTestUIHTML(): string {
                                     立即重试
                                 </button>
                             </div>
+                        </div>
+                    </div>
+                </div>
+            );
+        }
+        
+        // Queue Management Tab Component
+        function QueueManagementTab({ baseUrl, apiSecret, generateGetSignature, generateSignature, showToast }) {
+            const [queueStatus, setQueueStatus] = useState(null);
+            const [loading, setLoading] = useState(false);
+            
+            // Get queue status
+            const getQueueStatus = async () => {
+                setLoading(true);
+                try {
+                    const timestamp = Date.now().toString();
+                    const url = baseUrl + '/api/queue/status';
+                    const signature = await generateGetSignature(timestamp, url, apiSecret);
+                    
+                    const response = await fetch(url, {
+                        headers: {
+                            'X-Timestamp': timestamp,
+                            'X-Signature': signature
+                        }
+                    });
+                    
+                    const data = await response.json();
+                    if (data.success) {
+                        setQueueStatus(data.data);
+                        showToast('队列状态获取成功', 'success');
+                    } else {
+                        showToast(data.error || '获取队列状态失败', 'error');
+                    }
+                } catch (error) {
+                    showToast('获取队列状态失败: ' + error.message, 'error');
+                } finally {
+                    setLoading(false);
+                }
+            };
+            
+            // Clear queue messages
+            const clearQueueMessages = async (queueName) => {
+                if (!confirm(\`注意：清理队列 \${queueName} 的所有消息是不可逆的操作！\\n\\n确定要继续吗？\`)) {
+                    return;
+                }
+                
+                try {
+                    const timestamp = Date.now().toString();
+                    const body = JSON.stringify({ queueName });
+                    const signature = await generateSignature(timestamp, body, apiSecret);
+                    
+                    const response = await fetch(baseUrl + '/api/queue/clear-messages', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-Timestamp': timestamp,
+                            'X-Signature': signature
+                        },
+                        body
+                    });
+                    
+                    const data = await response.json();
+                    if (data.success) {
+                        showToast(data.message || '队列清理成功', 'success');
+                        getQueueStatus(); // Refresh status
+                    } else {
+                        showToast(data.message || data.error || '清理队列失败', 'error');
+                        if (data.hint) {
+                            alert(\`提示：\${data.hint}\`);
+                        }
+                    }
+                } catch (error) {
+                    showToast('清理队列失败: ' + error.message, 'error');
+                }
+            };
+            
+            useEffect(() => {
+                getQueueStatus();
+            }, []);
+            
+            return (
+                <div>
+                    <h2 className="text-xl font-bold mb-6 flex items-center gap-2">
+                        <Icon name="tasks" className="text-gray-600" />
+                        队列管理
+                    </h2>
+                    
+                    <div className="space-y-6">
+                        {/* Queue Status */}
+                        <div className="bg-gray-50 rounded-lg p-6">
+                            <div className="flex items-center justify-between mb-4">
+                                <h3 className="text-lg font-semibold">队列状态</h3>
+                                <button
+                                    className="btn btn-sm btn-secondary"
+                                    onClick={getQueueStatus}
+                                    disabled={loading}
+                                >
+                                    <Icon name="sync" className={loading ? 'animate-spin' : ''} />
+                                    刷新
+                                </button>
+                            </div>
+                            
+                            {queueStatus ? (
+                                <div className="space-y-4">
+                                    {/* Queues Status */}
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        {queueStatus.queues.map(queue => (
+                                            <div key={queue.name} className="bg-white rounded-lg p-4 shadow-sm">
+                                                <div className="flex items-center justify-between mb-2">
+                                                    <h4 className="font-medium">{queue.name}</h4>
+                                                    <button
+                                                        className="btn btn-sm btn-danger"
+                                                        onClick={() => clearQueueMessages(queue.name)}
+                                                    >
+                                                        <Icon name="trash" />
+                                                        清空队列
+                                                    </button>
+                                                </div>
+                                                <div className="text-sm text-gray-600">
+                                                    <p>队列大小: {queue.size === -1 ? '未知' : queue.size}</p>
+                                                    {queue.size === -1 && (
+                                                        <p className="text-xs text-gray-500 mt-1">
+                                                            * Cloudflare Queues API 不提供队列大小信息
+                                                        </p>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                    
+                                    {/* Pending Retries */}
+                                    {queueStatus.pendingRetries && (
+                                        <div className="bg-white rounded-lg p-4 shadow-sm">
+                                            <h4 className="font-medium mb-3">
+                                                待重试任务 ({queueStatus.pendingRetries.count})
+                                            </h4>
+                                            {queueStatus.pendingRetries.count > 0 ? (
+                                                <div className="max-h-60 overflow-y-auto">
+                                                    {queueStatus.pendingRetries.items.map(item => (
+                                                        <div key={item.id} className="mb-2 p-2 bg-gray-50 rounded text-sm">
+                                                            <div className="flex items-center gap-2">
+                                                                <span className="font-mono">{item.user_id}</span>
+                                                                <span className="badge badge-info text-xs">{item.channel}</span>
+                                                                <span className="badge badge-warning text-xs">
+                                                                    重试 {item.retry_count}
+                                                                </span>
+                                                            </div>
+                                                            <div className="text-xs text-gray-500">
+                                                                {new Date(item.created_at).toLocaleString('zh-CN')}
+                                                            </div>
+                                                            {item.error_message && (
+                                                                <div className="text-xs text-red-600 mt-1">
+                                                                    错误: {item.error_message}
+                                                                </div>
+                                                            )}
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            ) : (
+                                                <p className="text-gray-500 text-sm">暂无待重试任务</p>
+                                            )}
+                                        </div>
+                                    )}
+                                </div>
+                            ) : (
+                                <div className="text-center py-8">
+                                    <Icon name="spinner" className="text-4xl text-gray-400 animate-spin" />
+                                    <p className="text-gray-500 mt-2">加载中...</p>
+                                </div>
+                            )}
                         </div>
                     </div>
                 </div>
