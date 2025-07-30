@@ -2,7 +2,7 @@ import { Env } from '../../types';
 import { Logger } from '../../utils/logger';
 import { getDb } from '../../db/index';
 import { notificationLogs } from '../../db/schema';
-import { lt, sql } from 'drizzle-orm';
+import { lt, sql, and, inArray } from 'drizzle-orm';
 import { ValidationUtils } from '../../utils/validation';
 
 const logger = Logger.getInstance();
@@ -67,10 +67,17 @@ export async function cleanupLogsHandler(
     
     // Count records to be deleted first
     const db = getDb(env);
+    
+    // Only delete logs with status 'sent' or 'failed'
+    const whereCondition = and(
+      lt(notificationLogs.created_at, beforeDate.toISOString()),
+      inArray(notificationLogs.status, ['sent', 'failed'])
+    );
+    
     const countResult = await db
       .select({ count: sql<number>`count(*)` })
       .from(notificationLogs)
-      .where(lt(notificationLogs.created_at, beforeDate.toISOString()));
+      .where(whereCondition);
     
     const deleteCount = countResult[0]?.count || 0;
     
@@ -94,7 +101,7 @@ export async function cleanupLogsHandler(
     // Execute delete operation using Drizzle ORM
     await db
       .delete(notificationLogs)
-      .where(lt(notificationLogs.created_at, beforeDate.toISOString()));
+      .where(whereCondition);
     
     logger.info('Cleaned up old notification logs', {
       before: beforeDate.toISOString(),
@@ -117,10 +124,23 @@ export async function cleanupLogsHandler(
   } catch (error) {
     logger.error('Failed to cleanup logs', error);
     
+    // Provide more detailed error information
+    let errorMessage = 'Internal server error';
+    let errorDetails: any = {};
+    
+    if (error instanceof Error) {
+      errorMessage = error.message;
+      errorDetails = {
+        name: error.name,
+        stack: error.stack,
+      };
+    }
+    
     return new Response(
       JSON.stringify({
         success: false,
-        error: error instanceof Error ? error.message : 'Internal server error',
+        error: errorMessage,
+        details: process.env.NODE_ENV === 'development' ? errorDetails : undefined,
       }),
       {
         status: 500,
