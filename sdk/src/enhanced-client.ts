@@ -89,7 +89,7 @@ export class EnhancedNotificationClient extends NotificationClient {
     }
 
     // 确保有渠道
-    if (!targetChannels || targetChannels.length === 0) {
+    if (targetChannels.length === 0) {
       throw new NotificationError('No channels available for notification');
     }
 
