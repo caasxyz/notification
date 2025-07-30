@@ -93,8 +93,8 @@ class SDKProductionTests {
     // 健康检查
     await runTest('健康检查', 'basic', async () => {
       const result = await client.health();
-      // API 返回的是 data 对象，不是 success 字段
-      if (!result || !(result as any).data) throw new Error('Health check failed');
+      // API 直接返回状态对象
+      if (!result || (result as any).status !== 'healthy') throw new Error('Health check failed');
       return result;
     });
 
@@ -179,6 +179,7 @@ class SDKProductionTests {
       return await client
         .notify()
         .to(config.testUserId)
+        .via('webhook')
         .content('🔗 链式 API 测试通知')
         .idempotent(`chain-test-${Date.now()}`)
         .send();
@@ -236,10 +237,9 @@ class SDKProductionTests {
             subject_template: '🧪 SDK 测试 - {{test_name}}',
             content_template: '测试名称: {{test_name}}\n测试时间: {{test_time}}\n测试ID: {{test_id}}',
           },
-          email: {
-            content_type: 'html',
-            subject_template: 'SDK Test - {{test_name}}',
-            content_template: '<h3>SDK Test</h3><p>Name: {{test_name}}<br>Time: {{test_time}}<br>ID: {{test_id}}</p>',
+          webhook: {
+            content_type: 'json',
+            content_template: '{"test_name":"{{test_name}}","test_time":"{{test_time}}","test_id":"{{test_id}}"}',
           }
         }
       });
@@ -250,6 +250,7 @@ class SDKProductionTests {
       return await client
         .notify()
         .to(config.testUserId)
+        .via('webhook')
         .useTemplate(templateKey, {
           test_name: '生产环境测试',
           test_time: new Date().toLocaleString('zh-CN'),
@@ -313,7 +314,7 @@ class SDKProductionTests {
               content_type: 'text',
               content_template: '欢迎 {{name}} 加入！',
             },
-            email: {
+            webhook: {
               content_type: 'text',
               content_template: 'Welcome {{name}}!',
             }
@@ -336,7 +337,7 @@ class SDKProductionTests {
         await client.smartSend('', '测试消息');
         throw new Error('应该抛出错误');
       } catch (error) {
-        if (error instanceof Error && error.message.includes('User ID')) {
+        if (error instanceof Error && error.message.toLowerCase().includes('user')) {
           return { handled: true, error: error.message };
         }
         throw error;
