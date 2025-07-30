@@ -4,7 +4,7 @@ export interface NotificationRequest {
   user_id: string;
   channels?: ChannelType[];
   template_key?: string;
-  variables?: Record<string, any>;
+  variables?: Record<string, unknown>;
   custom_content?: {
     subject?: string;
     content: string;
@@ -31,7 +31,7 @@ export interface ChannelResult {
 
 export interface UserConfig {
   channel_type: ChannelType;
-  config: Record<string, any>;
+  config: Record<string, unknown>;
   is_active?: boolean;
 }
 
@@ -50,14 +50,14 @@ export interface Template {
   subject_template?: string;
   content_template?: string;
   allowed_channels?: ChannelType[];
-  default_variables?: Record<string, any>;
+  default_variables?: Record<string, unknown>;
 }
 
 export interface User {
   user_id: string;
   name?: string;
   email?: string;
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
 }
 
 export interface NotificationLog {
@@ -67,7 +67,7 @@ export interface NotificationLog {
   message_id: string;
   channel_type: ChannelType;
   template_key?: string;
-  variables?: Record<string, any>;
+  variables?: Record<string, unknown>;
   content: string;
   subject?: string;
   status: 'pending' | 'sent' | 'failed' | 'retry';
@@ -103,17 +103,19 @@ export interface ErrorResponse {
   success: false;
   error: string;
   code?: string;
-  details?: any;
+  details?: unknown;
 }
 
 export class NotificationError extends Error {
   public code?: string;
-  public details?: any;
+  public details?: unknown;
 
-  constructor(message: string, code?: string, details?: any) {
+  constructor(message: string, code?: string, details?: unknown) {
     super(message);
     this.name = 'NotificationError';
-    this.code = code;
+    if (code !== undefined) {
+      this.code = code;
+    }
     this.details = details;
   }
 }

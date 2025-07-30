@@ -5,9 +5,11 @@ export class TemplateRenderer {
   /**
    * Render a template with variables
    */
-  static render(template: string, variables: Record<string, any>): string {
-    return template.replace(/\{\{(\w+)\}\}/g, (match, key) => {
-      return variables[key] !== undefined ? String(variables[key]) : match;
+  static render(template: string, variables: Record<string, unknown>): string {
+    return template.replace(/\{\{(\w+)\}\}/g, (match, key: string) => {
+      return Object.prototype.hasOwnProperty.call(variables, key) && variables[key] !== undefined 
+        ? String(variables[key]) 
+        : match;
     });
   }
 
@@ -25,7 +27,7 @@ export class TemplateRenderer {
    */
   static validateVariables(
     template: string,
-    variables: Record<string, any>
+    variables: Record<string, unknown>
   ): { valid: boolean; missing: string[] } {
     const required = this.extractVariables(template);
     const missing = required.filter(key => !(key in variables));
