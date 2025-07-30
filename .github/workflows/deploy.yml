@@ -358,7 +358,9 @@ jobs:
       - name: Update SDK version
         working-directory: ./sdk
         run: |
+          # 更新 package.json 中的版本号
           npm version ${{ steps.new_version.outputs.new_version }} --no-git-tag-version
+          echo "✅ Updated package.json version to ${{ steps.new_version.outputs.new_version }}"
           
       - name: Build SDK
         working-directory: ./sdk
@@ -369,6 +371,11 @@ jobs:
         env:
           NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
+          # 确保使用正确的认证
+          echo "@caasxyz:registry=https://npm.pkg.github.com" > ~/.npmrc
+          echo "//npm.pkg.github.com/:_authToken=${{ secrets.GITHUB_TOKEN }}" >> ~/.npmrc
+          
+          # 发布新版本
           npm publish
           echo "✅ SDK v${{ steps.new_version.outputs.new_version }} published to GitHub Packages"
           
