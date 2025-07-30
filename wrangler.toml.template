@@ -6,6 +6,10 @@ compatibility_flags = ["nodejs_compat"]
 # Account ID will be replaced by GitHub Actions
 account_id = "PLACEHOLDER_ACCOUNT_ID"
 
+# Cron triggers - defined at root level for all environments
+[[triggers.crons]]
+cron = "*/5 * * * *"
+
 # Development environment
 [env.development]
 name = "notification-system-dev"
@@ -36,10 +40,6 @@ max_batch_timeout = 30
 queue = "failed-queue-dev"
 max_batch_size = 10
 max_batch_timeout = 30
-
-# Cron triggers for scheduled tasks
-[[env.development.triggers.crons]]
-cron = "*/5 * * * *"
 
 [env.development.vars]
 API_SECRET_KEY = "dev-secret-key-for-testing"
@@ -80,10 +80,6 @@ max_batch_timeout = 30
 queue = "failed-queue"
 max_batch_size = 25
 max_batch_timeout = 30
-
-# Cron triggers for scheduled tasks
-[[env.production.triggers.crons]]
-cron = "*/5 * * * *"
 
 [env.production.vars]
 # These should be set as secrets in GitHub
