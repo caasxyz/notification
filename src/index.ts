@@ -92,7 +92,10 @@ export default {
     });
 
     try {
-      await ScheduledTaskHandler.handleScheduledEvent(event, env, ctx);
+      // Wrap scheduled task handler with database initialization
+      await withDatabaseInit(env, async () => {
+        await ScheduledTaskHandler.handleScheduledEvent(event, env, ctx);
+      });
     } catch (error) {
       logger.error('Scheduled task failed', error, {
         cron: event.cron,

@@ -13,7 +13,18 @@ export class ScheduledTaskHandler {
     env: Env,
     _ctx: ExecutionContext,
   ): Promise<void> {
+    this.logger.info('handleScheduledEvent called', {
+      cron: event.cron,
+      scheduledTime: event.scheduledTime,
+      eventType: event.type,
+    });
+
     const taskName = this.getTaskName(event.cron);
+    
+    this.logger.info('Task identified', {
+      taskName,
+      cron: event.cron,
+    });
     
     Logger.logScheduledTask(taskName, 'started', {
       cron: event.cron,
@@ -27,13 +38,15 @@ export class ScheduledTaskHandler {
 
       switch (taskName) {
         case 'data_cleanup':
+          this.logger.info('Executing data_cleanup task');
           result = await ScheduledCleanup.executeCleanup(env);
           break;
         case 'monitoring':
+          this.logger.info('Executing monitoring task');
           result = await ScheduledTaskMonitor.executeMonitoring(env);
           break;
         default:
-          this.logger.warn('Unknown scheduled task', { cron: event.cron });
+          this.logger.warn('Unknown scheduled task', { cron: event.cron, taskName });
           return;
       }
 

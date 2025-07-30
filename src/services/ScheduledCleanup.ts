@@ -16,7 +16,10 @@ export class ScheduledCleanup {
     let cleanedKeys = 0;
     let cleanedCache = 0;
 
-    this.logger.info('Starting scheduled cleanup');
+    this.logger.info('Starting scheduled cleanup', {
+      env: env.ENVIRONMENT,
+      timestamp: new Date().toISOString(),
+    });
 
     try {
       cleanedLogs = await this.cleanupOldNotificationLogs(env);
@@ -71,6 +74,12 @@ export class ScheduledCleanup {
     const cutoffDate = new Date();
     cutoffDate.setHours(cutoffDate.getHours() - retentionHours);
     const cutoffDateStr = cutoffDate.toISOString();
+
+    this.logger.info('Cleanup parameters', {
+      retentionHours,
+      cutoffDate: cutoffDateStr,
+      currentTime: new Date().toISOString(),
+    });
 
     const db = getDb(env);
     
