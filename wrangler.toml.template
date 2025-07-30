@@ -11,8 +11,8 @@ account_id = "PLACEHOLDER_ACCOUNT_ID"
 name = "notification-system-dev"
 
 # Cron triggers for development
-[[env.development.triggers.crons]]
-cron = "*/5 * * * *"
+[env.development.triggers]
+crons = ["*/5 * * * *"]
 
 [[env.development.d1_databases]]
 binding = "DB"
@@ -55,8 +55,8 @@ GRAFANA_WEBHOOK_PASSWORD = "test-password"
 name = "notification-system"
 
 # Cron triggers for production
-[[env.production.triggers.crons]]
-cron = "*/5 * * * *"
+[env.production.triggers]
+crons = ["*/5 * * * *"]
 
 [[env.production.d1_databases]]
 binding = "DB"
