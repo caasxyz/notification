@@ -29,7 +29,8 @@
     "test:integration-sdk-enhanced": "cd sdk && npm run build && cd .. && tsx scripts/testing/integration-test-sdk-enhanced.ts",
     "test:production": "cd sdk && npm run build && cd .. && tsx scripts/testing/production-sdk-test.ts",
     "test:production-quick": "cd sdk && npm run build && cd .. && tsx scripts/testing/production-sdk-test.ts --quick",
-    "test:production-full": "cd sdk && npm run build && cd .. && tsx scripts/testing/production-sdk-test.ts --full --cleanup"
+    "test:production-full": "cd sdk && npm run build && cd .. && tsx scripts/testing/production-sdk-test.ts --full --cleanup",
+    "build:testui": "node scripts/build-testui.js"
   },
   "devDependencies": {
     "@cloudflare/workers-types": "^4.20241127.0",

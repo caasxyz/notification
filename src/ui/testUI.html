@@ -1,0 +1,1334 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>通知系统测试 UI</title>
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <style>
+        .json-editor {
+            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+            font-size: 12px;
+            line-height: 1.4;
+        }
+        
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            transform: translateX(400px);
+            transition: transform 0.3s ease-in-out;
+            z-index: 50;
+        }
+        
+        .toast.show {
+            transform: translateX(0);
+        }
+        
+        .spinner {
+            border: 2px solid #f3f3f3;
+            border-top: 2px solid #3498db;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .tab-content {
+            animation: fadeIn 0.3s ease-in;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        /* 自定义滚动条 */
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 4px;
+        }
+        
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #888;
+            border-radius: 4px;
+        }
+        
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: #555;
+        }
+
+        /* 代码高亮 */
+        .hljs-string { color: #0d9b55; }
+        .hljs-number { color: #0066cc; }
+        .hljs-boolean { color: #ff6b6b; }
+        .hljs-null { color: #868e96; }
+        .hljs-key { color: #5c2e91; }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+    <script type="text/babel">
+        const { useState, useEffect, useCallback, useRef, useMemo } = React;
+
+        // ========== 通用组件 ==========
+        function Toast({ message, type, show, onClose }) {
+            useEffect(() => {
+                if (show) {
+                    const timer = setTimeout(onClose, 3000);
+                    return () => clearTimeout(timer);
+                }
+            }, [show, onClose]);
+
+            const bgColor = type === 'success' ? 'bg-green-500' : 
+                           type === 'error' ? 'bg-red-500' : 
+                           type === 'warning' ? 'bg-yellow-500' : 'bg-blue-500';
+
+            return (
+                <div className={`toast ${show ? 'show' : ''} ${bgColor} text-white px-6 py-3 rounded-lg shadow-lg`}>
+                    <div className="flex items-center">
+                        <span>{message}</span>
+                        <button
+                            onClick={onClose}
+                            className="ml-4 text-white hover:text-gray-200"
+                        >
+                            ×
+                        </button>
+                    </div>
+                </div>
+            );
+        }
+
+        function JsonEditor({ value, onChange, height = '200px', readOnly = false }) {
+            const [internalValue, setInternalValue] = useState('');
+            const [error, setError] = useState('');
+
+            useEffect(() => {
+                try {
+                    const formatted = JSON.stringify(value, null, 2);
+                    setInternalValue(formatted);
+                    setError('');
+                } catch (e) {
+                    setInternalValue(String(value));
+                    setError('Invalid JSON');
+                }
+            }, [value]);
+
+            const handleChange = (e) => {
+                const newValue = e.target.value;
+                setInternalValue(newValue);
+
+                try {
+                    const parsed = JSON.parse(newValue);
+                    onChange(parsed);
+                    setError('');
+                } catch (e) {
+                    setError('Invalid JSON: ' + e.message);
+                }
+            };
+
+            return (
+                <div className="relative">
+                    <textarea
+                        value={internalValue}
+                        onChange={handleChange}
+                        readOnly={readOnly}
+                        className={`json-editor w-full p-3 bg-gray-50 border rounded-lg custom-scrollbar ${
+                            error ? 'border-red-500' : 'border-gray-300'
+                        } ${readOnly ? 'bg-gray-100' : ''}`}
+                        style={{ height }}
+                        spellCheck="false"
+                    />
+                    {error && (
+                        <div className="absolute bottom-0 left-0 text-xs text-red-500 mt-1">
+                            {error}
+                        </div>
+                    )}
+                </div>
+            );
+        }
+
+        function Select({ value, onChange, options, placeholder = '请选择...' }) {
+            return (
+                <select
+                    value={value}
+                    onChange={(e) => onChange(e.target.value)}
+                    className="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                    <option value="">{placeholder}</option>
+                    {options.map(option => (
+                        <option key={option.value} value={option.value}>
+                            {option.label}
+                        </option>
+                    ))}
+                </select>
+            );
+        }
+
+        function Card({ title, children, actions }) {
+            return (
+                <div className="bg-white rounded-lg shadow-md">
+                    <div className="px-6 py-4 border-b border-gray-200">
+                        <div className="flex justify-between items-center">
+                            <h3 className="text-lg font-semibold text-gray-800">{title}</h3>
+                            {actions && <div className="flex gap-2">{actions}</div>}
+                        </div>
+                    </div>
+                    <div className="p-6">{children}</div>
+                </div>
+            );
+        }
+
+        function Button({ onClick, children, variant = 'primary', size = 'md', disabled = false, loading = false }) {
+            const baseClasses = 'font-medium rounded-lg transition-colors duration-200 flex items-center justify-center';
+            
+            const sizeClasses = {
+                sm: 'px-3 py-1.5 text-sm',
+                md: 'px-4 py-2',
+                lg: 'px-6 py-3 text-lg'
+            };
+
+            const variantClasses = {
+                primary: 'bg-blue-500 text-white hover:bg-blue-600 disabled:bg-blue-300',
+                secondary: 'bg-gray-200 text-gray-800 hover:bg-gray-300 disabled:bg-gray-100',
+                danger: 'bg-red-500 text-white hover:bg-red-600 disabled:bg-red-300',
+                success: 'bg-green-500 text-white hover:bg-green-600 disabled:bg-green-300',
+                ghost: 'text-gray-600 hover:bg-gray-100'
+            };
+
+            return (
+                <button
+                    onClick={onClick}
+                    disabled={disabled || loading}
+                    className={`${baseClasses} ${sizeClasses[size]} ${variantClasses[variant]} ${
+                        disabled || loading ? 'cursor-not-allowed opacity-60' : ''
+                    }`}
+                >
+                    {loading && <div className="spinner mr-2" />}
+                    {children}
+                </button>
+            );
+        }
+
+        // ========== API 配置 ==========
+        const API_CONFIG = {
+            getBaseUrl: () => {
+                const saved = localStorage.getItem('notification_api_url');
+                return saved || window.location.origin;
+            },
+            setBaseUrl: (url) => {
+                localStorage.setItem('notification_api_url', url);
+            },
+            getApiKey: () => {
+                return localStorage.getItem('notification_api_key') || '';
+            },
+            setApiKey: (key) => {
+                localStorage.setItem('notification_api_key', key);
+            }
+        };
+
+        // ========== API 客户端 ==========
+        class ApiClient {
+            constructor() {
+                this.baseUrl = API_CONFIG.getBaseUrl();
+                this.apiKey = API_CONFIG.getApiKey();
+            }
+
+            setCredentials(baseUrl, apiKey) {
+                this.baseUrl = baseUrl;
+                this.apiKey = apiKey;
+                API_CONFIG.setBaseUrl(baseUrl);
+                API_CONFIG.setApiKey(apiKey);
+            }
+
+            generateSignature(timestamp, payload) {
+                return CryptoJS.HmacSHA256(timestamp + payload, this.apiKey).toString();
+            }
+
+            async request(path, method = 'GET', body = null) {
+                const url = `${this.baseUrl}${path}`;
+                const timestamp = Date.now().toString();
+                
+                let payload = '';
+                if (method === 'GET' || method === 'DELETE') {
+                    const urlObj = new URL(url);
+                    payload = urlObj.pathname + urlObj.search;
+                } else if (body) {
+                    payload = JSON.stringify(body);
+                }
+
+                const headers = {
+                    'Content-Type': 'application/json',
+                    'X-Timestamp': timestamp,
+                    'X-Signature': this.generateSignature(timestamp, payload)
+                };
+
+                const options = {
+                    method,
+                    headers
+                };
+
+                if (body && method !== 'GET' && method !== 'DELETE') {
+                    options.body = JSON.stringify(body);
+                }
+
+                const response = await fetch(url, options);
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.error || `HTTP ${response.status}`);
+                }
+
+                return data;
+            }
+
+            // API 方法
+            async sendNotification(data) {
+                return this.request('/api/notifications/send', 'POST', data);
+            }
+
+            async getUserConfigs(userId) {
+                return this.request(`/api/user-configs?user_id=${encodeURIComponent(userId)}`);
+            }
+
+            async setUserConfig(userId, channelType, config) {
+                return this.request('/api/user-configs', 'POST', {
+                    user_id: userId,
+                    channel_type: channelType,
+                    config_data: config,
+                    is_active: true
+                });
+            }
+
+            async getTemplates() {
+                return this.request('/api/templates');
+            }
+
+            async createTemplate(key, template) {
+                return this.request(`/api/templates?key=${encodeURIComponent(key)}`, 'POST', template);
+            }
+
+            async deleteTemplate(key) {
+                return this.request(`/api/templates?key=${encodeURIComponent(key)}`, 'DELETE');
+            }
+
+            async getNotificationLogs(params = {}) {
+                const queryParams = new URLSearchParams(params);
+                return this.request(`/api/notification-logs?${queryParams}`);
+            }
+
+            async checkHealth() {
+                return this.request('/health');
+            }
+        }
+
+        // ========== 主应用 ==========
+        function App() {
+            const [activeTab, setActiveTab] = useState('send');
+            const [apiKey, setApiKey] = useState(API_CONFIG.getApiKey());
+            const [baseUrl, setBaseUrl] = useState(API_CONFIG.getBaseUrl());
+            const [toast, setToast] = useState({ show: false, message: '', type: 'info' });
+            const [isHealthy, setIsHealthy] = useState(false);
+            const [loading, setLoading] = useState(false);
+
+            const apiClient = useRef(new ApiClient());
+
+            const showToast = useCallback((message, type = 'info') => {
+                setToast({ show: true, message, type });
+            }, []);
+
+            const checkHealth = useCallback(async () => {
+                if (!apiKey || !baseUrl) return;
+                
+                try {
+                    setLoading(true);
+                    apiClient.current.setCredentials(baseUrl, apiKey);
+                    const result = await apiClient.current.checkHealth();
+                    setIsHealthy(true);
+                    showToast('API 连接成功', 'success');
+                } catch (error) {
+                    setIsHealthy(false);
+                    showToast('API 连接失败: ' + error.message, 'error');
+                }
+                setLoading(false);
+            }, [apiKey, baseUrl, showToast]);
+
+            useEffect(() => {
+                if (apiKey && baseUrl) {
+                    checkHealth();
+                }
+            }, []);
+
+            const tabs = [
+                { id: 'send', label: '发送通知', icon: '📤' },
+                { id: 'config', label: '用户配置', icon: '⚙️' },
+                { id: 'template', label: '模板管理', icon: '📝' },
+                { id: 'logs', label: '通知日志', icon: '📊' },
+                { id: 'settings', label: '设置', icon: '🔧' }
+            ];
+
+            return (
+                <div className="min-h-screen bg-gray-50">
+                    {/* Header */}
+                    <header className="bg-white shadow-sm border-b">
+                        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                            <div className="flex justify-between items-center py-4">
+                                <div className="flex items-center">
+                                    <h1 className="text-2xl font-bold text-gray-900">通知系统测试 UI</h1>
+                                    <div className="ml-4">
+                                        {isHealthy ? (
+                                            <span className="text-green-500 text-sm">● 已连接</span>
+                                        ) : (
+                                            <span className="text-red-500 text-sm">● 未连接</span>
+                                        )}
+                                    </div>
+                                </div>
+                                <Button onClick={checkHealth} variant="ghost" size="sm" loading={loading}>
+                                    刷新状态
+                                </Button>
+                            </div>
+                        </div>
+                    </header>
+
+                    {/* Navigation */}
+                    <nav className="bg-white border-b">
+                        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                            <div className="flex space-x-8">
+                                {tabs.map(tab => (
+                                    <button
+                                        key={tab.id}
+                                        onClick={() => setActiveTab(tab.id)}
+                                        className={`py-3 px-1 border-b-2 font-medium text-sm transition-colors ${
+                                            activeTab === tab.id
+                                                ? 'border-blue-500 text-blue-600'
+                                                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                                        }`}
+                                    >
+                                        <span className="mr-2">{tab.icon}</span>
+                                        {tab.label}
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+                    </nav>
+
+                    {/* Content */}
+                    <main className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
+                        <div className="tab-content">
+                            {activeTab === 'send' && (
+                                <SendNotification apiClient={apiClient.current} showToast={showToast} />
+                            )}
+                            {activeTab === 'config' && (
+                                <UserConfig apiClient={apiClient.current} showToast={showToast} />
+                            )}
+                            {activeTab === 'template' && (
+                                <TemplateManagement apiClient={apiClient.current} showToast={showToast} />
+                            )}
+                            {activeTab === 'logs' && (
+                                <NotificationLogs apiClient={apiClient.current} showToast={showToast} />
+                            )}
+                            {activeTab === 'settings' && (
+                                <Settings 
+                                    apiKey={apiKey} 
+                                    setApiKey={setApiKey}
+                                    baseUrl={baseUrl}
+                                    setBaseUrl={setBaseUrl}
+                                    onSave={checkHealth}
+                                    showToast={showToast}
+                                />
+                            )}
+                        </div>
+                    </main>
+
+                    {/* Toast */}
+                    <Toast
+                        message={toast.message}
+                        type={toast.type}
+                        show={toast.show}
+                        onClose={() => setToast({ ...toast, show: false })}
+                    />
+                </div>
+            );
+        }
+
+        // ========== 发送通知组件 ==========
+        function SendNotification({ apiClient, showToast }) {
+            const [userId, setUserId] = useState('test-user');
+            const [channels, setChannels] = useState(['lark']);
+            const [sendMode, setSendMode] = useState('custom'); // 'custom' or 'template'
+            const [templateKey, setTemplateKey] = useState('');
+            const [customContent, setCustomContent] = useState({
+                subject: '测试通知',
+                content: '这是一条测试通知消息'
+            });
+            const [variables, setVariables] = useState({});
+            const [idempotencyKey, setIdempotencyKey] = useState('');
+            const [loading, setLoading] = useState(false);
+            const [response, setResponse] = useState(null);
+            const [templates, setTemplates] = useState([]);
+
+            useEffect(() => {
+                loadTemplates();
+            }, []);
+
+            const loadTemplates = async () => {
+                try {
+                    const result = await apiClient.getTemplates();
+                    if (result.templates) {
+                        setTemplates(Object.keys(result.templates));
+                    }
+                } catch (error) {
+                    console.error('Failed to load templates:', error);
+                }
+            };
+
+            const handleSend = async () => {
+                try {
+                    setLoading(true);
+                    const payload = {
+                        user_id: userId,
+                        channels: channels
+                    };
+
+                    if (sendMode === 'template') {
+                        payload.template_key = templateKey;
+                        if (Object.keys(variables).length > 0) {
+                            payload.variables = variables;
+                        }
+                    } else {
+                        payload.custom_content = customContent;
+                    }
+
+                    if (idempotencyKey) {
+                        payload.idempotency_key = idempotencyKey;
+                    }
+
+                    const result = await apiClient.sendNotification(payload);
+                    setResponse(result);
+                    showToast('通知发送成功', 'success');
+                } catch (error) {
+                    showToast('发送失败: ' + error.message, 'error');
+                }
+                setLoading(false);
+            };
+
+            const channelOptions = [
+                { value: 'lark', label: '飞书 (Lark)' },
+                { value: 'telegram', label: 'Telegram' },
+                { value: 'webhook', label: 'Webhook' },
+                { value: 'slack', label: 'Slack' }
+            ];
+
+            return (
+                <div className="space-y-6">
+                    <Card title="发送通知">
+                        <div className="space-y-4">
+                            {/* 用户 ID */}
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">
+                                    用户 ID
+                                </label>
+                                <input
+                                    type="text"
+                                    value={userId}
+                                    onChange={(e) => setUserId(e.target.value)}
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                    placeholder="输入用户 ID"
+                                />
+                            </div>
+
+                            {/* 通知渠道 */}
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">
+                                    通知渠道
+                                </label>
+                                <div className="space-y-2">
+                                    {channelOptions.map(option => (
+                                        <label key={option.value} className="flex items-center">
+                                            <input
+                                                type="checkbox"
+                                                value={option.value}
+                                                checked={channels.includes(option.value)}
+                                                onChange={(e) => {
+                                                    if (e.target.checked) {
+                                                        setChannels([...channels, option.value]);
+                                                    } else {
+                                                        setChannels(channels.filter(c => c !== option.value));
+                                                    }
+                                                }}
+                                                className="mr-2"
+                                            />
+                                            {option.label}
+                                        </label>
+                                    ))}
+                                </div>
+                            </div>
+
+                            {/* 发送模式 */}
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">
+                                    发送模式
+                                </label>
+                                <div className="flex space-x-4">
+                                    <label className="flex items-center">
+                                        <input
+                                            type="radio"
+                                            value="custom"
+                                            checked={sendMode === 'custom'}
+                                            onChange={(e) => setSendMode(e.target.value)}
+                                            className="mr-2"
+                                        />
+                                        自定义内容
+                                    </label>
+                                    <label className="flex items-center">
+                                        <input
+                                            type="radio"
+                                            value="template"
+                                            checked={sendMode === 'template'}
+                                            onChange={(e) => setSendMode(e.target.value)}
+                                            className="mr-2"
+                                        />
+                                        使用模板
+                                    </label>
+                                </div>
+                            </div>
+
+                            {/* 根据模式显示不同内容 */}
+                            {sendMode === 'custom' ? (
+                                <>
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                                            主题
+                                        </label>
+                                        <input
+                                            type="text"
+                                            value={customContent.subject}
+                                            onChange={(e) => setCustomContent({
+                                                ...customContent,
+                                                subject: e.target.value
+                                            })}
+                                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                            placeholder="通知主题"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                                            内容
+                                        </label>
+                                        <textarea
+                                            value={customContent.content}
+                                            onChange={(e) => setCustomContent({
+                                                ...customContent,
+                                                content: e.target.value
+                                            })}
+                                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                            rows="4"
+                                            placeholder="通知内容"
+                                        />
+                                    </div>
+                                </>
+                            ) : (
+                                <>
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                                            选择模板
+                                        </label>
+                                        <Select
+                                            value={templateKey}
+                                            onChange={setTemplateKey}
+                                            options={templates.map(t => ({ value: t, label: t }))}
+                                            placeholder="选择一个模板"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                                            模板变量 (JSON)
+                                        </label>
+                                        <JsonEditor
+                                            value={variables}
+                                            onChange={setVariables}
+                                            height="100px"
+                                        />
+                                    </div>
+                                </>
+                            )}
+
+                            {/* 幂等键 */}
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">
+                                    幂等键（可选）
+                                </label>
+                                <input
+                                    type="text"
+                                    value={idempotencyKey}
+                                    onChange={(e) => setIdempotencyKey(e.target.value)}
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                    placeholder="防止重复发送的唯一键"
+                                />
+                            </div>
+
+                            {/* 发送按钮 */}
+                            <div className="flex justify-end">
+                                <Button 
+                                    onClick={handleSend} 
+                                    disabled={!userId || channels.length === 0}
+                                    loading={loading}
+                                >
+                                    发送通知
+                                </Button>
+                            </div>
+                        </div>
+                    </Card>
+
+                    {/* 响应结果 */}
+                    {response && (
+                        <Card title="发送结果">
+                            <JsonEditor value={response} readOnly height="300px" />
+                        </Card>
+                    )}
+                </div>
+            );
+        }
+
+        // ========== 用户配置组件 ==========
+        function UserConfig({ apiClient, showToast }) {
+            const [userId, setUserId] = useState('test-user');
+            const [configs, setConfigs] = useState([]);
+            const [loading, setLoading] = useState(false);
+            const [editingConfig, setEditingConfig] = useState(null);
+            const [newConfig, setNewConfig] = useState({
+                channel_type: '',
+                config: {}
+            });
+
+            const loadConfigs = async () => {
+                if (!userId) return;
+                
+                try {
+                    setLoading(true);
+                    const result = await apiClient.getUserConfigs(userId);
+                    setConfigs(result.configs || []);
+                } catch (error) {
+                    showToast('加载配置失败: ' + error.message, 'error');
+                }
+                setLoading(false);
+            };
+
+            const saveConfig = async (channelType, config) => {
+                try {
+                    await apiClient.setUserConfig(userId, channelType, config);
+                    showToast('配置保存成功', 'success');
+                    loadConfigs();
+                    setEditingConfig(null);
+                } catch (error) {
+                    showToast('保存失败: ' + error.message, 'error');
+                }
+            };
+
+            const getConfigTemplate = (channelType) => {
+                const templates = {
+                    lark: {
+                        webhook_url: 'https://open.feishu.cn/open-apis/bot/v2/hook/xxx',
+                        secret: 'your-secret',
+                        msg_type: 'text'
+                    },
+                    telegram: {
+                        bot_token: 'your-bot-token',
+                        chat_id: 'your-chat-id'
+                    },
+                    webhook: {
+                        webhook_url: 'https://your-webhook-url.com',
+                        method: 'POST',
+                        headers: {}
+                    },
+                    slack: {
+                        webhook_url: 'https://hooks.slack.com/services/xxx'
+                    }
+                };
+                return templates[channelType] || {};
+            };
+
+            return (
+                <div className="space-y-6">
+                    <Card title="用户配置管理">
+                        <div className="space-y-4">
+                            <div className="flex gap-4">
+                                <input
+                                    type="text"
+                                    value={userId}
+                                    onChange={(e) => setUserId(e.target.value)}
+                                    className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                    placeholder="输入用户 ID"
+                                />
+                                <Button onClick={loadConfigs} loading={loading}>
+                                    加载配置
+                                </Button>
+                            </div>
+
+                            {configs.length > 0 && (
+                                <div className="space-y-4">
+                                    <h4 className="font-medium text-gray-700">现有配置</h4>
+                                    {configs.map(config => (
+                                        <div key={config.channel_type} className="bg-gray-50 p-4 rounded-lg">
+                                            <div className="flex justify-between items-start">
+                                                <div className="flex-1">
+                                                    <h5 className="font-medium">{config.channel_type}</h5>
+                                                    <p className="text-sm text-gray-500">
+                                                        状态: {config.is_active ? '✅ 启用' : '❌ 禁用'}
+                                                    </p>
+                                                    {editingConfig === config.channel_type ? (
+                                                        <div className="mt-2">
+                                                            <JsonEditor
+                                                                value={config.config}
+                                                                onChange={(newConfig) => {
+                                                                    const updated = configs.map(c => 
+                                                                        c.channel_type === config.channel_type
+                                                                            ? { ...c, config: newConfig }
+                                                                            : c
+                                                                    );
+                                                                    setConfigs(updated);
+                                                                }}
+                                                                height="150px"
+                                                            />
+                                                            <div className="mt-2 flex gap-2">
+                                                                <Button
+                                                                    size="sm"
+                                                                    onClick={() => saveConfig(config.channel_type, config.config)}
+                                                                >
+                                                                    保存
+                                                                </Button>
+                                                                <Button
+                                                                    size="sm"
+                                                                    variant="secondary"
+                                                                    onClick={() => setEditingConfig(null)}
+                                                                >
+                                                                    取消
+                                                                </Button>
+                                                            </div>
+                                                        </div>
+                                                    ) : (
+                                                        <div className="mt-2">
+                                                            <pre className="text-xs bg-white p-2 rounded">
+                                                                {JSON.stringify(config.config, null, 2)}
+                                                            </pre>
+                                                            <Button
+                                                                size="sm"
+                                                                variant="ghost"
+                                                                onClick={() => setEditingConfig(config.channel_type)}
+                                                            >
+                                                                编辑
+                                                            </Button>
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+
+                            <div>
+                                <h4 className="font-medium text-gray-700 mb-2">添加新配置</h4>
+                                <div className="space-y-3">
+                                    <Select
+                                        value={newConfig.channel_type}
+                                        onChange={(value) => {
+                                            setNewConfig({
+                                                channel_type: value,
+                                                config: getConfigTemplate(value)
+                                            });
+                                        }}
+                                        options={[
+                                            { value: 'lark', label: '飞书 (Lark)' },
+                                            { value: 'telegram', label: 'Telegram' },
+                                            { value: 'webhook', label: 'Webhook' },
+                                            { value: 'slack', label: 'Slack' }
+                                        ]}
+                                    />
+                                    {newConfig.channel_type && (
+                                        <>
+                                            <JsonEditor
+                                                value={newConfig.config}
+                                                onChange={(config) => setNewConfig({ ...newConfig, config })}
+                                                height="200px"
+                                            />
+                                            <Button
+                                                onClick={() => saveConfig(newConfig.channel_type, newConfig.config)}
+                                            >
+                                                添加配置
+                                            </Button>
+                                        </>
+                                    )}
+                                </div>
+                            </div>
+                        </div>
+                    </Card>
+                </div>
+            );
+        }
+
+        // ========== 模板管理组件 ==========
+        function TemplateManagement({ apiClient, showToast }) {
+            const [templates, setTemplates] = useState({});
+            const [loading, setLoading] = useState(false);
+            const [editingTemplate, setEditingTemplate] = useState(null);
+            const [newTemplate, setNewTemplate] = useState({
+                key: '',
+                name: '',
+                description: '',
+                variables: [],
+                contents: {}
+            });
+
+            useEffect(() => {
+                loadTemplates();
+            }, []);
+
+            const loadTemplates = async () => {
+                try {
+                    setLoading(true);
+                    const result = await apiClient.getTemplates();
+                    setTemplates(result.templates || {});
+                } catch (error) {
+                    showToast('加载模板失败: ' + error.message, 'error');
+                }
+                setLoading(false);
+            };
+
+            const saveTemplate = async (key, template) => {
+                try {
+                    await apiClient.createTemplate(key, template);
+                    showToast('模板保存成功', 'success');
+                    loadTemplates();
+                    setEditingTemplate(null);
+                    setNewTemplate({
+                        key: '',
+                        name: '',
+                        description: '',
+                        variables: [],
+                        contents: {}
+                    });
+                } catch (error) {
+                    showToast('保存失败: ' + error.message, 'error');
+                }
+            };
+
+            const deleteTemplate = async (key) => {
+                if (!confirm('确定要删除这个模板吗？')) return;
+                
+                try {
+                    await apiClient.deleteTemplate(key);
+                    showToast('模板删除成功', 'success');
+                    loadTemplates();
+                } catch (error) {
+                    showToast('删除失败: ' + error.message, 'error');
+                }
+            };
+
+            return (
+                <div className="space-y-6">
+                    <Card 
+                        title="模板管理" 
+                        actions={
+                            <Button onClick={loadTemplates} variant="ghost" size="sm" loading={loading}>
+                                刷新
+                            </Button>
+                        }
+                    >
+                        <div className="space-y-4">
+                            {Object.entries(templates).map(([key, template]) => (
+                                <div key={key} className="bg-gray-50 p-4 rounded-lg">
+                                    <div className="flex justify-between items-start">
+                                        <div className="flex-1">
+                                            <h4 className="font-medium">{template.name || key}</h4>
+                                            <p className="text-sm text-gray-500">{template.description}</p>
+                                            <p className="text-xs text-gray-400 mt-1">
+                                                键名: {key} | 变量: {template.variables?.join(', ') || '无'}
+                                            </p>
+                                            {editingTemplate === key ? (
+                                                <div className="mt-3">
+                                                    <JsonEditor
+                                                        value={template}
+                                                        onChange={(updated) => {
+                                                            setTemplates({
+                                                                ...templates,
+                                                                [key]: updated
+                                                            });
+                                                        }}
+                                                        height="300px"
+                                                    />
+                                                    <div className="mt-2 flex gap-2">
+                                                        <Button
+                                                            size="sm"
+                                                            onClick={() => saveTemplate(key, templates[key])}
+                                                        >
+                                                            保存
+                                                        </Button>
+                                                        <Button
+                                                            size="sm"
+                                                            variant="secondary"
+                                                            onClick={() => {
+                                                                setEditingTemplate(null);
+                                                                loadTemplates();
+                                                            }}
+                                                        >
+                                                            取消
+                                                        </Button>
+                                                    </div>
+                                                </div>
+                                            ) : (
+                                                <div className="mt-2 flex gap-2">
+                                                    <Button
+                                                        size="sm"
+                                                        variant="ghost"
+                                                        onClick={() => setEditingTemplate(key)}
+                                                    >
+                                                        编辑
+                                                    </Button>
+                                                    <Button
+                                                        size="sm"
+                                                        variant="danger"
+                                                        onClick={() => deleteTemplate(key)}
+                                                    >
+                                                        删除
+                                                    </Button>
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
+                                </div>
+                            ))}
+
+                            <div className="mt-6">
+                                <h4 className="font-medium text-gray-700 mb-3">创建新模板</h4>
+                                <div className="space-y-3">
+                                    <input
+                                        type="text"
+                                        value={newTemplate.key}
+                                        onChange={(e) => setNewTemplate({ ...newTemplate, key: e.target.value })}
+                                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                        placeholder="模板键名（唯一标识）"
+                                    />
+                                    <input
+                                        type="text"
+                                        value={newTemplate.name}
+                                        onChange={(e) => setNewTemplate({ ...newTemplate, name: e.target.value })}
+                                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                        placeholder="模板名称"
+                                    />
+                                    <textarea
+                                        value={newTemplate.description}
+                                        onChange={(e) => setNewTemplate({ ...newTemplate, description: e.target.value })}
+                                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                        placeholder="模板描述"
+                                        rows="2"
+                                    />
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                                            模板内容 (JSON)
+                                        </label>
+                                        <JsonEditor
+                                            value={newTemplate}
+                                            onChange={setNewTemplate}
+                                            height="300px"
+                                        />
+                                    </div>
+                                    <Button
+                                        onClick={() => saveTemplate(newTemplate.key, newTemplate)}
+                                        disabled={!newTemplate.key || !newTemplate.name}
+                                    >
+                                        创建模板
+                                    </Button>
+                                </div>
+                            </div>
+                        </div>
+                    </Card>
+                </div>
+            );
+        }
+
+        // ========== 通知日志组件 ==========
+        function NotificationLogs({ apiClient, showToast }) {
+            const [logs, setLogs] = useState([]);
+            const [loading, setLoading] = useState(false);
+            const [filters, setFilters] = useState({
+                user_id: '',
+                status: '',
+                channel_type: '',
+                limit: 20
+            });
+
+            const loadLogs = async () => {
+                try {
+                    setLoading(true);
+                    const params = {};
+                    Object.entries(filters).forEach(([key, value]) => {
+                        if (value) params[key] = value;
+                    });
+                    
+                    const result = await apiClient.getNotificationLogs(params);
+                    setLogs(result.logs || []);
+                } catch (error) {
+                    showToast('加载日志失败: ' + error.message, 'error');
+                }
+                setLoading(false);
+            };
+
+            useEffect(() => {
+                loadLogs();
+            }, []);
+
+            const formatDate = (dateString) => {
+                return new Date(dateString).toLocaleString('zh-CN');
+            };
+
+            const getStatusBadge = (status) => {
+                const statusMap = {
+                    'sent': { label: '已发送', class: 'bg-green-100 text-green-800' },
+                    'failed': { label: '失败', class: 'bg-red-100 text-red-800' },
+                    'pending': { label: '待发送', class: 'bg-yellow-100 text-yellow-800' },
+                    'retry': { label: '重试中', class: 'bg-blue-100 text-blue-800' }
+                };
+                const config = statusMap[status] || { label: status, class: 'bg-gray-100 text-gray-800' };
+                return (
+                    <span className={`px-2 py-1 text-xs rounded-full ${config.class}`}>
+                        {config.label}
+                    </span>
+                );
+            };
+
+            return (
+                <div className="space-y-6">
+                    <Card title="通知日志">
+                        <div className="space-y-4">
+                            {/* 筛选器 */}
+                            <div className="grid grid-cols-4 gap-4">
+                                <input
+                                    type="text"
+                                    value={filters.user_id}
+                                    onChange={(e) => setFilters({ ...filters, user_id: e.target.value })}
+                                    className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                    placeholder="用户 ID"
+                                />
+                                <Select
+                                    value={filters.status}
+                                    onChange={(value) => setFilters({ ...filters, status: value })}
+                                    options={[
+                                        { value: 'sent', label: '已发送' },
+                                        { value: 'failed', label: '失败' },
+                                        { value: 'pending', label: '待发送' },
+                                        { value: 'retry', label: '重试中' }
+                                    ]}
+                                    placeholder="状态"
+                                />
+                                <Select
+                                    value={filters.channel_type}
+                                    onChange={(value) => setFilters({ ...filters, channel_type: value })}
+                                    options={[
+                                        { value: 'lark', label: '飞书' },
+                                        { value: 'telegram', label: 'Telegram' },
+                                        { value: 'webhook', label: 'Webhook' },
+                                        { value: 'slack', label: 'Slack' }
+                                    ]}
+                                    placeholder="渠道"
+                                />
+                                <Button onClick={loadLogs} loading={loading}>
+                                    查询
+                                </Button>
+                            </div>
+
+                            {/* 日志表格 */}
+                            <div className="overflow-x-auto">
+                                <table className="min-w-full divide-y divide-gray-200">
+                                    <thead className="bg-gray-50">
+                                        <tr>
+                                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                时间
+                                            </th>
+                                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                用户
+                                            </th>
+                                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                渠道
+                                            </th>
+                                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                状态
+                                            </th>
+                                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                消息 ID
+                                            </th>
+                                        </tr>
+                                    </thead>
+                                    <tbody className="bg-white divide-y divide-gray-200">
+                                        {logs.map((log) => (
+                                            <tr key={log.id} className="hover:bg-gray-50">
+                                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                                    {formatDate(log.created_at)}
+                                                </td>
+                                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                                    {log.user_id}
+                                                </td>
+                                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                                    {log.channel_type}
+                                                </td>
+                                                <td className="px-6 py-4 whitespace-nowrap">
+                                                    {getStatusBadge(log.status)}
+                                                </td>
+                                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                                    {log.message_id || '-'}
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
+
+                            {logs.length === 0 && (
+                                <div className="text-center py-8 text-gray-500">
+                                    暂无日志记录
+                                </div>
+                            )}
+                        </div>
+                    </Card>
+                </div>
+            );
+        }
+
+        // ========== 设置组件 ==========
+        function Settings({ apiKey, setApiKey, baseUrl, setBaseUrl, onSave, showToast }) {
+            const [tempApiKey, setTempApiKey] = useState(apiKey);
+            const [tempBaseUrl, setTempBaseUrl] = useState(baseUrl);
+            const [showApiKey, setShowApiKey] = useState(false);
+
+            const handleSave = () => {
+                setApiKey(tempApiKey);
+                setBaseUrl(tempBaseUrl);
+                API_CONFIG.setApiKey(tempApiKey);
+                API_CONFIG.setBaseUrl(tempBaseUrl);
+                showToast('设置已保存', 'success');
+                onSave();
+            };
+
+            return (
+                <div className="space-y-6">
+                    <Card title="API 设置">
+                        <div className="space-y-4">
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">
+                                    API 地址
+                                </label>
+                                <input
+                                    type="text"
+                                    value={tempBaseUrl}
+                                    onChange={(e) => setTempBaseUrl(e.target.value)}
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                    placeholder="https://api.example.com"
+                                />
+                                <p className="mt-1 text-sm text-gray-500">
+                                    通知系统 API 的基础 URL
+                                </p>
+                            </div>
+
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">
+                                    API 密钥
+                                </label>
+                                <div className="relative">
+                                    <input
+                                        type={showApiKey ? 'text' : 'password'}
+                                        value={tempApiKey}
+                                        onChange={(e) => setTempApiKey(e.target.value)}
+                                        className="w-full px-3 py-2 pr-10 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                        placeholder="输入 API 密钥"
+                                    />
+                                    <button
+                                        type="button"
+                                        onClick={() => setShowApiKey(!showApiKey)}
+                                        className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-500 hover:text-gray-700"
+                                    >
+                                        {showApiKey ? '🙈' : '👁️'}
+                                    </button>
+                                </div>
+                                <p className="mt-1 text-sm text-gray-500">
+                                    用于 HMAC-SHA256 签名验证的密钥
+                                </p>
+                            </div>
+
+                            <div className="flex justify-end">
+                                <Button onClick={handleSave}>
+                                    保存设置
+                                </Button>
+                            </div>
+                        </div>
+                    </Card>
+
+                    <Card title="使用说明">
+                        <div className="prose prose-sm max-w-none">
+                            <h4 className="text-base font-medium mb-2">快速开始</h4>
+                            <ol className="list-decimal list-inside space-y-2 text-sm text-gray-700">
+                                <li>在"设置"页面配置 API 地址和密钥</li>
+                                <li>在"用户配置"页面为用户添加通知渠道配置</li>
+                                <li>在"模板管理"页面创建通知模板（可选）</li>
+                                <li>在"发送通知"页面测试发送通知</li>
+                                <li>在"通知日志"页面查看发送记录</li>
+                            </ol>
+
+                            <h4 className="text-base font-medium mt-4 mb-2">支持的通知渠道</h4>
+                            <ul className="list-disc list-inside space-y-1 text-sm text-gray-700">
+                                <li><strong>飞书 (Lark)</strong>: 需要配置 webhook URL 和密钥</li>
+                                <li><strong>Telegram</strong>: 需要配置 bot token 和 chat ID</li>
+                                <li><strong>Webhook</strong>: 支持任意 HTTP webhook</li>
+                                <li><strong>Slack</strong>: 需要配置 webhook URL</li>
+                            </ul>
+
+                            <h4 className="text-base font-medium mt-4 mb-2">API 签名说明</h4>
+                            <p className="text-sm text-gray-700">
+                                所有 API 请求都需要使用 HMAC-SHA256 签名验证。签名生成规则：
+                            </p>
+                            <pre className="mt-2 p-3 bg-gray-100 rounded text-xs overflow-x-auto">
+{`// 1. 获取当前时间戳（毫秒）
+const timestamp = Date.now().toString();
+
+// 2. 构造签名内容
+// GET/DELETE: path + query
+// POST/PUT: request body
+const payload = method === 'GET' || method === 'DELETE'
+  ? pathname + search
+  : JSON.stringify(body);
+
+// 3. 生成签名
+const signature = HMAC-SHA256(timestamp + payload, apiKey);
+
+// 4. 添加请求头
+headers['X-Timestamp'] = timestamp;
+headers['X-Signature'] = signature;`}
+                            </pre>
+                        </div>
+                    </Card>
+                </div>
+            );
+        }
+
+        // 加载 CryptoJS
+        const script = document.createElement('script');
+        script.src = 'https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js';
+        script.onload = () => {
+            ReactDOM.render(<App />, document.getElementById('root'));
+        };
+        document.head.appendChild(script);
+    </script>
+</body>
+</html>
