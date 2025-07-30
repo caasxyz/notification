@@ -148,7 +148,12 @@ export class EnhancedNotificationClient extends NotificationClient {
   /**
    * 创建通知会话（用于发送一系列相关通知）
    */
-  createSession(userId: string, defaultChannels?: ChannelType[]): { send: (content: string, options?: { subject?: string; template?: string; variables?: Record<string, unknown> }) => Promise<NotificationResponse> } {
+  createSession(userId: string, defaultChannels?: ChannelType[]): {
+    send: (content: string, options?: { subject?: string; template?: string; variables?: Record<string, unknown> }) => Promise<NotificationResponse>;
+    email: (subject: string, content: string) => Promise<NotificationResponse>;
+    lark: (content: string) => Promise<NotificationResponse>;
+    fromTemplate: (templateKey: string, variables?: Record<string, unknown>) => Promise<NotificationResponse>;
+  } {
     return {
       send: (content: string, options?: { subject?: string; template?: string; variables?: Record<string, unknown> }) => {
         const request: NotificationRequest = {
