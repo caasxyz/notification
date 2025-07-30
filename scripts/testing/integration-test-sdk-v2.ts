@@ -1,12 +1,12 @@
 /**
  * SDK 集成测试脚本 V2 - 与原始测试保持完全一致的输出
- * 使用 SDK 测试所有接口的基本功能
+ * 使用增强版 SDK 测试所有接口的基本功能
  * 
  * 运行方式:
  * API_SECRET_KEY=your-secret-key npx tsx scripts/testing/integration-test-sdk-v2.ts
  */
 
-import * as crypto from 'crypto';
+import { EnhancedNotificationClient } from '../../sdk/dist/index.js';
 
 // 配置
 const config = {
@@ -29,73 +29,16 @@ const testResults: Array<{
   duration: number;
 }> = [];
 
-// 生成签名 - 使用 Node.js crypto
-function generateSignature(timestamp: string, payload: string, secretKey: string): string {
-  return crypto
-    .createHmac('sha256', secretKey)
-    .update(timestamp + payload)
-    .digest('hex');
-}
+// 初始化 SDK 客户端
+let client: EnhancedNotificationClient;
 
-// 发送请求的通用函数
-async function sendRequest(
-  method: string,
-  endpoint: string,
-  body?: any,
-  skipAuth = false,
-  basicAuth?: { username: string; password: string },
-  additionalHeaders?: Record<string, string>
-): Promise<{ response: Response; data: any }> {
-  const url = `${config.baseUrl}${endpoint}`;
-  const timestamp = Date.now().toString();
-  
-  const headers: Record<string, string> = {
-    'Content-Type': 'application/json',
-    ...additionalHeaders, // 合并额外的 headers
-  };
-
-  // 添加 Basic Auth（如果提供）
-  if (basicAuth) {
-    const credentials = Buffer.from(`${basicAuth.username}:${basicAuth.password}`).toString('base64');
-    headers['Authorization'] = `Basic ${credentials}`;
-  } else if (!skipAuth && config.apiSecret) {
-    // 添加签名（除非明确跳过）
-    let payload: string;
-    if (method === 'GET' || method === 'DELETE') {
-      const urlObj = new URL(url);
-      payload = urlObj.pathname + urlObj.search;
-    } else {
-      payload = body ? JSON.stringify(body) : '';
-    }
-    
-    headers['X-Timestamp'] = timestamp;
-    headers['X-Signature'] = generateSignature(timestamp, payload, config.apiSecret);
-  }
-
-  const options: RequestInit = {
-    method,
-    headers,
-  };
-
-  if (body && (method === 'POST' || method === 'PUT' || method === 'DELETE')) {
-    options.body = JSON.stringify(body);
-  }
-
-  const response = await fetch(url, options);
-  const data = await response.json().catch(() => ({}));
-  
-  return { response, data };
-}
-
-// 测试单个接口
+// 测试单个接口（使用 SDK）
 async function testEndpoint(
   name: string,
   method: string,
   endpoint: string,
-  body?: any,
-  skipAuth = false,
-  basicAuth?: { username: string; password: string },
-  additionalHeaders?: Record<string, string>
+  action: () => Promise<any>,
+  skipAuth = false
 ): Promise<void> {
   const startTime = Date.now();
   
@@ -103,15 +46,15 @@ async function testEndpoint(
     console.log(`\n测试: ${name}`);
     console.log(`${method} ${endpoint}`);
     
-    const { response, data } = await sendRequest(method, endpoint, body, skipAuth, basicAuth, additionalHeaders);
+    const result = await action();
     
     const duration = Date.now() - startTime;
-    const success = response.ok;
+    const success = result !== undefined && (result.success !== false);
     
     if (success) {
-      console.log(`✅ 成功 (${response.status}) - ${duration}ms`);
+      console.log(`✅ 成功 (200) - ${duration}ms`);
     } else {
-      console.log(`❌ 失败 (${response.status}): ${data.error || 'Unknown error'}`);
+      console.log(`❌ 失败 (${result?.status || 500}): ${result?.error || 'Unknown error'}`);
     }
     
     testResults.push({
@@ -119,13 +62,13 @@ async function testEndpoint(
       endpoint,
       method,
       success,
-      error: !success ? data.error : undefined,
+      error: !success ? result?.error : undefined,
       duration,
     });
     
     // 如果有响应数据，打印部分内容
-    if (data && Object.keys(data).length > 0) {
-      console.log('响应预览:', JSON.stringify(data, null, 2).substring(0, 200) + '...');
+    if (result && Object.keys(result).length > 0) {
+      console.log('响应预览:', JSON.stringify(result, null, 2).substring(0, 200) + '...');
     }
   } catch (error) {
     const duration = Date.now() - startTime;
@@ -140,6 +83,53 @@ async function testEndpoint(
       duration,
     });
   }
+}
+
+// 直接调用 API（用于不支持的端点）
+async function directApiCall(
+  method: string,
+  endpoint: string,
+  body?: any
+): Promise<any> {
+  const url = `${config.baseUrl}${endpoint}`;
+  const timestamp = Date.now().toString();
+  
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json',
+  };
+
+  if (config.apiSecret) {
+    // 使用 SDK 的签名方法
+    const { createHmacSignature } = await import('../../sdk/dist/index.js');
+    let payload: string;
+    if (method === 'GET' || method === 'DELETE') {
+      const urlObj = new URL(url);
+      payload = urlObj.pathname + urlObj.search;
+    } else {
+      payload = body ? JSON.stringify(body) : '';
+    }
+    
+    headers['X-Timestamp'] = timestamp;
+    headers['X-Signature'] = createHmacSignature(timestamp + payload, config.apiSecret);
+  }
+
+  const options: RequestInit = {
+    method,
+    headers,
+  };
+
+  if (body && (method === 'POST' || method === 'PUT' || method === 'DELETE')) {
+    options.body = JSON.stringify(body);
+  }
+
+  const response = await fetch(url, options);
+  const data = await response.json().catch(() => ({}));
+  
+  if (!response.ok) {
+    throw new Error(data.error || `HTTP ${response.status}`);
+  }
+  
+  return data;
 }
 
 // 主测试流程
@@ -157,29 +147,47 @@ async function runTests() {
     process.exit(1);
   }
 
+  // 初始化 SDK
+  client = new EnhancedNotificationClient({
+    baseUrl: config.baseUrl,
+    apiKey: config.apiSecret,
+    timeout: 30000,
+  });
+
   console.log('\n' + '='.repeat(80));
 
   // 1. 测试所有 GET 接口
   console.log('\n📋 第一步: 测试所有 GET 接口\n');
 
   // 公开接口（不需要认证）
-  await testEndpoint('健康检查', 'GET', '/health', undefined, true);
-  await testEndpoint('定时任务健康检查', 'GET', '/health/scheduled-tasks', undefined, true);
+  await testEndpoint('健康检查', 'GET', '/health', 
+    () => client.health(), true);
+  
+  await testEndpoint('定时任务健康检查', 'GET', '/health/scheduled-tasks',
+    () => directApiCall('GET', '/health/scheduled-tasks'), true);
   
   // 需要认证的 GET 接口
-  await testEndpoint('获取系统指标', 'GET', '/metrics');
-  await testEndpoint('获取用户配置', 'GET', `/api/user-configs?user_id=${config.testUserId}`);
-  await testEndpoint('获取所有模板', 'GET', '/api/templates');
-  await testEndpoint('获取通知日志', 'GET', `/api/notification-logs?user_id=${config.testUserId}&limit=10`);
-  await testEndpoint('检查数据库架构', 'GET', '/api/db/schema');
+  await testEndpoint('获取系统指标', 'GET', '/metrics',
+    () => directApiCall('GET', '/metrics'));
+  
+  await testEndpoint('获取用户配置', 'GET', `/api/user-configs?user_id=${config.testUserId}`,
+    () => client.configs.list(config.testUserId));
+  
+  await testEndpoint('获取所有模板', 'GET', '/api/templates',
+    () => client.templates.list());
+  
+  await testEndpoint('获取通知日志', 'GET', `/api/notification-logs?user_id=${config.testUserId}&limit=10`,
+    () => client.logs.query({ user_id: config.testUserId, limit: 10 }));
+  
+  await testEndpoint('检查数据库架构', 'GET', '/api/db/schema',
+    () => directApiCall('GET', '/api/db/schema'));
 
   // 2. 创建测试用户的 Lark 配置
   console.log('\n📋 第二步: 配置 Lark 用户\n');
 
   const larkConfig = {
-    user_id: config.testUserId,
-    channel_type: 'lark',
-    config_data: {
+    channel_type: 'lark' as const,
+    config: {
       webhook_url: config.larkWebhook,
       secret: config.larkSecret,
       msg_type: 'text',
@@ -187,7 +195,8 @@ async function runTests() {
     is_active: true,
   };
 
-  await testEndpoint('创建 Lark 用户配置', 'POST', '/api/user-configs', larkConfig);
+  await testEndpoint('创建 Lark 用户配置', 'POST', '/api/user-configs',
+    () => client.configs.set(config.testUserId, 'lark', larkConfig));
 
   // 3. 创建测试模板
   console.log('\n📋 第三步: 创建测试模板\n');
@@ -200,7 +209,7 @@ async function runTests() {
     variables: ['test_time', 'test_id'],
     contents: {
       lark: {
-        content_type: 'text',
+        content_type: 'text' as const,
         subject_template: '🚀 【模板测试】集成测试通知',
         content_template: '🔥🔥🔥 模板消息测试 🔥🔥🔥\n\n📌 这是通过模板发送的消息\n⏰ 测试时间: {{test_time}}\n🆔 测试ID: {{test_id}}\n🏷️ 模板Key: integration_test_template\n\n✅ 如果您看到这条消息，说明模板功能正常工作！',
       }
@@ -215,59 +224,52 @@ async function runTests() {
     variables: ['alertname', 'severity', 'summary', 'description', 'service', 'instance', 'runbook_url', 'error_rate'],
     contents: {
       lark: {
-        content_type: 'text',
+        content_type: 'text' as const,
         subject_template: '🚨 【Grafana告警】{{alertname}} - {{severity}}',
         content_template: '🚨🚨🚨 Grafana 告警通知 🚨🚨🚨\n\n📌 告警名称: {{alertname}}\n🔴 严重级别: {{severity}}\n🏷️ 服务: {{service}}\n🖥️ 实例: {{instance}}\n\n📊 摘要:\n{{summary}}\n\n📝 详情:\n{{description}}\n\n📈 错误率: {{error_rate}}\n\n📚 Runbook: {{runbook_url}}\n\n⏰ 触发时间: ' + new Date().toLocaleString('zh-CN'),
       },
       webhook: {
-        content_type: 'json',
+        content_type: 'json' as const,
         content_template: '{"alertname":"{{alertname}}","severity":"{{severity}}","summary":"{{summary}}","description":"{{description}}","service":"{{service}}","instance":"{{instance}}","error_rate":"{{error_rate}}","runbook_url":"{{runbook_url}}"}',
       }
     }
   };
 
-  await testEndpoint(
-    '创建测试模板', 
-    'POST', 
-    `/api/templates?key=${testTemplateKey}`, 
-    testTemplateData
-  );
+  await testEndpoint('创建测试模板', 'POST', `/api/templates?key=${testTemplateKey}`,
+    () => client.templates.create(testTemplateKey, testTemplateData));
   
-  await testEndpoint(
-    '创建 Grafana 告警模板', 
-    'POST', 
-    `/api/templates?key=${grafanaTemplateKey}`, 
-    grafanaTemplateData
-  );
+  await testEndpoint('创建 Grafana 告警模板', 'POST', `/api/templates?key=${grafanaTemplateKey}`,
+    () => client.templates.create(grafanaTemplateKey, grafanaTemplateData));
 
   // 4. 发送测试通知
   console.log('\n📋 第四步: 发送测试通知\n');
 
-  // 使用自定义内容发送
-  const customNotification = {
-    user_id: config.testUserId,
-    channels: ['lark'],
-    custom_content: {
-      subject: '🤖 【自定义消息】GitHub Actions 集成测试',
-      content: `🎯🎯🎯 自定义消息测试 🎯🎯🎯\n\n📌 这是通过自定义内容发送的消息\n🌐 环境: ${config.baseUrl}\n⏰ 时间: ${new Date().toLocaleString('zh-CN')}\n👤 用户: ${config.testUserId}\n🏷️ 类型: 自定义内容（非模板）\n\n✅ 如果您看到这条消息，说明自定义内容功能正常工作！`,
-    },
-    idempotency_key: `test-${Date.now()}`,
-  };
-
-  await testEndpoint('发送自定义通知', 'POST', '/api/notifications/send', customNotification);
+  // 使用自定义内容发送 - 使用链式调用
+  await testEndpoint('发送自定义通知', 'POST', '/api/notifications/send',
+    () => client
+      .notify()
+      .to(config.testUserId)
+      .via('lark')
+      .content(
+        `🎯🎯🎯 自定义消息测试 🎯🎯🎯\n\n📌 这是通过自定义内容发送的消息\n🌐 环境: ${config.baseUrl}\n⏰ 时间: ${new Date().toLocaleString('zh-CN')}\n👤 用户: ${config.testUserId}\n🏷️ 类型: 自定义内容（非模板）\n\n✅ 如果您看到这条消息，说明自定义内容功能正常工作！`,
+        '🤖 【自定义消息】GitHub Actions 集成测试'
+      )
+      .idempotent(`test-${Date.now()}`)
+      .send()
+  );
 
   // 使用模板发送
-  const templateNotification = {
-    user_id: config.testUserId,
-    channels: ['lark'],
-    template_key: testTemplateKey,
-    variables: {
-      test_time: new Date().toLocaleString('zh-CN'),
-      test_id: `TEST-${Date.now()}`,
-    },
-  };
-
-  await testEndpoint('发送模板通知', 'POST', '/api/notifications/send', templateNotification);
+  await testEndpoint('发送模板通知', 'POST', '/api/notifications/send',
+    () => client
+      .notify()
+      .to(config.testUserId)
+      .via('lark')
+      .useTemplate(testTemplateKey, {
+        test_time: new Date().toLocaleString('zh-CN'),
+        test_id: `TEST-${Date.now()}`,
+      })
+      .send()
+  );
 
   // 5. 测试 Grafana Webhook
   console.log('\n📋 第五步: 测试 Grafana Webhook 集成\n');
@@ -284,45 +286,30 @@ async function runTests() {
   console.log('\n📋 第六步: 测试其他功能\n');
 
   // 查询刚才发送的通知日志
-  await testEndpoint(
-    '查询最新通知日志',
-    'GET',
-    `/api/notification-logs?user_id=${config.testUserId}&limit=5`
-  );
+  await testEndpoint('查询最新通知日志', 'GET', `/api/notification-logs?user_id=${config.testUserId}&limit=5`,
+    () => client.logs.query({ user_id: config.testUserId, limit: 5 }));
 
   // 测试重试功能
-  await testEndpoint('触发重试', 'POST', '/api/notifications/retry', {});
+  await testEndpoint('触发重试', 'POST', '/api/notifications/retry',
+    () => client.retry.trigger());
 
   // 7. 清理测试数据
   console.log('\n📋 第七步: 清理测试数据\n');
 
   // 删除测试模板
-  await testEndpoint(
-    '删除测试模板',
-    'DELETE',
-    `/api/templates?key=${testTemplateKey}`
-  );
+  await testEndpoint('删除测试模板', 'DELETE', `/api/templates?key=${testTemplateKey}`,
+    () => client.templates.delete(testTemplateKey));
   
-  await testEndpoint(
-    '删除 Grafana 告警模板',
-    'DELETE',
-    `/api/templates?key=${grafanaTemplateKey}`
-  );
+  await testEndpoint('删除 Grafana 告警模板', 'DELETE', `/api/templates?key=${grafanaTemplateKey}`,
+    () => client.templates.delete(grafanaTemplateKey));
 
   // 删除用户配置
-  await testEndpoint(
-    '删除 Lark 配置',
-    'DELETE',
-    `/api/user-configs?user_id=${config.testUserId}&channel_type=lark`
-  );
+  await testEndpoint('删除 Lark 配置', 'DELETE', `/api/user-configs?user_id=${config.testUserId}&channel_type=lark`,
+    () => client.configs.delete(config.testUserId, 'lark'));
 
   // 清理旧日志（保留最近 30 天）
-  await testEndpoint(
-    '清理旧日志',
-    'DELETE',
-    '/api/notification-logs/cleanup',
-    { days: 30 }
-  );
+  await testEndpoint('清理旧日志', 'DELETE', '/api/notification-logs/cleanup',
+    () => client.logs.cleanup(new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)));
 
   // 打印测试报告
   console.log('\n' + '='.repeat(80));

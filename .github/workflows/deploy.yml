@@ -174,7 +174,7 @@ jobs:
           sleep 10
           
           # Run SDK integration test (v2 - matches original test output)
-          npx tsx scripts/testing/integration-test-sdk-v2.ts 2>&1 | tee integration-test.log || {
+          npx tsx scripts/testing/integration-test-sdk-enhanced.ts 2>&1 | tee integration-test.log || {
             echo "❌ SDK integration tests failed"
             
             # Extract test summary from log
