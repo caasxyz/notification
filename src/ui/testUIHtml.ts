@@ -4,7 +4,7 @@
  * 自动生成的文件，请勿手动编辑！
  * 如需修改，请编辑 src/ui/testUI.html 然后运行 npm run build:testui
  * 
- * Generated at: 2025-07-30T09:17:09.485Z
+ * Generated at: 2025-07-30T09:42:07.266Z
  */
 
 /**
@@ -2421,43 +2421,131 @@ export function getTestUIHTML(): string {
                         </div>
                         
                         {scheduledTasksStatus && scheduledTasksStatus.tasks && (
-                            <div className="overflow-x-auto">
-                                <table className="w-full">
-                                    <thead>
-                                        <tr className="border-b">
-                                            <th className="text-left py-3 px-4">任务名称</th>
-                                            <th className="text-left py-3 px-4">最后运行</th>
-                                            <th className="text-left py-3 px-4">下次运行</th>
-                                            <th className="text-left py-3 px-4">状态</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {Object.entries(scheduledTasksStatus.tasks).map(([taskName, taskInfo]) => (
-                                            <tr key={taskName} className="border-b hover:bg-gray-50">
-                                                <td className="py-3 px-4 font-medium">
-                                                    {taskName.replace(/_/g, ' ').toUpperCase()}
-                                                </td>
-                                                <td className="py-3 px-4">
-                                                    {taskInfo.lastRun ? 
-                                                        new Date(taskInfo.lastRun).toLocaleString('zh-CN') : 
-                                                        '未运行'
-                                                    }
-                                                </td>
-                                                <td className="py-3 px-4">
-                                                    {taskInfo.nextRun ? 
-                                                        new Date(taskInfo.nextRun).toLocaleString('zh-CN') : 
-                                                        '-'
-                                                    }
-                                                </td>
-                                                <td className="py-3 px-4">
-                                                    <span className={\`badge \${taskInfo.isRunning ? 'badge-warning' : 'badge-success'}\`}>
-                                                        {taskInfo.isRunning ? '运行中' : '空闲'}
-                                                    </span>
-                                                </td>
+                            <div className="space-y-4">
+                                <div className="overflow-x-auto">
+                                    <table className="w-full">
+                                        <thead>
+                                            <tr className="border-b">
+                                                <th className="text-left py-3 px-4">任务名称</th>
+                                                <th className="text-left py-3 px-4">最后运行</th>
+                                                <th className="text-left py-3 px-4">下次运行</th>
+                                                <th className="text-left py-3 px-4">状态</th>
+                                                <th className="text-left py-3 px-4">成功率</th>
+                                                <th className="text-left py-3 px-4">耗时</th>
                                             </tr>
-                                        ))}
-                                    </tbody>
-                                </table>
+                                        </thead>
+                                        <tbody>
+                                            {Object.entries(scheduledTasksStatus.tasks).map(([taskName, taskInfo]) => (
+                                                <tr key={taskName} className="border-b hover:bg-gray-50">
+                                                    <td className="py-3 px-4 font-medium">
+                                                        {taskName === 'data_cleanup' ? '数据清理' : 
+                                                         taskName === 'monitoring' ? '系统监控' :
+                                                         taskName.replace(/_/g, ' ').toUpperCase()}
+                                                    </td>
+                                                    <td className="py-3 px-4">
+                                                        {taskInfo.lastRun ? 
+                                                            new Date(taskInfo.lastRun).toLocaleString('zh-CN') : 
+                                                            taskInfo.status === 'never_run' ? '从未运行' : '未知'
+                                                        }
+                                                    </td>
+                                                    <td className="py-3 px-4">
+                                                        {taskInfo.nextRun ? 
+                                                            new Date(taskInfo.nextRun).toLocaleString('zh-CN') : 
+                                                            '-'
+                                                        }
+                                                    </td>
+                                                    <td className="py-3 px-4">
+                                                        {taskInfo.lastStatus ? (
+                                                            <span className={\`badge \${
+                                                                taskInfo.lastStatus === 'completed' ? 'badge-success' : 
+                                                                taskInfo.lastStatus === 'failed' ? 'badge-danger' :
+                                                                'badge-warning'
+                                                            }\`}>
+                                                                {taskInfo.lastStatus === 'completed' ? '成功' : 
+                                                                 taskInfo.lastStatus === 'failed' ? '失败' :
+                                                                 taskInfo.lastStatus}
+                                                            </span>
+                                                        ) : (
+                                                            <span className="badge badge-secondary">
+                                                                {taskInfo.status === 'never_run' ? '从未运行' : '未知'}
+                                                            </span>
+                                                        )}
+                                                    </td>
+                                                    <td className="py-3 px-4">
+                                                        {taskInfo.successRate !== undefined ? 
+                                                            \`\${taskInfo.successRate}%\` : '-'
+                                                        }
+                                                    </td>
+                                                    <td className="py-3 px-4">
+                                                        {taskInfo.lastDuration ? 
+                                                            \`\${taskInfo.lastDuration}ms\` : '-'
+                                                        }
+                                                    </td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                </div>
+                                
+                                {/* Show pending cleanup information */}
+                                {scheduledTasksStatus.pendingCleanup && (
+                                    <div className="bg-blue-50 rounded-lg p-4">
+                                        <h4 className="font-medium mb-2 flex items-center gap-2">
+                                            <Icon name="info-circle" className="text-blue-600" />
+                                            待清理数据统计
+                                        </h4>
+                                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+                                            <div>
+                                                <span className="text-gray-600">日志记录: </span>
+                                                <span className="font-medium">{scheduledTasksStatus.pendingCleanup.logs.toLocaleString()}</span>
+                                            </div>
+                                            <div>
+                                                <span className="text-gray-600">幂等性键: </span>
+                                                <span className="font-medium">{scheduledTasksStatus.pendingCleanup.keys.toLocaleString()}</span>
+                                            </div>
+                                            <div>
+                                                <span className="text-gray-600">任务记录: </span>
+                                                <span className="font-medium">{scheduledTasksStatus.pendingCleanup.taskRecords.toLocaleString()}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                )}
+                                
+                                {/* Show last cleanup result */}
+                                {scheduledTasksStatus.lastCleanupResult && (
+                                    <div className="bg-green-50 rounded-lg p-4">
+                                        <h4 className="font-medium mb-2 flex items-center gap-2">
+                                            <Icon name="check-circle" className="text-green-600" />
+                                            最后清理结果
+                                        </h4>
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                                            <div>
+                                                <span className="text-gray-600">清理时间: </span>
+                                                <span className="font-medium">
+                                                    {new Date(scheduledTasksStatus.lastCleanupResult.timestamp).toLocaleString('zh-CN')}
+                                                </span>
+                                            </div>
+                                            <div>
+                                                <span className="text-gray-600">耗时: </span>
+                                                <span className="font-medium">{scheduledTasksStatus.lastCleanupResult.duration}ms</span>
+                                            </div>
+                                            <div>
+                                                <span className="text-gray-600">清理日志: </span>
+                                                <span className="font-medium">{scheduledTasksStatus.lastCleanupResult.cleanedLogs}</span>
+                                            </div>
+                                            <div>
+                                                <span className="text-gray-600">清理缓存: </span>
+                                                <span className="font-medium">{scheduledTasksStatus.lastCleanupResult.cleanedCache}</span>
+                                            </div>
+                                        </div>
+                                        {scheduledTasksStatus.lastCleanupResult.errors && 
+                                         scheduledTasksStatus.lastCleanupResult.errors.length > 0 && (
+                                            <div className="mt-2 text-red-600 text-sm">
+                                                错误: {scheduledTasksStatus.lastCleanupResult.errors.join(', ')}
+                                            </div>
+                                        )}
+                                    </div>
+                                )}
                             </div>
                         )}
                     </div>
