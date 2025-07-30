@@ -1934,17 +1934,15 @@
                 
                 try {
                     const timestamp = Date.now().toString();
-                    const body = JSON.stringify({ days: parseInt(cleanupDays) });
-                    const signature = await generateSignature(timestamp, body, apiSecret);
+                    const url = baseUrl + `/api/notification-logs/cleanup?days=${cleanupDays}`;
+                    const signature = await generateGetSignature(timestamp, url, apiSecret);
                     
-                    const response = await fetch(baseUrl + '/api/notification-logs/cleanup', {
+                    const response = await fetch(url, {
                         method: 'DELETE',
                         headers: {
-                            'Content-Type': 'application/json',
                             'X-Timestamp': timestamp,
                             'X-Signature': signature
-                        },
-                        body: body
+                        }
                     });
                     
                     const data = await response.json();

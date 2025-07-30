@@ -19,10 +19,20 @@ export async function cleanupLogsHandler(
       // Check for query parameter first
       const url = new URL(request.url);
       const beforeParam = url.searchParams.get('before');
+      const daysParam = url.searchParams.get('days');
       
       if (beforeParam) {
         // Direct date parameter
         beforeDate = ValidationUtils.validateDateString(beforeParam);
+      } else if (daysParam) {
+        // Days parameter in query string
+        const days = ValidationUtils.validatePositiveInteger(parseInt(daysParam), 'days');
+        // Limit to maximum 365 days
+        if (days > 365) {
+          throw new Error('Cannot delete logs older than 365 days');
+        }
+        beforeDate = new Date();
+        beforeDate.setDate(beforeDate.getDate() - days);
       } else {
         // Check request body for days parameter
         try {

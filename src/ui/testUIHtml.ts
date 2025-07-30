@@ -4,7 +4,7 @@
  * 自动生成的文件，请勿手动编辑！
  * 如需修改，请编辑 src/ui/testUI.html 然后运行 npm run build:testui
  * 
- * Generated at: 2025-07-30T09:12:59.697Z
+ * Generated at: 2025-07-30T09:17:09.485Z
  */
 
 /**
@@ -1947,17 +1947,15 @@ export function getTestUIHTML(): string {
                 
                 try {
                     const timestamp = Date.now().toString();
-                    const body = JSON.stringify({ days: parseInt(cleanupDays) });
-                    const signature = await generateSignature(timestamp, body, apiSecret);
+                    const url = baseUrl + \`/api/notification-logs/cleanup?days=\${cleanupDays}\`;
+                    const signature = await generateGetSignature(timestamp, url, apiSecret);
                     
-                    const response = await fetch(baseUrl + '/api/notification-logs/cleanup', {
+                    const response = await fetch(url, {
                         method: 'DELETE',
                         headers: {
-                            'Content-Type': 'application/json',
                             'X-Timestamp': timestamp,
                             'X-Signature': signature
-                        },
-                        body: body
+                        }
                     });
                     
                     const data = await response.json();
