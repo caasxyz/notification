@@ -312,23 +312,53 @@ jobs:
         uses: actions/checkout@v4
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
+          fetch-depth: 2  # 需要获取前一个 commit 来比较变化
+          
+      - name: Check if SDK has changes
+        id: check_changes
+        run: |
+          echo "Checking for SDK changes..."
+          
+          # 检查 SDK 目录是否有更改
+          SDK_CHANGED=$(git diff --name-only HEAD^ HEAD | grep -E '^sdk/' || true)
+          
+          if [ -n "$SDK_CHANGED" ]; then
+            echo "SDK has changes:"
+            echo "$SDK_CHANGED"
+            echo "sdk_changed=true" >> $GITHUB_OUTPUT
+          else
+            echo "No SDK changes detected"
+            echo "sdk_changed=false" >> $GITHUB_OUTPUT
+          fi
+          
+      - name: Skip SDK publish if no changes
+        if: steps.check_changes.outputs.sdk_changed == 'false'
+        run: |
+          echo "📦 SDK Publishing Skipped" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "No changes detected in the SDK directory. Skipping publish." >> $GITHUB_STEP_SUMMARY
+          echo "✅ Deployment completed without SDK publish." >> $GITHUB_STEP_SUMMARY
           
       - name: Setup Node.js
+        if: steps.check_changes.outputs.sdk_changed == 'true'
         uses: actions/setup-node@v4
         with:
           node-version: '18'
           registry-url: 'https://npm.pkg.github.com'
           
       - name: Configure Git
+        if: steps.check_changes.outputs.sdk_changed == 'true'
         run: |
           git config user.name "kaito"
           git config user.email "kaito@caas.xyz"
           
       - name: Install SDK dependencies
+        if: steps.check_changes.outputs.sdk_changed == 'true'
         working-directory: ./sdk
         run: npm ci
         
       - name: Get current version
+        if: steps.check_changes.outputs.sdk_changed == 'true'
         id: current_version
         working-directory: ./sdk
         run: |
@@ -337,6 +367,7 @@ jobs:
           echo "Current SDK version: $CURRENT_VERSION"
           
       - name: Check latest published version
+        if: steps.check_changes.outputs.sdk_changed == 'true'
         id: latest_version
         working-directory: ./sdk
         env:
@@ -352,6 +383,7 @@ jobs:
           echo "Latest published version: $LATEST_VERSION"
           
       - name: Determine new version
+        if: steps.check_changes.outputs.sdk_changed == 'true'
         id: new_version
         run: |
           # 从当前版本中提取主版本号、次版本号和补丁号
@@ -384,6 +416,7 @@ jobs:
           echo "New SDK version: $NEW_VERSION"
           
       - name: Update SDK version
+        if: steps.check_changes.outputs.sdk_changed == 'true'
         working-directory: ./sdk
         run: |
           # 更新 package.json 中的版本号
@@ -391,10 +424,12 @@ jobs:
           echo "✅ Updated package.json version to ${{ steps.new_version.outputs.new_version }}"
           
       - name: Build SDK
+        if: steps.check_changes.outputs.sdk_changed == 'true'
         working-directory: ./sdk
         run: npm run build
         
       - name: Publish to GitHub Packages
+        if: steps.check_changes.outputs.sdk_changed == 'true'
         working-directory: ./sdk
         env:
           NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -410,6 +445,7 @@ jobs:
 
           
       - name: Update deployment summary
+        if: steps.check_changes.outputs.sdk_changed == 'true'
         run: |
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "### 📦 SDK Published" >> $GITHUB_STEP_SUMMARY
