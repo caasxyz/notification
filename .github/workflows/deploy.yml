@@ -215,6 +215,34 @@ jobs:
           
           echo "✅ SDK integration tests passed"
 
+      - name: Run production SDK tests
+        if: steps.setup.outputs.DEPLOY_ENV == 'production'
+        env:
+          API_SECRET_KEY: ${{ secrets.PROD_API_SECRET }}
+          API_BASE_URL: ${{ steps.verify.outputs.WORKER_URL }}
+          LARK_WEBHOOK: ${{ secrets.LARK_WEBHOOK_URL || '' }}
+          LARK_SECRET: ${{ secrets.LARK_WEBHOOK_SECRET || '' }}
+        run: |
+          echo "🧪 Running production SDK tests..."
+          echo "   Target: $API_BASE_URL"
+          
+          # Run quick production tests
+          npx tsx scripts/testing/production-sdk-test.ts --quick --user-id github-actions-prod-test || {
+            echo "⚠️ Production tests failed (non-blocking)"
+            
+            # Add to summary even if failed
+            echo "### ⚠️ Production SDK Test Results" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "Some production tests failed. This is non-blocking but should be investigated." >> $GITHUB_STEP_SUMMARY
+          }
+          
+          # If tests passed
+          if [ $? -eq 0 ]; then
+            echo "### ✅ Production SDK Tests Passed" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "All production SDK tests completed successfully." >> $GITHUB_STEP_SUMMARY
+          fi
+
       - name: Upload SDK test report
         if: always() && steps.setup.outputs.DEPLOY_ENV == 'production'
         uses: actions/upload-artifact@v4
