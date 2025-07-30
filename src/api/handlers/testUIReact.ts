@@ -2314,17 +2314,10 @@ receiver: security-team\`}
 
 export async function testUIReactHandler(
   _request: Request,
-  env: Env,
+  _env: Env,
 ): Promise<Response> {
-  // 只在开发环境启用
-  const isDevelopment = env.API_SECRET_KEY?.includes('dev') || 
-                       env.API_SECRET_KEY?.includes('test') ||
-                       env.API_SECRET_KEY === 'test-secret-key-for-local-dev';
-  
-  
-  if (!isDevelopment) {
-    return new Response('Not Found', { status: 404 });
-  }
+  // Test UI 现在在所有环境中都可用
+  // 注意：生产环境中仍需要正确的 API 密钥进行认证
 
   return new Response(getTestUIHTML(), {
     headers: {
