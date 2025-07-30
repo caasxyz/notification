@@ -180,6 +180,60 @@ export async function clearRetryTasksHandler(
 }
 
 /**
+ * Clear all messages from queues
+ */
+export async function clearQueueMessagesHandler(
+  request: Request,
+  env: Env,
+): Promise<Response> {
+  try {
+    const body = await request.json();
+    const { queueName } = body as { queueName: string };
+    
+    if (!queueName) {
+      return new Response(
+        JSON.stringify({
+          success: false,
+          error: 'Queue name is required',
+        }),
+        {
+          status: 400,
+          headers: { 'Content-Type': 'application/json' },
+        },
+      );
+    }
+    
+    // Note: Cloudflare Queues doesn't provide a direct API to clear all messages
+    // This would typically be done through the Cloudflare dashboard or API
+    // For now, we'll return a message indicating this limitation
+    
+    return new Response(
+      JSON.stringify({
+        success: false,
+        message: 'Queue clearing is not directly supported via Workers API. Please use Cloudflare dashboard or wrangler CLI to manage queue messages.',
+        hint: `To clear queue messages, use: wrangler queues consumer tail ${queueName} --clear`,
+      }),
+      {
+        headers: { 'Content-Type': 'application/json' },
+      },
+    );
+  } catch (error) {
+    logger.error('Failed to clear queue messages', error);
+    
+    return new Response(
+      JSON.stringify({
+        success: false,
+        error: 'Failed to clear queue messages',
+      }),
+      {
+        status: 500,
+        headers: { 'Content-Type': 'application/json' },
+      },
+    );
+  }
+}
+
+/**
  * Purge test data from the system
  */
 export async function purgeTestDataHandler(

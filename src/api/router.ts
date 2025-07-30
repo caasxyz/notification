@@ -45,6 +45,7 @@ const PROTECTED_PATHS = [
   '/api/queue/status',
   '/api/queue/clear-retries',
   '/api/queue/purge-test-data',
+  '/api/queue/clear-messages',
   '/metrics',
 ];
 
@@ -159,6 +160,11 @@ export async function handleApiRequest(
     if (path === '/api/queue/purge-test-data' && method === 'POST') {
       const { purgeTestDataHandler } = await import('./handlers/queueManagement');
       return withCORS(await purgeTestDataHandler(request, env));
+    }
+    
+    if (path === '/api/queue/clear-messages' && method === 'POST') {
+      const { clearQueueMessagesHandler } = await import('./handlers/queueManagement');
+      return withCORS(await clearQueueMessagesHandler(request, env));
     }
 
     // Database migration endpoints

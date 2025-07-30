@@ -128,12 +128,6 @@
             gap: 8px;
         }
         
-        .btn-sm {
-            padding: 8px 16px;
-            font-size: 14px;
-            gap: 6px;
-        }
-        
         .btn::before {
             content: '';
             position: absolute;
@@ -639,7 +633,7 @@
             const channels = [
                 { id: 'webhook', name: 'Webhook', icon: 'link', color: 'text-blue-600' },
                 { id: 'telegram', name: 'Telegram', icon: 'paper-plane', color: 'text-sky-600' },
-                { id: 'lark', name: '飞书/Lark', icon: 'feather-alt', color: 'text-green-600' },
+                { id: 'lark', name: '飞书/Lark', icon: 'comments', color: 'text-green-600' },
                 { id: 'slack', name: 'Slack', icon: 'hashtag', color: 'text-purple-600' }
             ];
             
@@ -915,7 +909,6 @@
                 { id: 'userconfig', name: '用户配置', icon: 'user-cog' },
                 { id: 'templates', name: '模板管理', icon: 'file-alt' },
                 { id: 'logs', name: '通知日志', icon: 'history' },
-                { id: 'queue', name: '队列管理', icon: 'tasks' },
                 { id: 'health', name: '健康检查', icon: 'heartbeat' },
                 { id: 'metrics', name: '系统指标', icon: 'chart-line' },
                 { id: 'grafana', name: 'Grafana', icon: 'chart-area' }
@@ -948,7 +941,6 @@
                 userconfig: <UserConfigTab baseUrl={baseUrl} showResponse={showResponse} apiSecret={apiSecret} generateGetSignature={generateGetSignature} generateSignature={generateSignature} showToast={showToast} />,
                 templates: <TemplatesTab baseUrl={baseUrl} showResponse={showResponse} apiSecret={apiSecret} generateGetSignature={generateGetSignature} generateSignature={generateSignature} showToast={showToast} />,
                 logs: <LogsTab baseUrl={baseUrl} showResponse={showResponse} apiSecret={apiSecret} generateGetSignature={generateGetSignature} generateSignature={generateSignature} showToast={showToast} />,
-                queue: <QueueManagementTab baseUrl={baseUrl} showResponse={showResponse} apiSecret={apiSecret} generateGetSignature={generateGetSignature} generateSignature={generateSignature} showToast={showToast} />,
                 health: <HealthTab baseUrl={baseUrl} showResponse={showResponse} showToast={showToast} />,
                 metrics: <MetricsTab baseUrl={baseUrl} showResponse={showResponse} apiSecret={apiSecret} generateGetSignature={generateGetSignature} showToast={showToast} />,
                 grafana: <GrafanaTab baseUrl={baseUrl} showResponse={showResponse} environment={environment} showToast={showToast} />
@@ -1090,7 +1082,7 @@
                     </div>
                     
                     <div className="input-group">
-                        <label>用户 ID <span className="text-red-500">*</span></label>
+                        <label>用户 ID *</label>
                         <input
                             type="text"
                             value={userId}
@@ -1103,7 +1095,7 @@
                     
                     <div>
                         <label className="block text-sm font-medium text-gray-700 mb-3">
-                            通知渠道 <span className="text-red-500">*</span> <span className="text-gray-500">选择一个或多个渠道</span>
+                            通知渠道 * <span className="text-gray-500">选择一个或多个渠道</span>
                         </label>
                         <ChannelSelector
                             selectedChannels={selectedChannels}
@@ -1132,7 +1124,7 @@
                             </div>
                             
                             <div className="input-group">
-                                <label>内容 <span className="text-red-500">*</span></label>
+                                <label>内容 *</label>
                                 <textarea
                                     placeholder="通知内容"
                                     required
@@ -1364,7 +1356,7 @@
                                 />
                             </div>
                             <button
-                                className="btn btn-primary self-end mb-5"
+                                className="btn btn-primary self-end"
                                 onClick={getUserConfigs}
                                 disabled={loading}
                             >
@@ -1379,12 +1371,12 @@
                         <div className="overflow-x-auto">
                             <table className="w-full">
                                 <thead>
-                                    <tr className="border-b bg-gray-50">
-                                        <th className="text-left py-3 px-4 font-semibold text-gray-700">用户 ID</th>
-                                        <th className="text-left py-3 px-4 font-semibold text-gray-700">渠道类型</th>
-                                        <th className="text-left py-3 px-4 font-semibold text-gray-700">配置数据</th>
-                                        <th className="text-center py-3 px-4 font-semibold text-gray-700">状态</th>
-                                        <th className="text-center py-3 px-4 font-semibold text-gray-700">操作</th>
+                                    <tr className="border-b">
+                                        <th className="text-left py-3 px-4">用户 ID</th>
+                                        <th className="text-left py-3 px-4">渠道类型</th>
+                                        <th className="text-left py-3 px-4">配置数据</th>
+                                        <th className="text-left py-3 px-4">状态</th>
+                                        <th className="text-left py-3 px-4">操作</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -1399,12 +1391,12 @@
                                                     {JSON.stringify(config.config_data, null, 2)}
                                                 </pre>
                                             </td>
-                                            <td className="py-3 px-4 text-center">
+                                            <td className="py-3 px-4">
                                                 <span className={`badge ${config.is_active ? 'badge-success' : 'badge-error'}`}>
                                                     {config.is_active ? '激活' : '禁用'}
                                                 </span>
                                             </td>
-                                            <td className="py-3 px-4 text-center">
+                                            <td className="py-3 px-4">
                                                 <button
                                                     className="btn btn-danger btn-sm"
                                                     onClick={() => deleteUserConfig(config.user_id, config.channel_type)}
@@ -1628,16 +1620,19 @@
                 if (!confirm('确定要删除这个模板吗？')) return;
                 
                 try {
-                    const url = baseUrl + '/api/templates?key=' + encodeURIComponent(templateKey);
+                    const url = baseUrl + '/api/templates';
                     const timestamp = Date.now().toString();
-                    const signature = await generateGetSignature(timestamp, url, apiSecret);
+                    const body = JSON.stringify({ template_key: templateKey });
+                    const signature = await generateSignature(timestamp, body, apiSecret);
                     
                     const response = await fetch(url, {
                         method: 'DELETE',
                         headers: {
+                            'Content-Type': 'application/json',
                             'X-Timestamp': timestamp,
                             'X-Signature': signature
-                        }
+                        },
+                        body: body
                     });
                     
                     const data = await response.json();
@@ -1680,13 +1675,13 @@
                             <div className="overflow-x-auto">
                                 <table className="w-full">
                                     <thead>
-                                        <tr className="border-b bg-gray-50">
-                                            <th className="text-left py-3 px-4 font-semibold text-gray-700">模板 Key</th>
-                                            <th className="text-left py-3 px-4 font-semibold text-gray-700">模板名称</th>
-                                            <th className="text-left py-3 px-4 font-semibold text-gray-700">描述</th>
-                                            <th className="text-left py-3 px-4 font-semibold text-gray-700">变量</th>
-                                            <th className="text-left py-3 px-4 font-semibold text-gray-700">支持渠道</th>
-                                            <th className="text-center py-3 px-4 font-semibold text-gray-700">操作</th>
+                                        <tr className="border-b">
+                                            <th className="text-left py-3 px-4">模板 Key</th>
+                                            <th className="text-left py-3 px-4">模板名称</th>
+                                            <th className="text-left py-3 px-4">描述</th>
+                                            <th className="text-left py-3 px-4">变量</th>
+                                            <th className="text-left py-3 px-4">支持渠道</th>
+                                            <th className="text-left py-3 px-4">操作</th>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -1717,7 +1712,7 @@
                                                         </div>
                                                     ) : '-'}
                                                 </td>
-                                                <td className="py-3 px-4 text-center">
+                                                <td className="py-3 px-4">
                                                     <button
                                                         className="btn btn-danger btn-sm"
                                                         onClick={() => deleteTemplate(template.template_key)}
@@ -1854,7 +1849,7 @@
                                         </div>
                                         
                                         <div className="input-group">
-                                            <label>内容模板 <span className="text-red-500">*</span></label>
+                                            <label>内容模板 *</label>
                                             <textarea
                                                 placeholder="使用 {{变量名}} 作为占位符"
                                                 required
@@ -1898,14 +1893,6 @@
             });
             const [cleanupDays, setCleanupDays] = useState('7');
             const [loading, setLoading] = useState(false);
-            const [logs, setLogs] = useState([]);
-            const [totalCount, setTotalCount] = useState(0);
-            const [currentPage, setCurrentPage] = useState(1);
-            
-            useEffect(() => {
-                const page = Math.floor(parseInt(filters.offset) / parseInt(filters.limit)) + 1;
-                setCurrentPage(page);
-            }, [filters.offset, filters.limit]);
             
             const getNotificationLogs = async () => {
                 setLoading(true);
@@ -1929,13 +1916,8 @@
                     const data = await response.json();
                     showResponse(data, response.status);
                     
-                    if (response.ok && data.success) {
-                        setLogs(data.data.logs || []);
-                        setTotalCount(data.data.total || 0);
-                        showToast(`查询成功，共 ${data.data.total || 0} 条记录`, 'success');
-                    } else {
-                        setLogs([]);
-                        setTotalCount(0);
+                    if (response.ok) {
+                        showToast('日志查询成功', 'success');
                     }
                 } catch (error) {
                     showResponse({ error: error.message }, 400);
@@ -2070,117 +2052,6 @@
                             查询日志
                         </button>
                     </div>
-                    
-                    {/* Logs Table */}
-                    {logs.length > 0 && (
-                        <div>
-                            <div className="flex items-center justify-between mb-4">
-                                <h3 className="text-lg font-bold flex items-center gap-2">
-                                    <Icon name="list" />
-                                    查询结果
-                                    <span className="badge badge-info">{totalCount} 条</span>
-                                </h3>
-                                {totalCount > parseInt(filters.limit) && (
-                                    <div className="flex items-center gap-2 text-sm text-gray-600">
-                                        <button
-                                            className="btn btn-secondary btn-sm"
-                                            onClick={() => {
-                                                const newOffset = Math.max(0, parseInt(filters.offset) - parseInt(filters.limit));
-                                                setFilters(prev => ({ ...prev, offset: newOffset.toString() }));
-                                                setTimeout(() => getNotificationLogs(), 0);
-                                            }}
-                                            disabled={parseInt(filters.offset) === 0}
-                                        >
-                                            <Icon name="chevron-left" />
-                                            上一页
-                                        </button>
-                                        <span>
-                                            第 {Math.floor(parseInt(filters.offset) / parseInt(filters.limit)) + 1} 页
-                                        </span>
-                                        <button
-                                            className="btn btn-secondary btn-sm"
-                                            onClick={() => {
-                                                const newOffset = parseInt(filters.offset) + parseInt(filters.limit);
-                                                setFilters(prev => ({ ...prev, offset: newOffset.toString() }));
-                                                setTimeout(() => getNotificationLogs(), 0);
-                                            }}
-                                            disabled={parseInt(filters.offset) + parseInt(filters.limit) >= totalCount}
-                                        >
-                                            下一页
-                                            <Icon name="chevron-right" />
-                                        </button>
-                                    </div>
-                                )}
-                            </div>
-                            
-                            <div className="overflow-x-auto">
-                                <table className="w-full">
-                                    <thead>
-                                        <tr className="border-b bg-gray-50">
-                                            <th className="text-left py-3 px-4 font-semibold text-gray-700">时间</th>
-                                            <th className="text-left py-3 px-4 font-semibold text-gray-700">用户</th>
-                                            <th className="text-left py-3 px-4 font-semibold text-gray-700">渠道</th>
-                                            <th className="text-center py-3 px-4 font-semibold text-gray-700">状态</th>
-                                            <th className="text-left py-3 px-4 font-semibold text-gray-700">模板</th>
-                                            <th className="text-center py-3 px-4 font-semibold text-gray-700">重试</th>
-                                            <th className="text-left py-3 px-4 font-semibold text-gray-700">错误信息</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {logs.map((log, index) => (
-                                            <tr key={log.id || index} className="border-b hover:bg-gray-50">
-                                                <td className="py-3 px-4 text-sm">
-                                                    {new Date(log.created_at).toLocaleString('zh-CN')}
-                                                </td>
-                                                <td className="py-3 px-4">
-                                                    <span className="font-mono text-sm">{log.user_id}</span>
-                                                </td>
-                                                <td className="py-3 px-4">
-                                                    <span className="badge badge-info">{log.channel}</span>
-                                                </td>
-                                                <td className="py-3 px-4 text-center">
-                                                    <span className={`badge ${
-                                                        log.status === 'sent' ? 'badge-success' : 
-                                                        log.status === 'failed' ? 'badge-error' : 
-                                                        log.status === 'retry' ? 'badge-warning' : 
-                                                        'badge-info'
-                                                    }`}>
-                                                        {log.status === 'sent' ? '成功' : 
-                                                         log.status === 'failed' ? '失败' : 
-                                                         log.status === 'retry' ? '重试中' : 
-                                                         log.status}
-                                                    </span>
-                                                </td>
-                                                <td className="py-3 px-4">
-                                                    {log.template_key ? (
-                                                        <span className="font-mono text-sm">{log.template_key}</span>
-                                                    ) : (
-                                                        <span className="text-gray-400">-</span>
-                                                    )}
-                                                </td>
-                                                <td className="py-3 px-4 text-center">
-                                                    <span className="badge badge-warning">
-                                                        {log.retry_count || 0}
-                                                    </span>
-                                                </td>
-                                                <td className="py-3 px-4">
-                                                    {log.error_message ? (
-                                                        <span className="text-sm text-red-600" title={log.error_message}>
-                                                            {log.error_message.length > 50 
-                                                                ? log.error_message.substring(0, 50) + '...' 
-                                                                : log.error_message}
-                                                        </span>
-                                                    ) : (
-                                                        <span className="text-gray-400">-</span>
-                                                    )}
-                                                </td>
-                                            </tr>
-                                        ))}
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
-                    )}
                     
                     {/* Management Section */}
                     <div>
@@ -2915,185 +2786,6 @@ receiver: security-team`}
                             </div>
                         </div>
                     </div>
-                </div>
-            );
-        }
-        
-        // Queue Management Tab Component
-        function QueueManagementTab({ baseUrl, showResponse, apiSecret, generateGetSignature, generateSignature, showToast }) {
-            const [queueStatus, setQueueStatus] = useState(null);
-            const [loading, setLoading] = useState(false);
-            
-            const getQueueStatus = async () => {
-                setLoading(true);
-                try {
-                    const url = baseUrl + '/api/queue/status';
-                    const timestamp = Date.now().toString();
-                    const signature = await generateGetSignature(timestamp, url, apiSecret);
-                    
-                    const response = await fetch(url, {
-                        headers: {
-                            'X-Timestamp': timestamp,
-                            'X-Signature': signature
-                        }
-                    });
-                    const data = await response.json();
-                    
-                    if (response.ok && data.success) {
-                        setQueueStatus(data.data);
-                        showToast('队列状态加载成功', 'success');
-                    } else {
-                        showToast(data.error || '加载队列状态失败', 'error');
-                    }
-                } catch (error) {
-                    showToast(error.message || '加载队列状态失败', 'error');
-                } finally {
-                    setLoading(false);
-                }
-            };
-            
-            
-            const clearQueueMessages = async (queueName) => {
-                if (!confirm(`注意：清理队列 ${queueName} 的所有消息是不可逆的操作！\n\n确定要继续吗？`)) return;
-                
-                try {
-                    const timestamp = Date.now().toString();
-                    const body = JSON.stringify({ queueName });
-                    const signature = await generateSignature(timestamp, body, apiSecret);
-                    
-                    const response = await fetch(baseUrl + '/api/queue/clear-messages', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'X-Timestamp': timestamp,
-                            'X-Signature': signature
-                        },
-                        body: body
-                    });
-                    
-                    const data = await response.json();
-                    
-                    if (data.hint) {
-                        showToast(data.message, 'warning');
-                        alert(`${data.message}\n\n${data.hint}`);
-                    } else if (response.ok) {
-                        showToast('队列已清理', 'success');
-                        getQueueStatus(); // Refresh
-                    } else {
-                        showToast(data.error || '清理队列失败', 'error');
-                    }
-                } catch (error) {
-                    showToast(error.message || '清理队列失败', 'error');
-                }
-            };
-            
-            
-            useEffect(() => {
-                getQueueStatus();
-            }, []);
-            
-            return (
-                <div className="space-y-8">
-                    {/* Queue Status */}
-                    <div>
-                        <div className="flex items-center justify-between mb-4">
-                            <h3 className="text-lg font-bold flex items-center gap-2">
-                                <Icon name="tasks" />
-                                队列状态
-                            </h3>
-                            <button
-                                className="btn btn-primary"
-                                onClick={getQueueStatus}
-                                disabled={loading}
-                            >
-                                {loading ? <LoadingSpinner size="small" /> : <Icon name="sync" />}
-                                刷新状态
-                            </button>
-                        </div>
-                        
-                        {queueStatus && (
-                            <div className="grid md:grid-cols-2 gap-6">
-                                {/* Queue Info */}
-                                <div className="card p-6">
-                                    <h4 className="font-medium mb-4 flex items-center gap-2">
-                                        <Icon name="server" />
-                                        队列信息
-                                    </h4>
-                                    {queueStatus.queues.map(queue => (
-                                        <div key={queue.name} className="mb-3 p-3 bg-gray-50 rounded">
-                                            <div className="flex items-center justify-between">
-                                                <div>
-                                                    <span className="font-medium">{queue.name}</span>
-                                                    <span className="badge badge-info ml-2">
-                                                        {queue.size >= 0 ? `${queue.size} 条消息` : '未知'}
-                                                    </span>
-                                                </div>
-                                                <button
-                                                    className="btn btn-danger btn-sm"
-                                                    onClick={() => clearQueueMessages(queue.name)}
-                                                    title="清空队列所有消息"
-                                                >
-                                                    <Icon name="trash" />
-                                                    清空
-                                                </button>
-                                            </div>
-                                        </div>
-                                    ))}
-                                    <p className="text-sm text-gray-500 mt-4">
-                                        <Icon name="info-circle" className="mr-1" />
-                                        {queueStatus.note}
-                                    </p>
-                                </div>
-                                
-                                {/* Pending Retries */}
-                                <div className="card p-6">
-                                    <h4 className="font-medium mb-4 flex items-center gap-2">
-                                        <Icon name="redo" />
-                                        待重试任务
-                                        <span className="badge badge-warning">
-                                            {queueStatus.pendingRetries.count}
-                                        </span>
-                                    </h4>
-                                    {queueStatus.pendingRetries.count > 0 ? (
-                                        <div className="max-h-60 overflow-y-auto">
-                                            {queueStatus.pendingRetries.items.map(item => (
-                                                <div key={item.id} className="mb-2 p-2 bg-gray-50 rounded text-sm">
-                                                    <label className="flex items-center gap-2 cursor-pointer">
-                                                        <input
-                                                            type="checkbox"
-                                                            checked={selectedRetries.includes(item.id)}
-                                                            onChange={(e) => {
-                                                                if (e.target.checked) {
-                                                                    setSelectedRetries([...selectedRetries, item.id]);
-                                                                } else {
-                                                                    setSelectedRetries(selectedRetries.filter(id => id !== item.id));
-                                                                }
-                                                            }}
-                                                        />
-                                                        <div className="flex-1">
-                                                            <div className="flex items-center gap-2">
-                                                                <span className="font-mono">{item.user_id}</span>
-                                                                <span className="badge badge-info text-xs">{item.channel}</span>
-                                                                <span className="badge badge-warning text-xs">
-                                                                    重试 {item.retry_count}
-                                                                </span>
-                                                            </div>
-                                                            <div className="text-xs text-gray-500">
-                                                                {new Date(item.created_at).toLocaleString('zh-CN')}
-                                                            </div>
-                                                        </div>
-                                                    </label>
-                                                </div>
-                                            ))}
-                                        </div>
-                                    ) : (
-                                        <p className="text-gray-500">暂无待重试任务</p>
-                                    )}
-                                </div>
-                            </div>
-                        )}
-                    </div>
-                    
                 </div>
             );
         }

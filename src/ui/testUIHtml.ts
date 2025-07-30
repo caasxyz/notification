@@ -4,7 +4,7 @@
  * 自动生成的文件，请勿手动编辑！
  * 如需修改，请编辑 src/ui/testUI.html 然后运行 npm run build:testui
  * 
- * Generated at: 2025-07-30T08:30:02.094Z
+ * Generated at: 2025-07-30T08:55:39.940Z
  */
 
 /**
@@ -2936,9 +2936,6 @@ receiver: security-team\`}
         function QueueManagementTab({ baseUrl, showResponse, apiSecret, generateGetSignature, generateSignature, showToast }) {
             const [queueStatus, setQueueStatus] = useState(null);
             const [loading, setLoading] = useState(false);
-            const [selectedRetries, setSelectedRetries] = useState([]);
-            const [testUserIds, setTestUserIds] = useState(['test-user', 'demo-user']);
-            const [customTestUserId, setCustomTestUserId] = useState('');
             
             const getQueueStatus = async () => {
                 setLoading(true);
@@ -2954,37 +2951,30 @@ receiver: security-team\`}
                         }
                     });
                     const data = await response.json();
-                    showResponse(data, response.status);
                     
                     if (response.ok && data.success) {
                         setQueueStatus(data.data);
                         showToast('队列状态加载成功', 'success');
+                    } else {
+                        showToast(data.error || '加载队列状态失败', 'error');
                     }
                 } catch (error) {
-                    showResponse({ error: error.message }, 400);
-                    showToast('加载队列状态失败', 'error');
+                    showToast(error.message || '加载队列状态失败', 'error');
                 } finally {
                     setLoading(false);
                 }
             };
             
-            const clearRetryTasks = async (markAsFailed = true) => {
-                const taskIds = selectedRetries.length > 0 ? selectedRetries : undefined;
-                const message = taskIds 
-                    ? \`确定要清理选中的 \${taskIds.length} 个重试任务吗？\` 
-                    : '确定要清理所有重试任务吗？';
-                    
-                if (!confirm(message)) return;
+            
+            const clearQueueMessages = async (queueName) => {
+                if (!confirm(\`注意：清理队列 \${queueName} 的所有消息是不可逆的操作！\\n\\n确定要继续吗？\`)) return;
                 
                 try {
                     const timestamp = Date.now().toString();
-                    const body = JSON.stringify({
-                        taskIds,
-                        markAsFailed
-                    });
+                    const body = JSON.stringify({ queueName });
                     const signature = await generateSignature(timestamp, body, apiSecret);
                     
-                    const response = await fetch(baseUrl + '/api/queue/clear-retries', {
+                    const response = await fetch(baseUrl + '/api/queue/clear-messages', {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',
@@ -2995,63 +2985,21 @@ receiver: security-team\`}
                     });
                     
                     const data = await response.json();
-                    showResponse(data, response.status);
                     
-                    if (response.ok) {
-                        showToast('重试任务已清理', 'success');
-                        setSelectedRetries([]);
+                    if (data.hint) {
+                        showToast(data.message, 'warning');
+                        alert(\`\${data.message}\\n\\n\${data.hint}\`);
+                    } else if (response.ok) {
+                        showToast('队列已清理', 'success');
                         getQueueStatus(); // Refresh
+                    } else {
+                        showToast(data.error || '清理队列失败', 'error');
                     }
                 } catch (error) {
-                    showResponse({ error: error.message }, 400);
-                    showToast('清理重试任务失败', 'error');
+                    showToast(error.message || '清理队列失败', 'error');
                 }
             };
             
-            const purgeTestData = async (dryRun = false) => {
-                const allTestUserIds = [...testUserIds];
-                if (customTestUserId.trim()) {
-                    allTestUserIds.push(customTestUserId.trim());
-                }
-                
-                const message = dryRun 
-                    ? \`检查将要删除的测试数据（用户: \${allTestUserIds.join(', ')}）\` 
-                    : \`确定要永久删除这些测试用户的所有数据吗？\\n用户: \${allTestUserIds.join(', ')}\`;
-                    
-                if (!dryRun && !confirm(message)) return;
-                
-                try {
-                    const timestamp = Date.now().toString();
-                    const body = JSON.stringify({
-                        testUserIds: allTestUserIds,
-                        dryRun
-                    });
-                    const signature = await generateSignature(timestamp, body, apiSecret);
-                    
-                    const response = await fetch(baseUrl + '/api/queue/purge-test-data', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'X-Timestamp': timestamp,
-                            'X-Signature': signature
-                        },
-                        body: body
-                    });
-                    
-                    const data = await response.json();
-                    showResponse(data, response.status);
-                    
-                    if (response.ok) {
-                        showToast(
-                            dryRun ? '预检查完成' : '测试数据已清理',
-                            'success'
-                        );
-                    }
-                } catch (error) {
-                    showResponse({ error: error.message }, 400);
-                    showToast('操作失败', 'error');
-                }
-            };
             
             useEffect(() => {
                 getQueueStatus();
@@ -3087,10 +3035,20 @@ receiver: security-team\`}
                                     {queueStatus.queues.map(queue => (
                                         <div key={queue.name} className="mb-3 p-3 bg-gray-50 rounded">
                                             <div className="flex items-center justify-between">
-                                                <span className="font-medium">{queue.name}</span>
-                                                <span className="badge badge-info">
-                                                    {queue.size >= 0 ? \`\${queue.size} 条消息\` : '未知'}
-                                                </span>
+                                                <div>
+                                                    <span className="font-medium">{queue.name}</span>
+                                                    <span className="badge badge-info ml-2">
+                                                        {queue.size >= 0 ? \`\${queue.size} 条消息\` : '未知'}
+                                                    </span>
+                                                </div>
+                                                <button
+                                                    className="btn btn-danger btn-sm"
+                                                    onClick={() => clearQueueMessages(queue.name)}
+                                                    title="清空队列所有消息"
+                                                >
+                                                    <Icon name="trash" />
+                                                    清空
+                                                </button>
                                             </div>
                                         </div>
                                     ))}
@@ -3149,113 +3107,6 @@ receiver: security-team\`}
                         )}
                     </div>
                     
-                    {/* Queue Operations */}
-                    <div>
-                        <h3 className="text-lg font-bold mb-4 flex items-center gap-2">
-                            <Icon name="tools" />
-                            队列操作
-                        </h3>
-                        
-                        <div className="grid md:grid-cols-2 gap-6">
-                            {/* Clear Retry Tasks */}
-                            <div className="card p-6 bg-orange-50">
-                                <h4 className="font-medium mb-4 flex items-center gap-2">
-                                    <Icon name="times-circle" className="text-orange-600" />
-                                    清理重试任务
-                                </h4>
-                                <p className="text-sm text-gray-600 mb-4">
-                                    清理待重试任务，可以标记为失败或取消
-                                </p>
-                                <div className="space-y-2">
-                                    <button
-                                        className="btn btn-danger w-full"
-                                        onClick={() => clearRetryTasks(true)}
-                                    >
-                                        <Icon name="times" />
-                                        {selectedRetries.length > 0 
-                                            ? \`标记选中的 \${selectedRetries.length} 个任务为失败\` 
-                                            : '标记所有重试任务为失败'}
-                                    </button>
-                                    <button
-                                        className="btn btn-secondary w-full"
-                                        onClick={() => clearRetryTasks(false)}
-                                    >
-                                        <Icon name="ban" />
-                                        {selectedRetries.length > 0 
-                                            ? \`取消选中的 \${selectedRetries.length} 个任务\` 
-                                            : '取消所有重试任务'}
-                                    </button>
-                                </div>
-                            </div>
-                            
-                            {/* Purge Test Data */}
-                            <div className="card p-6 bg-red-50">
-                                <h4 className="font-medium mb-4 flex items-center gap-2">
-                                    <Icon name="trash-alt" className="text-red-600" />
-                                    清理测试数据
-                                </h4>
-                                <p className="text-sm text-gray-600 mb-4">
-                                    永久删除测试用户的所有通知记录
-                                </p>
-                                <div className="mb-4">
-                                    <label className="text-sm font-medium text-gray-700">测试用户 ID</label>
-                                    <div className="space-y-2 mt-2">
-                                        {testUserIds.map((id, index) => (
-                                            <div key={index} className="flex items-center gap-2">
-                                                <input
-                                                    type="text"
-                                                    value={id}
-                                                    onChange={(e) => {
-                                                        const newIds = [...testUserIds];
-                                                        newIds[index] = e.target.value;
-                                                        setTestUserIds(newIds);
-                                                    }}
-                                                    className="flex-1 px-3 py-2 border-2 border-gray-300 rounded-lg text-sm"
-                                                />
-                                                <button
-                                                    onClick={() => {
-                                                        setTestUserIds(testUserIds.filter((_, i) => i !== index));
-                                                    }}
-                                                    className="text-red-600 hover:text-red-700"
-                                                >
-                                                    <Icon name="times" />
-                                                </button>
-                                            </div>
-                                        ))}
-                                        <input
-                                            type="text"
-                                            placeholder="添加更多测试用户 ID..."
-                                            value={customTestUserId}
-                                            onChange={(e) => setCustomTestUserId(e.target.value)}
-                                            onKeyPress={(e) => {
-                                                if (e.key === 'Enter' && customTestUserId.trim()) {
-                                                    setTestUserIds([...testUserIds, customTestUserId.trim()]);
-                                                    setCustomTestUserId('');
-                                                }
-                                            }}
-                                            className="w-full px-3 py-2 border-2 border-gray-300 rounded-lg text-sm"
-                                        />
-                                    </div>
-                                </div>
-                                <div className="space-y-2">
-                                    <button
-                                        className="btn btn-secondary w-full"
-                                        onClick={() => purgeTestData(true)}
-                                    >
-                                        <Icon name="search" />
-                                        预检查（显示将删除的数据量）
-                                    </button>
-                                    <button
-                                        className="btn btn-danger w-full"
-                                        onClick={() => purgeTestData(false)}
-                                    >
-                                        <Icon name="trash" />
-                                        永久删除测试数据
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
                 </div>
             );
         }

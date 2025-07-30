@@ -1,0 +1,2308 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>通知系统 API 测试工具 V2 - React</title>
+    
+    <!-- React and Babel from CDN -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background-color: #f5f5f5;
+            color: #333;
+            line-height: 1.6;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            transition: background 0.3s ease;
+        }
+        
+        .header.production {
+            background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+        }
+        
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+        
+        .header p {
+            opacity: 0.9;
+            font-size: 1.1rem;
+        }
+        
+        .warning {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            color: #856404;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+        
+        .warning.production {
+            background: #f8d7da;
+            border-color: #f5c6cb;
+            color: #721c24;
+        }
+        
+        .section {
+            background: white;
+            padding: 25px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+        
+        .section h2 {
+            color: #667eea;
+            margin-bottom: 20px;
+            font-size: 1.8rem;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #555;
+        }
+        
+        .form-group input, .form-group select, .form-group textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 6px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+        
+        .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        .form-group textarea {
+            min-height: 120px;
+            resize: vertical;
+            font-family: 'Consolas', 'Monaco', monospace;
+        }
+        
+        .btn {
+            display: inline-block;
+            padding: 12px 24px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-right: 10px;
+            margin-bottom: 10px;
+        }
+        
+        .btn:hover {
+            background: #5a67d8;
+            transform: translateY(-1px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+        }
+        
+        .btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+        
+        .btn-primary {
+            background: #667eea;
+        }
+        
+        .btn-secondary {
+            background: #6c757d;
+        }
+        
+        .btn-danger {
+            background: #dc3545;
+        }
+        
+        .btn-danger:hover {
+            background: #c82333;
+        }
+        
+        .status-badge {
+            display: inline-block;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 600;
+        }
+        
+        .status-success {
+            background: #d4edda;
+            color: #155724;
+        }
+        
+        .status-error {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        
+        .response-body {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 6px;
+            padding: 20px;
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-size: 14px;
+            white-space: pre-wrap;
+            word-break: break-word;
+            max-height: 500px;
+            overflow-y: auto;
+            position: relative;
+        }
+        
+        .copy-button {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            padding: 5px 10px;
+            background: #6c757d;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            opacity: 0.7;
+            transition: opacity 0.2s;
+        }
+        
+        .copy-button:hover {
+            opacity: 1;
+        }
+        
+        .copy-button.copied {
+            background: #28a745;
+        }
+        
+        .json-key {
+            color: #881391;
+            font-weight: bold;
+        }
+        
+        .json-string {
+            color: #1a1aa6;
+        }
+        
+        .json-number {
+            color: #008080;
+        }
+        
+        .json-boolean {
+            color: #d73a49;
+        }
+        
+        .json-null {
+            color: #666;
+        }
+        
+        .tab-nav {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #e0e0e0;
+            flex-wrap: wrap;
+        }
+        
+        .tab-btn {
+            padding: 10px 20px;
+            background: none;
+            border: none;
+            border-bottom: 3px solid transparent;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            color: #666;
+            transition: all 0.3s;
+        }
+        
+        .tab-btn.active {
+            color: #667eea;
+            border-bottom-color: #667eea;
+        }
+        
+        .tab-content {
+            display: none;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        .endpoint-info {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+            font-family: monospace;
+        }
+        
+        .method-badge {
+            display: inline-block;
+            padding: 4px 8px;
+            background: #28a745;
+            color: white;
+            border-radius: 4px;
+            font-weight: bold;
+            font-size: 14px;
+            margin-right: 10px;
+        }
+        
+        .method-badge.get {
+            background: #007bff;
+        }
+        
+        .method-badge.post {
+            background: #28a745;
+        }
+        
+        .method-badge.delete {
+            background: #dc3545;
+        }
+        
+        .quick-fill {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+            flex-wrap: wrap;
+        }
+        
+        .quick-fill button {
+            padding: 6px 12px;
+            background: #6c757d;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        
+        .quick-fill button:hover {
+            background: #5a6268;
+        }
+        
+        .loader {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255,255,255,.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 1s ease-in-out infinite;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        .channels {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+        
+        .channel-checkbox {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        
+        .channel-checkbox input[type="checkbox"] {
+            width: auto;
+            margin: 0;
+        }
+        
+        .channel-checkbox label {
+            margin: 0;
+            font-weight: normal;
+            cursor: pointer;
+        }
+        
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        
+        .data-table th, .data-table td {
+            padding: 10px;
+            border: 1px solid #ddd;
+            text-align: left;
+        }
+        
+        .data-table th {
+            background: #f8f9fa;
+            font-weight: 600;
+        }
+        
+        .data-table tr:hover {
+            background: #f8f9fa;
+        }
+        
+        .action-btns {
+            display: flex;
+            gap: 5px;
+        }
+        
+        .btn-sm {
+            padding: 4px 8px;
+            font-size: 14px;
+        }
+        
+        .form-row {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .form-row .form-group {
+            flex: 1;
+            margin-bottom: 0;
+        }
+        
+        .template-channel-item {
+            border: 1px solid #e0e0e0;
+            padding: 15px;
+            margin-bottom: 15px;
+            border-radius: 6px;
+            background: #f8f9fa;
+        }
+        
+        .v2-badge {
+            background: #17a2b8;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            margin-left: 10px;
+        }
+        
+        .remove-btn {
+            float: right;
+            background: #dc3545;
+            color: white;
+            border: none;
+            padding: 4px 8px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+        
+        .remove-btn:hover {
+            background: #c82333;
+        }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+    
+    <script type="text/babel">
+        const { useState, useEffect, useCallback, useRef } = React;
+        
+        // API configuration
+        const PRODUCTION_URL = 'https://notification.caas.xyz';
+        
+        // JSON 美化组件
+        function ResponseDisplay({ data }) {
+            const [copied, setCopied] = useState(false);
+            
+            const handleCopy = async () => {
+                try {
+                    await navigator.clipboard.writeText(data || '');
+                    setCopied(true);
+                    setTimeout(() => setCopied(false), 2000);
+                } catch (err) {
+                    console.error('Failed to copy:', err);
+                }
+            };
+            
+            const formatJSON = (jsonString) => {
+                if (!jsonString) return '响应结果将在这里显示...';
+                
+                try {
+                    const obj = JSON.parse(jsonString);
+                    return JSON.stringify(obj, null, 2);
+                } catch {
+                    return jsonString;
+                }
+            };
+            
+            return (
+                <div className="response-body">
+                    {data && (
+                        <button 
+                            className={`copy-button ${copied ? 'copied' : ''}`}
+                            onClick={handleCopy}
+                        >
+                            {copied ? '✓ 已复制' : '复制'}
+                        </button>
+                    )}
+                    <pre style={{ margin: 0 }}>{formatJSON(data)}</pre>
+                </div>
+            );
+        }
+
+        // Main App Component
+        function App() {
+            const [activeTab, setActiveTab] = useState('send');
+            const [environment, setEnvironment] = useState(() => {
+                return localStorage.getItem('environment') || 'local';
+            });
+            const [apiSecret, setApiSecret] = useState(() => {
+                const currentEnv = localStorage.getItem('environment') || 'local';
+                if (currentEnv === 'production') {
+                    return localStorage.getItem('api_secret_production') || '';
+                } else {
+                    return localStorage.getItem('api_secret_local') || 'test-secret-key-for-development';
+                }
+            });
+            const [baseUrl, setBaseUrl] = useState(() => {
+                const currentEnv = localStorage.getItem('environment') || 'local';
+                return currentEnv === 'production' ? PRODUCTION_URL : window.location.origin;
+            });
+            const [response, setResponse] = useState({ data: null, status: null });
+            const [loading, setLoading] = useState(false);
+            const [requestHistory, setRequestHistory] = useState(() => {
+                const saved = localStorage.getItem('request_history');
+                return saved ? JSON.parse(saved) : [];
+            });
+            
+            // Form states
+            const [userId, setUserId] = useState('test-user');
+            const [selectedChannels, setSelectedChannels] = useState(['webhook']);
+            const [sendMethod, setSendMethod] = useState('custom');
+            const [subject, setSubject] = useState('');
+            const [content, setContent] = useState('这是一条测试通知 🔔');
+            const [templateKey, setTemplateKey] = useState('');
+            const [variables, setVariables] = useState('{}');
+            const [idempotencyKey, setIdempotencyKey] = useState('');
+            const [templates, setTemplates] = useState([]);
+            const [templatesData, setTemplatesData] = useState({});
+            
+            // Handle environment change
+            const handleEnvironmentChange = (env) => {
+                if (env === 'production') {
+                    if (confirm('⚠️ 注意：您即将切换到正式环境！\n\n请确保：\n1. 使用正确的正式环境 API 密钥\n2. 谨慎操作，避免发送测试数据\n\n是否继续？')) {
+                        setEnvironment('production');
+                        localStorage.setItem('environment', 'production');
+                        setBaseUrl(PRODUCTION_URL);
+                        const prodSecret = localStorage.getItem('api_secret_production') || '';
+                        setApiSecret(prodSecret);
+                    }
+                } else {
+                    setEnvironment('local');
+                    localStorage.setItem('environment', 'local');
+                    setBaseUrl(window.location.origin);
+                    const localSecret = localStorage.getItem('api_secret_local') || 'test-secret-key-for-development';
+                    setApiSecret(localSecret);
+                }
+            };
+            
+            // Generate signature
+            const generateSignature = async (timestamp, body, secretKey) => {
+                const encoder = new TextEncoder();
+                const key = await crypto.subtle.importKey(
+                    'raw',
+                    encoder.encode(secretKey),
+                    { name: 'HMAC', hash: 'SHA-256' },
+                    false,
+                    ['sign']
+                );
+                
+                const signature = await crypto.subtle.sign(
+                    'HMAC',
+                    key,
+                    encoder.encode(timestamp + body)
+                );
+                
+                return Array.from(new Uint8Array(signature))
+                    .map(b => b.toString(16).padStart(2, '0'))
+                    .join('');
+            };
+            
+            // Generate signature for GET/DELETE requests
+            const generateGetSignature = async (timestamp, url, secretKey) => {
+                const urlObj = new URL(url);
+                const pathAndQuery = urlObj.pathname + urlObj.search;
+                return generateSignature(timestamp, pathAndQuery, secretKey);
+            };
+            
+            // Show response
+            const showResponse = (data, status) => {
+                const envInfo = environment === 'production' ? 
+                    '⚠️ 正式环境响应\n' + '━'.repeat(50) + '\n' : 
+                    '✅ 本地环境响应\n' + '━'.repeat(50) + '\n';
+                
+                setResponse({
+                    data: envInfo + JSON.stringify(data, null, 2),
+                    status
+                });
+            };
+            
+            // Load templates
+            const loadTemplates = useCallback(async () => {
+                if (selectedChannels.length === 0) {
+                    setTemplates([]);
+                    return;
+                }
+                
+                try {
+                    const response = await fetch(baseUrl + '/api/templates');
+                    const data = await response.json();
+                    
+                    if (data.success && data.data) {
+                        const templatesMap = {};
+                        data.data.forEach(template => {
+                            templatesMap[template.template_key] = template;
+                        });
+                        setTemplatesData(templatesMap);
+                        
+                        // Filter templates that support all selected channels
+                        const availableTemplates = data.data.filter(template => 
+                            selectedChannels.every(channel => 
+                                template.supported_channels && template.supported_channels.includes(channel)
+                            )
+                        );
+                        
+                        setTemplates(availableTemplates);
+                        if (availableTemplates.length > 0) {
+                            setTemplateKey(availableTemplates[0].template_key);
+                        }
+                    }
+                } catch (error) {
+                    console.error('Failed to load templates:', error);
+                    setTemplates([]);
+                }
+            }, [selectedChannels, baseUrl]);
+            
+            // Send notification
+            const sendNotification = async () => {
+                setLoading(true);
+                try {
+                    const requestBody = {
+                        user_id: userId,
+                        channels: selectedChannels
+                    };
+                    
+                    if (sendMethod === 'custom') {
+                        requestBody.custom_content = {
+                            content: content
+                        };
+                        if (subject) {
+                            requestBody.custom_content.subject = subject;
+                        }
+                    } else {
+                        requestBody.template_key = templateKey;
+                        try {
+                            const vars = JSON.parse(variables);
+                            if (Object.keys(vars).length > 0) {
+                                requestBody.variables = vars;
+                            }
+                        } catch (e) {
+                            throw new Error('模板变量必须是有效的 JSON 格式');
+                        }
+                    }
+                    
+                    if (idempotencyKey) {
+                        requestBody.idempotency_key = idempotencyKey;
+                    }
+                    
+                    const timestamp = Date.now().toString();
+                    const body = JSON.stringify(requestBody);
+                    const signature = await generateSignature(timestamp, body, apiSecret);
+                    
+                    // 调试信息
+                    console.log('Request Debug Info:');
+                    console.log('Timestamp:', timestamp);
+                    console.log('API Secret:', apiSecret);
+                    console.log('Body:', body);
+                    console.log('Signature:', signature);
+                    console.log('Payload for signature:', timestamp + body);
+                    
+                    const response = await fetch(baseUrl + '/api/notifications/send', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-Timestamp': timestamp,
+                            'X-Signature': signature
+                        },
+                        body: body
+                    });
+                    
+                    const data = await response.json();
+                    showResponse(data, response.status);
+                } catch (error) {
+                    showResponse({ error: error.message }, 400);
+                } finally {
+                    setLoading(false);
+                }
+            };
+            
+            // Channel checkbox handler
+            const handleChannelChange = (channel) => {
+                setSelectedChannels(prev => {
+                    if (prev.includes(channel)) {
+                        return prev.filter(c => c !== channel);
+                    } else {
+                        return [...prev, channel];
+                    }
+                });
+            };
+            
+            // Load templates when channels change
+            useEffect(() => {
+                if (sendMethod === 'template') {
+                    loadTemplates();
+                }
+            }, [selectedChannels, sendMethod, loadTemplates]);
+            
+            // Tab components
+            const tabs = {
+                send: <SendNotificationTab 
+                    userId={userId}
+                    setUserId={setUserId}
+                    selectedChannels={selectedChannels}
+                    handleChannelChange={handleChannelChange}
+                    sendMethod={sendMethod}
+                    setSendMethod={setSendMethod}
+                    subject={subject}
+                    setSubject={setSubject}
+                    content={content}
+                    setContent={setContent}
+                    templateKey={templateKey}
+                    setTemplateKey={setTemplateKey}
+                    templates={templates}
+                    templatesData={templatesData}
+                    variables={variables}
+                    setVariables={setVariables}
+                    idempotencyKey={idempotencyKey}
+                    setIdempotencyKey={setIdempotencyKey}
+                    sendNotification={sendNotification}
+                    loading={loading}
+                />,
+                userconfig: <UserConfigTab baseUrl={baseUrl} showResponse={showResponse} apiSecret={apiSecret} generateGetSignature={generateGetSignature} generateSignature={generateSignature} />,
+                templates: <TemplatesTab baseUrl={baseUrl} showResponse={showResponse} apiSecret={apiSecret} generateGetSignature={generateGetSignature} generateSignature={generateSignature} />,
+                logs: <LogsTab baseUrl={baseUrl} showResponse={showResponse} apiSecret={apiSecret} generateGetSignature={generateGetSignature} generateSignature={generateSignature} />,
+                health: <HealthTab baseUrl={baseUrl} showResponse={showResponse} />,
+                metrics: <MetricsTab baseUrl={baseUrl} showResponse={showResponse} apiSecret={apiSecret} generateGetSignature={generateGetSignature} />,
+                grafana: <GrafanaTab baseUrl={baseUrl} showResponse={showResponse} environment={environment} />
+            };
+            
+            return (
+                <div className="container">
+                    <div className={`header ${environment === 'production' ? 'production' : ''}`}>
+                        <h1>🚀 通知系统 API 测试工具 <span className="v2-badge">V2 React</span></h1>
+                        <p>本地开发环境专用测试界面 - 支持多渠道模板</p>
+                    </div>
+                    
+                    <div className={`warning ${environment === 'production' ? 'production' : ''}`}>
+                        {environment === 'production' ? (
+                            <>🚨 <strong>正式环境模式：</strong>您正在对正式环境进行操作，请谨慎使用！所有操作都会影响真实用户。</>
+                        ) : (
+                            <>⚠️ <strong>注意：</strong>此界面仅在本地开发环境可用，生产环境会自动禁用。</>
+                        )}
+                    </div>
+                    
+                    <div className="section">
+                        <h2>🔧 API 配置</h2>
+                        <div className="form-row">
+                            <div className="form-group">
+                                <label htmlFor="environment">环境选择</label>
+                                <select 
+                                    id="environment" 
+                                    value={environment}
+                                    onChange={(e) => handleEnvironmentChange(e.target.value)}
+                                >
+                                    <option value="local">本地开发环境</option>
+                                    <option value="production">正式环境 (notification.caas.xyz)</option>
+                                </select>
+                                <small style={{ color: environment === 'production' ? '#dc3545' : '#28a745' }}>
+                                    {environment === 'production' ? '当前使用正式环境 API' : '当前使用本地 API'}
+                                </small>
+                            </div>
+                            <div className="form-group">
+                                <label htmlFor="apiSecret">API 密钥</label>
+                                <input 
+                                    type="password" 
+                                    id="apiSecret" 
+                                    value={apiSecret}
+                                    onChange={(e) => {
+                                        const newSecret = e.target.value;
+                                        setApiSecret(newSecret);
+                                        // 根据当前环境保存密钥
+                                        if (environment === 'production') {
+                                            localStorage.setItem('api_secret_production', newSecret);
+                                        } else {
+                                            localStorage.setItem('api_secret_local', newSecret);
+                                        }
+                                    }}
+                                    placeholder={environment === 'production' ? '输入正式环境 API 密钥' : '输入 API 密钥'}
+                                />
+                                <small style={{ color: environment === 'production' ? '#dc3545' : '#666' }}>
+                                    {environment === 'production' ? '请输入正式环境的 API 密钥' : '默认使用 .dev.vars 中的密钥'}
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div className="section">
+                        <div className="tab-nav">
+                            {Object.keys(tabs).map(tab => (
+                                <button
+                                    key={tab}
+                                    className={`tab-btn ${activeTab === tab ? 'active' : ''}`}
+                                    onClick={() => setActiveTab(tab)}
+                                >
+                                    {tab === 'send' && '发送通知'}
+                                    {tab === 'userconfig' && '用户配置'}
+                                    {tab === 'templates' && '模板管理 V2'}
+                                    {tab === 'logs' && '通知日志'}
+                                    {tab === 'health' && '健康检查'}
+                                    {tab === 'metrics' && '系统指标'}
+                                    {tab === 'grafana' && 'Grafana Webhook'}
+                                </button>
+                            ))}
+                        </div>
+                        
+                        <div className="tab-content active">
+                            {tabs[activeTab]}
+                        </div>
+                    </div>
+                    
+                    <div className="section response-section">
+                        <div className="response-header">
+                            <h2>📤 响应结果</h2>
+                            {response.status && (
+                                <div id="statusBadge">
+                                    <span className={`status-badge ${response.status >= 200 && response.status < 300 ? 'status-success' : 'status-error'}`}>
+                                        {response.status >= 200 && response.status < 300 ? '成功' : '错误'} {response.status}
+                                    </span>
+                                </div>
+                            )}
+                        </div>
+                        <ResponseDisplay data={response.data} />
+                    </div>
+                </div>
+            );
+        }
+        
+        // Send Notification Tab Component
+        function SendNotificationTab(props) {
+            const {
+                userId, setUserId, selectedChannels, handleChannelChange,
+                sendMethod, setSendMethod, subject, setSubject,
+                content, setContent, templateKey, setTemplateKey,
+                templates, templatesData, variables, setVariables,
+                idempotencyKey, setIdempotencyKey, sendNotification, loading
+            } = props;
+            
+            return (
+                <>
+                    <div className="endpoint-info">
+                        <span className="method-badge post">POST</span>
+                        <span>/api/notifications/send</span>
+                    </div>
+                    
+                    <div className="form-group">
+                        <label htmlFor="userId">用户 ID *</label>
+                        <input 
+                            type="text" 
+                            id="userId" 
+                            value={userId}
+                            onChange={(e) => setUserId(e.target.value)}
+                            required 
+                        />
+                        <div className="quick-fill">
+                            <button onClick={() => setUserId('test-user')}>测试用户</button>
+                            <button onClick={() => setUserId('demo-user')}>演示用户</button>
+                            <button onClick={() => setUserId('rei')}>Rei (Lark)</button>
+                            <button onClick={() => setUserId('user-' + Date.now())}>随机用户</button>
+                        </div>
+                    </div>
+                    
+                    <div className="form-group">
+                        <label>通知渠道 * <small>选择一个或多个渠道</small></label>
+                        <div className="channels">
+                            {['webhook', 'telegram', 'lark', 'slack'].map(channel => (
+                                <div key={channel} className="channel-checkbox">
+                                    <input 
+                                        type="checkbox" 
+                                        id={`channel-${channel}`}
+                                        value={channel}
+                                        checked={selectedChannels.includes(channel)}
+                                        onChange={() => handleChannelChange(channel)}
+                                    />
+                                    <label htmlFor={`channel-${channel}`}>
+                                        {channel === 'webhook' && 'Webhook'}
+                                        {channel === 'telegram' && 'Telegram'}
+                                        {channel === 'lark' && '飞书/Lark'}
+                                        {channel === 'slack' && 'Slack'}
+                                    </label>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                    
+                    <div className="form-group">
+                        <label>发送方式</label>
+                        <select value={sendMethod} onChange={(e) => setSendMethod(e.target.value)}>
+                            <option value="custom">自定义内容</option>
+                            <option value="template">使用模板</option>
+                        </select>
+                    </div>
+                    
+                    {sendMethod === 'custom' ? (
+                        <>
+                            <div className="form-group">
+                                <label htmlFor="subject">主题（可选）</label>
+                                <input 
+                                    type="text" 
+                                    id="subject" 
+                                    placeholder="通知主题"
+                                    value={subject}
+                                    onChange={(e) => setSubject(e.target.value)}
+                                />
+                            </div>
+                            
+                            <div className="form-group">
+                                <label htmlFor="content">内容 *</label>
+                                <textarea 
+                                    id="content" 
+                                    placeholder="通知内容" 
+                                    required
+                                    value={content}
+                                    onChange={(e) => setContent(e.target.value)}
+                                />
+                            </div>
+                        </>
+                    ) : (
+                        <>
+                            <div className="form-group">
+                                <label htmlFor="templateKey">模板 Key</label>
+                                <select 
+                                    id="templateKey"
+                                    value={templateKey}
+                                    onChange={(e) => setTemplateKey(e.target.value)}
+                                    disabled={templates.length === 0}
+                                >
+                                    {templates.length === 0 ? (
+                                        <option value="">没有可用的模板</option>
+                                    ) : (
+                                        templates.map(template => (
+                                            <option key={template.template_key} value={template.template_key}>
+                                                {template.template_key} - {template.template_name}
+                                                {template.description && ` (${template.description})`}
+                                            </option>
+                                        ))
+                                    )}
+                                </select>
+                                <small>只显示所有选中渠道都支持的模板</small>
+                            </div>
+                            
+                            <div className="form-group">
+                                <label htmlFor="variables">模板变量（JSON）</label>
+                                <textarea 
+                                    id="variables" 
+                                    placeholder='{"username": "张三", "date": "2024-01-01"}'
+                                    value={variables}
+                                    onChange={(e) => setVariables(e.target.value)}
+                                />
+                                {templateKey && templatesData[templateKey]?.variables && Array.isArray(templatesData[templateKey].variables) && (
+                                    <div style={{ marginTop: '10px', color: '#666', fontSize: '14px' }}>
+                                        需要的变量: {templatesData[templateKey].variables.join(', ')}
+                                    </div>
+                                )}
+                            </div>
+                        </>
+                    )}
+                    
+                    <div className="form-group">
+                        <label htmlFor="idempotencyKey">幂等键（可选）</label>
+                        <input 
+                            type="text" 
+                            id="idempotencyKey" 
+                            placeholder="用于防止重复发送"
+                            value={idempotencyKey}
+                            onChange={(e) => setIdempotencyKey(e.target.value)}
+                        />
+                    </div>
+                    
+                    <button 
+                        className="btn btn-primary" 
+                        onClick={sendNotification}
+                        disabled={loading || selectedChannels.length === 0}
+                    >
+                        {loading ? (
+                            <>
+                                <span className="loader" style={{ marginRight: '5px' }}></span>
+                                发送中...
+                            </>
+                        ) : (
+                            '发送通知'
+                        )}
+                    </button>
+                </>
+            );
+        }
+        
+        // User Config Tab Component
+        function UserConfigTab({ baseUrl, showResponse, apiSecret, generateGetSignature, generateSignature }) {
+            const [userId, setUserId] = useState('');
+            const [configs, setConfigs] = useState([]);
+            const [newConfig, setNewConfig] = useState({
+                userId: '',
+                channelType: 'webhook',
+                configData: '{}'
+            });
+            
+            const getUserConfigs = async () => {
+                try {
+                    const url = baseUrl + '/api/user-configs' + (userId ? `?user_id=${userId}` : '');
+                    const timestamp = Date.now().toString();
+                    const signature = await generateGetSignature(timestamp, url, apiSecret);
+                    
+                    const response = await fetch(url, {
+                        headers: {
+                            'X-Timestamp': timestamp,
+                            'X-Signature': signature
+                        }
+                    });
+                    const data = await response.json();
+                    showResponse(data, response.status);
+                    
+                    if (data.success && data.data) {
+                        setConfigs(data.data);
+                    }
+                } catch (error) {
+                    showResponse({ error: error.message }, 400);
+                }
+            };
+            
+            const upsertUserConfig = async () => {
+                try {
+                    const configData = JSON.parse(newConfig.configData);
+                    const requestBody = {
+                        user_id: newConfig.userId,
+                        channel_type: newConfig.channelType,
+                        config_data: configData
+                    };
+                    
+                    const timestamp = Date.now().toString();
+                    const body = JSON.stringify(requestBody);
+                    const signature = await generateSignature(timestamp, body, apiSecret);
+                    
+                    const response = await fetch(baseUrl + '/api/user-configs', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-Timestamp': timestamp,
+                            'X-Signature': signature
+                        },
+                        body: body
+                    });
+                    
+                    const data = await response.json();
+                    showResponse(data, response.status);
+                    
+                    if (response.ok) {
+                        getUserConfigs();
+                    }
+                } catch (error) {
+                    showResponse({ error: error.message }, 400);
+                }
+            };
+            
+            const deleteUserConfig = async (userId, channelType) => {
+                if (!confirm('确定要删除这个配置吗？')) return;
+                
+                try {
+                    const timestamp = Date.now().toString();
+                    const body = JSON.stringify({ user_id: userId, channel_type: channelType });
+                    const signature = await generateSignature(timestamp, body, apiSecret);
+                    
+                    const response = await fetch(baseUrl + '/api/user-configs', {
+                        method: 'DELETE',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-Timestamp': timestamp,
+                            'X-Signature': signature
+                        },
+                        body: body
+                    });
+                    
+                    const data = await response.json();
+                    showResponse(data, response.status);
+                    
+                    if (response.ok) {
+                        getUserConfigs();
+                    }
+                } catch (error) {
+                    showResponse({ error: error.message }, 400);
+                }
+            };
+            
+            const setConfigTemplate = (type) => {
+                const templates = {
+                    webhook: {
+                        webhook_url: "https://webhook.site/your-webhook-url"
+                    },
+                    telegram: {
+                        bot_token: "YOUR_BOT_TOKEN",
+                        chat_id: "YOUR_CHAT_ID"
+                    },
+                    lark: {
+                        webhook_url: "https://open.feishu.cn/open-apis/bot/v2/hook/xxx",
+                        secret: "YOUR_SECRET_KEY"
+                    },
+                    slack: {
+                        webhook_url: "https://hooks.slack.com/services/xxx/xxx/xxx"
+                    }
+                };
+                
+                setNewConfig(prev => ({
+                    ...prev,
+                    channelType: type,
+                    configData: JSON.stringify(templates[type], null, 2)
+                }));
+            };
+            
+            return (
+                <>
+                    <h3>查询用户配置</h3>
+                    <div className="form-group">
+                        <label htmlFor="configUserId">用户 ID（可选）</label>
+                        <input 
+                            type="text" 
+                            id="configUserId" 
+                            placeholder="留空查询所有"
+                            value={userId}
+                            onChange={(e) => setUserId(e.target.value)}
+                        />
+                    </div>
+                    <button className="btn btn-primary" onClick={getUserConfigs}>查询配置</button>
+                    
+                    {configs.length > 0 && (
+                        <table className="data-table">
+                            <thead>
+                                <tr>
+                                    <th>用户 ID</th>
+                                    <th>渠道类型</th>
+                                    <th>配置数据</th>
+                                    <th>状态</th>
+                                    <th>操作</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {configs.map((config, index) => (
+                                    <tr key={index}>
+                                        <td>{config.user_id}</td>
+                                        <td>{config.channel_type}</td>
+                                        <td>
+                                            <pre style={{ margin: 0, fontSize: '12px' }}>
+                                                {JSON.stringify(config.config_data, null, 2)}
+                                            </pre>
+                                        </td>
+                                        <td>{config.is_active ? '✅ 激活' : '❌ 禁用'}</td>
+                                        <td>
+                                            <button 
+                                                className="btn btn-danger btn-sm"
+                                                onClick={() => deleteUserConfig(config.user_id, config.channel_type)}
+                                            >
+                                                删除
+                                            </button>
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    )}
+                    
+                    <hr style={{ margin: '30px 0' }} />
+                    
+                    <h3>创建/更新配置</h3>
+                    <div className="form-row">
+                        <div className="form-group">
+                            <label htmlFor="newUserId">用户 ID</label>
+                            <input 
+                                type="text" 
+                                id="newUserId" 
+                                placeholder="test-user"
+                                value={newConfig.userId}
+                                onChange={(e) => setNewConfig(prev => ({ ...prev, userId: e.target.value }))}
+                            />
+                        </div>
+                        <div className="form-group">
+                            <label htmlFor="newChannelType">渠道类型</label>
+                            <select 
+                                id="newChannelType"
+                                value={newConfig.channelType}
+                                onChange={(e) => setNewConfig(prev => ({ ...prev, channelType: e.target.value }))}
+                            >
+                                <option value="webhook">Webhook</option>
+                                <option value="telegram">Telegram</option>
+                                <option value="lark">Lark</option>
+                                <option value="slack">Slack</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div className="form-group">
+                        <label htmlFor="newConfigData">配置数据（JSON）</label>
+                        <textarea 
+                            id="newConfigData" 
+                            placeholder='{"key": "value"}'
+                            rows="8"
+                            value={newConfig.configData}
+                            onChange={(e) => setNewConfig(prev => ({ ...prev, configData: e.target.value }))}
+                        />
+                        <div className="quick-fill">
+                            <button onClick={() => setConfigTemplate('webhook')}>Webhook 模板</button>
+                            <button onClick={() => setConfigTemplate('telegram')}>Telegram 模板</button>
+                            <button onClick={() => setConfigTemplate('lark')}>Lark 模板</button>
+                            <button onClick={() => setConfigTemplate('slack')}>Slack 模板</button>
+                        </div>
+                    </div>
+                    
+                    <button className="btn btn-primary" onClick={upsertUserConfig}>保存配置</button>
+                </>
+            );
+        }
+        
+        // Templates Tab Component
+        function TemplatesTab({ baseUrl, showResponse, apiSecret, generateGetSignature, generateSignature }) {
+            const [templates, setTemplates] = useState([]);
+            const [newTemplate, setNewTemplate] = useState({
+                templateKey: '',
+                templateName: '',
+                description: '',
+                variables: '',
+                channels: []
+            });
+            
+            const getTemplates = async () => {
+                try {
+                    const url = baseUrl + '/api/templates';
+                    const timestamp = Date.now().toString();
+                    const signature = await generateGetSignature(timestamp, url, apiSecret);
+                    
+                    const response = await fetch(url, {
+                        headers: {
+                            'X-Timestamp': timestamp,
+                            'X-Signature': signature
+                        }
+                    });
+                    const data = await response.json();
+                    showResponse(data, response.status);
+                    
+                    if (data.success && data.data) {
+                        setTemplates(data.data);
+                    }
+                } catch (error) {
+                    showResponse({ error: error.message }, 400);
+                }
+            };
+            
+            const addTemplateChannel = () => {
+                setNewTemplate(prev => ({
+                    ...prev,
+                    channels: [...prev.channels, {
+                        channelType: 'webhook',
+                        contentType: 'text',
+                        subjectTemplate: '',
+                        contentTemplate: ''
+                    }]
+                }));
+            };
+            
+            const removeTemplateChannel = (index) => {
+                setNewTemplate(prev => ({
+                    ...prev,
+                    channels: prev.channels.filter((_, i) => i !== index)
+                }));
+            };
+            
+            const updateTemplateChannel = (index, field, value) => {
+                setNewTemplate(prev => ({
+                    ...prev,
+                    channels: prev.channels.map((ch, i) => 
+                        i === index ? { ...ch, [field]: value } : ch
+                    )
+                }));
+            };
+            
+            const upsertTemplate = async () => {
+                try {
+                    const variables = newTemplate.variables ? 
+                        newTemplate.variables.split(',').map(v => v.trim()).filter(v => v) : [];
+                    
+                    const requestBody = {
+                        template_key: newTemplate.templateKey,
+                        template_name: newTemplate.templateName,
+                        description: newTemplate.description || undefined,
+                        variables: variables.length > 0 ? variables : undefined,
+                        channels: newTemplate.channels.map(ch => ({
+                            channel_type: ch.channelType,
+                            content_type: ch.contentType,
+                            subject_template: ch.subjectTemplate || undefined,
+                            content_template: ch.contentTemplate
+                        }))
+                    };
+                    
+                    const timestamp = Date.now().toString();
+                    const body = JSON.stringify(requestBody);
+                    const signature = await generateSignature(timestamp, body, apiSecret);
+                    
+                    const response = await fetch(baseUrl + '/api/templates', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-Timestamp': timestamp,
+                            'X-Signature': signature
+                        },
+                        body: body
+                    });
+                    
+                    const data = await response.json();
+                    showResponse(data, response.status);
+                    
+                    if (response.ok) {
+                        setNewTemplate({
+                            templateKey: '',
+                            templateName: '',
+                            description: '',
+                            variables: '',
+                            channels: []
+                        });
+                        getTemplates();
+                    }
+                } catch (error) {
+                    showResponse({ error: error.message }, 400);
+                }
+            };
+            
+            const deleteTemplate = async (templateKey) => {
+                if (!confirm('确定要删除这个模板吗？')) return;
+                
+                try {
+                    const url = baseUrl + '/api/templates';
+                    const timestamp = Date.now().toString();
+                    const body = JSON.stringify({ template_key: templateKey });
+                    const signature = await generateSignature(timestamp, body, apiSecret);
+                    
+                    const response = await fetch(url, {
+                        method: 'DELETE',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-Timestamp': timestamp,
+                            'X-Signature': signature
+                        },
+                        body: body
+                    });
+                    
+                    const data = await response.json();
+                    showResponse(data, response.status);
+                    
+                    if (response.ok) {
+                        getTemplates();
+                    }
+                } catch (error) {
+                    showResponse({ error: error.message }, 400);
+                }
+            };
+            
+            useEffect(() => {
+                getTemplates();
+            }, []);
+            
+            return (
+                <>
+                    <h3>模板列表</h3>
+                    <button className="btn btn-primary" onClick={getTemplates}>查询模板</button>
+                    
+                    {templates.length > 0 && (
+                        <table className="data-table">
+                            <thead>
+                                <tr>
+                                    <th>模板 Key</th>
+                                    <th>模板名称</th>
+                                    <th>描述</th>
+                                    <th>变量</th>
+                                    <th>支持渠道</th>
+                                    <th>操作</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {templates.map(template => (
+                                    <tr key={template.template_key}>
+                                        <td>{template.template_key}</td>
+                                        <td>{template.template_name}</td>
+                                        <td>{template.description || '-'}</td>
+                                        <td>{Array.isArray(template.variables) ? template.variables.join(', ') : '-'}</td>
+                                        <td>{Array.isArray(template.supported_channels) ? template.supported_channels.join(', ') : '-'}</td>
+                                        <td>
+                                            <button 
+                                                className="btn btn-danger btn-sm"
+                                                onClick={() => deleteTemplate(template.template_key)}
+                                            >
+                                                删除
+                                            </button>
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    )}
+                    
+                    <hr style={{ margin: '30px 0' }} />
+                    
+                    <h3>创建/更新模板</h3>
+                    <div className="form-row">
+                        <div className="form-group">
+                            <label htmlFor="newTemplateKey">模板 Key</label>
+                            <input 
+                                type="text" 
+                                id="newTemplateKey" 
+                                placeholder="welcome_email"
+                                value={newTemplate.templateKey}
+                                onChange={(e) => setNewTemplate(prev => ({ ...prev, templateKey: e.target.value }))}
+                            />
+                        </div>
+                        <div className="form-group">
+                            <label htmlFor="newTemplateName">模板名称</label>
+                            <input 
+                                type="text" 
+                                id="newTemplateName" 
+                                placeholder="欢迎邮件"
+                                value={newTemplate.templateName}
+                                onChange={(e) => setNewTemplate(prev => ({ ...prev, templateName: e.target.value }))}
+                            />
+                        </div>
+                    </div>
+                    
+                    <div className="form-group">
+                        <label htmlFor="newTemplateDescription">描述（可选）</label>
+                        <input 
+                            type="text" 
+                            id="newTemplateDescription" 
+                            placeholder="新用户注册欢迎邮件模板"
+                            value={newTemplate.description}
+                            onChange={(e) => setNewTemplate(prev => ({ ...prev, description: e.target.value }))}
+                        />
+                    </div>
+                    
+                    <div className="form-group">
+                        <label htmlFor="newTemplateVariables">模板变量（逗号分隔）</label>
+                        <input 
+                            type="text" 
+                            id="newTemplateVariables" 
+                            placeholder="username, email, date"
+                            value={newTemplate.variables}
+                            onChange={(e) => setNewTemplate(prev => ({ ...prev, variables: e.target.value }))}
+                        />
+                    </div>
+                    
+                    <div className="form-group">
+                        <label>渠道配置</label>
+                        <button 
+                            type="button" 
+                            className="btn btn-secondary" 
+                            onClick={addTemplateChannel}
+                        >
+                            + 添加渠道
+                        </button>
+                        
+                        <div id="templateChannelsList" style={{ marginTop: '15px' }}>
+                            {newTemplate.channels.map((channel, index) => (
+                                <div key={index} className="template-channel-item">
+                                    <button 
+                                        className="remove-btn"
+                                        onClick={() => removeTemplateChannel(index)}
+                                    >
+                                        ✕ 移除
+                                    </button>
+                                    
+                                    <div className="form-row">
+                                        <div className="form-group">
+                                            <label>渠道类型</label>
+                                            <select 
+                                                value={channel.channelType}
+                                                onChange={(e) => updateTemplateChannel(index, 'channelType', e.target.value)}
+                                            >
+                                                <option value="webhook">Webhook</option>
+                                                <option value="telegram">Telegram</option>
+                                                <option value="lark">Lark</option>
+                                                <option value="slack">Slack</option>
+                                                <option value="email">Email</option>
+                                            </select>
+                                        </div>
+                                        <div className="form-group">
+                                            <label>内容类型</label>
+                                            <select 
+                                                value={channel.contentType}
+                                                onChange={(e) => updateTemplateChannel(index, 'contentType', e.target.value)}
+                                            >
+                                                <option value="text">Text</option>
+                                                <option value="html">HTML</option>
+                                                <option value="markdown">Markdown</option>
+                                                <option value="json">JSON</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    
+                                    <div className="form-group">
+                                        <label>主题模板（Email 渠道可用）</label>
+                                        <input 
+                                            type="text"
+                                            placeholder="Welcome {{username}}!"
+                                            value={channel.subjectTemplate}
+                                            onChange={(e) => updateTemplateChannel(index, 'subjectTemplate', e.target.value)}
+                                        />
+                                    </div>
+                                    
+                                    <div className="form-group">
+                                        <label>内容模板 *</label>
+                                        <textarea 
+                                            placeholder="使用 {{变量名}} 作为占位符"
+                                            required
+                                            value={channel.contentTemplate}
+                                            onChange={(e) => updateTemplateChannel(index, 'contentTemplate', e.target.value)}
+                                        />
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                    
+                    <button 
+                        className="btn btn-primary" 
+                        onClick={upsertTemplate}
+                        disabled={!newTemplate.templateKey || !newTemplate.templateName || newTemplate.channels.length === 0}
+                    >
+                        保存模板
+                    </button>
+                </>
+            );
+        }
+        
+        // Logs Tab Component
+        function LogsTab({ baseUrl, showResponse, apiSecret, generateGetSignature, generateSignature }) {
+            const [filters, setFilters] = useState({
+                userId: '',
+                status: '',
+                limit: '20',
+                offset: '0'
+            });
+            const [cleanupDays, setCleanupDays] = useState('7');
+            
+            const getNotificationLogs = async () => {
+                try {
+                    const params = new URLSearchParams();
+                    if (filters.userId) params.append('user_id', filters.userId);
+                    if (filters.status) params.append('status', filters.status);
+                    params.append('limit', filters.limit);
+                    params.append('offset', filters.offset);
+                    
+                    const url = baseUrl + '/api/notification-logs?' + params;
+                    const timestamp = Date.now().toString();
+                    const signature = await generateGetSignature(timestamp, url, apiSecret);
+                    
+                    const response = await fetch(url, {
+                        headers: {
+                            'X-Timestamp': timestamp,
+                            'X-Signature': signature
+                        }
+                    });
+                    const data = await response.json();
+                    showResponse(data, response.status);
+                } catch (error) {
+                    showResponse({ error: error.message }, 400);
+                }
+            };
+            
+            const cleanupLogs = async () => {
+                if (!confirm(`确定要删除 ${cleanupDays} 天前的日志吗？`)) return;
+                
+                try {
+                    const timestamp = Date.now().toString();
+                    const body = JSON.stringify({ days: parseInt(cleanupDays) });
+                    const signature = await generateSignature(timestamp, body, apiSecret);
+                    
+                    const response = await fetch(baseUrl + '/api/notification-logs/cleanup', {
+                        method: 'DELETE',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-Timestamp': timestamp,
+                            'X-Signature': signature
+                        },
+                        body: body
+                    });
+                    
+                    const data = await response.json();
+                    showResponse(data, response.status);
+                } catch (error) {
+                    showResponse({ error: error.message }, 400);
+                }
+            };
+            
+            const triggerRetry = async () => {
+                if (!confirm('确定要立即触发重试吗？')) return;
+                
+                try {
+                    const timestamp = Date.now().toString();
+                    const body = JSON.stringify({});
+                    const signature = await generateSignature(timestamp, body, apiSecret);
+                    
+                    const response = await fetch(baseUrl + '/api/notifications/retry', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-Timestamp': timestamp,
+                            'X-Signature': signature
+                        },
+                        body: body
+                    });
+                    
+                    const data = await response.json();
+                    showResponse(data, response.status);
+                } catch (error) {
+                    showResponse({ error: error.message }, 400);
+                }
+            };
+            
+            return (
+                <>
+                    <h3>查询通知日志</h3>
+                    <div className="form-row">
+                        <div className="form-group">
+                            <label htmlFor="logsUserId">用户 ID（可选）</label>
+                            <input 
+                                type="text" 
+                                id="logsUserId" 
+                                placeholder="留空查询所有"
+                                value={filters.userId}
+                                onChange={(e) => setFilters(prev => ({ ...prev, userId: e.target.value }))}
+                            />
+                        </div>
+                        <div className="form-group">
+                            <label htmlFor="logsStatus">状态（可选）</label>
+                            <select 
+                                id="logsStatus"
+                                value={filters.status}
+                                onChange={(e) => setFilters(prev => ({ ...prev, status: e.target.value }))}
+                            >
+                                <option value="">全部</option>
+                                <option value="pending">待发送</option>
+                                <option value="sent">成功</option>
+                                <option value="failed">失败</option>
+                                <option value="retry">重试中</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div className="form-row">
+                        <div className="form-group">
+                            <label htmlFor="logsLimit">每页数量</label>
+                            <input 
+                                type="number" 
+                                id="logsLimit" 
+                                min="1" 
+                                max="100"
+                                value={filters.limit}
+                                onChange={(e) => setFilters(prev => ({ ...prev, limit: e.target.value }))}
+                            />
+                        </div>
+                        <div className="form-group">
+                            <label htmlFor="logsOffset">偏移量</label>
+                            <input 
+                                type="number" 
+                                id="logsOffset" 
+                                min="0"
+                                value={filters.offset}
+                                onChange={(e) => setFilters(prev => ({ ...prev, offset: e.target.value }))}
+                            />
+                        </div>
+                    </div>
+                    
+                    <button className="btn btn-primary" onClick={getNotificationLogs}>查询日志</button>
+                    
+                    <hr style={{ margin: '30px 0' }} />
+                    
+                    <h3>日志管理</h3>
+                    <div className="form-group">
+                        <label>清理日志</label>
+                        <p style={{ marginBottom: '10px', color: '#666' }}>删除指定天数之前的日志记录</p>
+                        <div className="form-row">
+                            <div className="form-group" style={{ flex: '0.3' }}>
+                                <input 
+                                    type="number" 
+                                    id="cleanupDays" 
+                                    min="1" 
+                                    placeholder="天数"
+                                    value={cleanupDays}
+                                    onChange={(e) => setCleanupDays(e.target.value)}
+                                />
+                            </div>
+                            <div className="form-group" style={{ flex: '0.7' }}>
+                                <button className="btn btn-danger" onClick={cleanupLogs}>清理日志</button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div className="form-group">
+                        <label>触发重试</label>
+                        <p style={{ marginBottom: '10px', color: '#666' }}>立即触发失败通知的重试（通常由定时任务自动执行）</p>
+                        <button className="btn btn-primary" onClick={triggerRetry}>立即重试</button>
+                    </div>
+                </>
+            );
+        }
+        
+        // Health Tab Component
+        function HealthTab({ baseUrl, showResponse }) {
+            const [healthStatus, setHealthStatus] = useState(null);
+            const [loading, setLoading] = useState(false);
+            const [scheduledTasksStatus, setScheduledTasksStatus] = useState(null);
+            
+            const testHealth = async () => {
+                setLoading(true);
+                try {
+                    const response = await fetch(baseUrl + '/health');
+                    const data = await response.json();
+                    showResponse(data, response.status);
+                    setHealthStatus(data);
+                } catch (error) {
+                    showResponse({ error: error.message }, 400);
+                } finally {
+                    setLoading(false);
+                }
+            };
+            
+            const checkScheduledTasksHealth = async () => {
+                try {
+                    const response = await fetch(baseUrl + '/health/scheduled-tasks');
+                    const data = await response.json();
+                    showResponse(data, response.status);
+                    setScheduledTasksStatus(data);
+                } catch (error) {
+                    showResponse({ error: error.message }, 400);
+                }
+            };
+            
+            useEffect(() => {
+                testHealth();
+            }, []);
+            
+            return (
+                <>
+                    <div className="endpoint-info">
+                        <span className="method-badge get">GET</span>
+                        <span>/health</span>
+                    </div>
+                    
+                    <button className="btn btn-primary" onClick={testHealth} disabled={loading}>
+                        {loading ? '检查中...' : '检查健康状态'}
+                    </button>
+                    
+                    {healthStatus && (
+                        <div style={{ marginTop: '20px' }}>
+                            <h4>
+                                系统状态: 
+                                <span style={{ 
+                                    marginLeft: '10px',
+                                    color: healthStatus.status === 'healthy' ? '#28a745' : '#dc3545' 
+                                }}>
+                                    {healthStatus.status === 'healthy' ? '✅ 健康' : '❌ 异常'}
+                                </span>
+                            </h4>
+                            <table className="data-table">
+                                <tbody>
+                                    <tr>
+                                        <td><strong>环境</strong></td>
+                                        <td>{healthStatus.environment || 'production'}</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>检查时间</strong></td>
+                                        <td>{new Date(healthStatus.timestamp).toLocaleString('zh-CN')}</td>
+                                    </tr>
+                                    {healthStatus.version && (
+                                        <tr>
+                                            <td><strong>版本</strong></td>
+                                            <td>{healthStatus.version}</td>
+                                        </tr>
+                                    )}
+                                </tbody>
+                            </table>
+                            
+                            {healthStatus.services && (
+                                <>
+                                    <h4 style={{ marginTop: '20px' }}>服务状态</h4>
+                                    <table className="data-table">
+                                        <thead>
+                                            <tr>
+                                                <th>服务</th>
+                                                <th>状态</th>
+                                                <th>延迟</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {Object.entries(healthStatus.services).map(([service, status]) => (
+                                                <tr key={service}>
+                                                    <td>{service.charAt(0).toUpperCase() + service.slice(1)}</td>
+                                                    <td>{status ? '✅ 正常' : '❌ 异常'}</td>
+                                                    <td>-</td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                </>
+                            )}
+                        </div>
+                    )}
+                    
+                    <hr style={{ margin: '30px 0' }} />
+                    
+                    <div className="endpoint-info">
+                        <span className="method-badge get">GET</span>
+                        <span>/health/scheduled-tasks</span>
+                    </div>
+                    
+                    <button className="btn btn-primary" onClick={checkScheduledTasksHealth}>
+                        检查定时任务健康状态
+                    </button>
+                    
+                    {scheduledTasksStatus && (
+                        <div style={{ marginTop: '20px' }}>
+                            <h4>定时任务状态</h4>
+                            <table className="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>任务名称</th>
+                                        <th>最后运行</th>
+                                        <th>下次运行</th>
+                                        <th>状态</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {Object.entries(scheduledTasksStatus.tasks || {}).map(([taskName, taskInfo]) => (
+                                        <tr key={taskName}>
+                                            <td>{taskName.replace(/_/g, ' ').toUpperCase()}</td>
+                                            <td>{taskInfo.lastRun ? new Date(taskInfo.lastRun).toLocaleString('zh-CN') : '未运行'}</td>
+                                            <td>{taskInfo.nextRun ? new Date(taskInfo.nextRun).toLocaleString('zh-CN') : '-'}</td>
+                                            <td>{taskInfo.isRunning ? '🔄 运行中' : '✅ 空闲'}</td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+                    )}
+                </>
+            );
+        }
+        
+        // Metrics Tab Component
+        function MetricsTab({ baseUrl, showResponse, apiSecret, generateGetSignature }) {
+            const getMetrics = async () => {
+                try {
+                    const url = baseUrl + '/metrics';
+                    const timestamp = Date.now().toString();
+                    const signature = await generateGetSignature(timestamp, url, apiSecret);
+                    
+                    // 调试信息
+                    const urlObj = new URL(url);
+                    const pathAndQuery = urlObj.pathname + urlObj.search;
+                    console.log('Metrics Request Debug Info:');
+                    console.log('Full URL:', url);
+                    console.log('Path and Query:', pathAndQuery);
+                    console.log('Timestamp:', timestamp);
+                    console.log('API Secret:', apiSecret);
+                    console.log('Signature:', signature);
+                    console.log('Payload for signature:', timestamp + pathAndQuery);
+                    
+                    const response = await fetch(url, {
+                        headers: {
+                            'X-Timestamp': timestamp,
+                            'X-Signature': signature
+                        }
+                    });
+                    const data = await response.json();
+                    showResponse(data, response.status);
+                } catch (error) {
+                    showResponse({ error: error.message }, 400);
+                }
+            };
+            
+            return (
+                <>
+                    <div className="endpoint-info">
+                        <span className="method-badge get">GET</span>
+                        <span>/metrics</span>
+                    </div>
+                    
+                    <button className="btn btn-primary" onClick={getMetrics}>
+                        获取系统指标
+                    </button>
+                    
+                    <div style={{ marginTop: '20px', color: '#666' }}>
+                        <p>系统指标包括：</p>
+                        <ul>
+                            <li>总通知数量</li>
+                            <li>成功/失败统计</li>
+                            <li>渠道使用统计</li>
+                            <li>模板使用统计</li>
+                            <li>响应时间统计</li>
+                            <li>系统资源使用情况</li>
+                        </ul>
+                    </div>
+                </>
+            );
+        }
+        
+        // Grafana Tab Component
+        function GrafanaTab({ baseUrl, showResponse, environment }) {
+            const [grafanaAuth, setGrafanaAuth] = useState(() => {
+                const envPrefix = environment === 'production' ? 'prod_' : 'local_';
+                return {
+                    username: localStorage.getItem(`${envPrefix}grafana_username`) || 'grafana',
+                    password: localStorage.getItem(`${envPrefix}grafana_password`) || 'test-password'
+                };
+            });
+            
+            const [grafanaPayload, setGrafanaPayload] = useState({
+                receiver: 'test-user',
+                channels: 'webhook',
+                alertStatus: 'firing',
+                useTemplate: false,
+                templateKey: 'grafana-alert',
+                customAlert: JSON.stringify({
+                    status: 'firing',
+                    labels: {
+                        alertname: 'High CPU Usage',
+                        severity: 'critical',
+                        instance: 'server-01'
+                    },
+                    annotations: {
+                        description: 'CPU usage is above 90%',
+                        summary: 'High CPU usage detected'
+                    },
+                    startsAt: new Date(Date.now() - 10 * 60 * 1000).toISOString(),
+                    endsAt: '0001-01-01T00:00:00Z',
+                    generatorURL: 'http://grafana.example.com/alert',
+                    fingerprint: '123456789'
+                }, null, 2)
+            });
+            
+            const [loading, setLoading] = useState(false);
+            
+            // Save auth to localStorage when changed
+            const updateAuth = (field, value) => {
+                const newAuth = { ...grafanaAuth, [field]: value };
+                setGrafanaAuth(newAuth);
+                const envPrefix = environment === 'production' ? 'prod_' : 'local_';
+                localStorage.setItem(`${envPrefix}grafana_${field}`, value);
+            };
+            
+            // Generate Grafana webhook payload
+            const generatePayload = () => {
+                const basePayload = {
+                    receiver: grafanaPayload.receiver,
+                    status: grafanaPayload.alertStatus,
+                    alerts: [],
+                    groupLabels: {},
+                    commonLabels: {},
+                    commonAnnotations: {},
+                    externalURL: 'http://alertmanager.example.com',
+                    version: '4',
+                    groupKey: '{}:{}'
+                };
+                
+                try {
+                    const customAlert = JSON.parse(grafanaPayload.customAlert);
+                    customAlert.status = grafanaPayload.alertStatus;
+                    
+                    if (grafanaPayload.alertStatus === 'resolved' && customAlert.endsAt === '0001-01-01T00:00:00Z') {
+                        customAlert.endsAt = new Date().toISOString();
+                    }
+                    
+                    basePayload.alerts = [customAlert];
+                    basePayload.groupLabels = { alertname: customAlert.labels.alertname };
+                    basePayload.commonLabels = customAlert.labels;
+                    basePayload.commonAnnotations = customAlert.annotations;
+                    
+                    // Add template key to labels if using template
+                    if (grafanaPayload.useTemplate) {
+                        basePayload.commonLabels.notification_template = grafanaPayload.templateKey;
+                    }
+                    
+                    return basePayload;
+                } catch (error) {
+                    console.error('Invalid alert JSON:', error);
+                    return basePayload;
+                }
+            };
+            
+            // Send Grafana webhook
+            const sendGrafanaWebhook = async () => {
+                setLoading(true);
+                try {
+                    const payload = generatePayload();
+                    const authString = btoa(`${grafanaAuth.username}:${grafanaAuth.password}`);
+                    
+                    console.log('Grafana Webhook Request:');
+                    console.log('URL:', baseUrl + '/api/webhooks/grafana');
+                    console.log('Auth:', authString);
+                    console.log('Channels Header:', grafanaPayload.channels);
+                    console.log('Payload:', JSON.stringify(payload, null, 2));
+                    
+                    const response = await fetch(baseUrl + '/api/webhooks/grafana', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Basic ${authString}`,
+                            'X-Notification-Channels': grafanaPayload.channels
+                        },
+                        body: JSON.stringify(payload)
+                    });
+                    
+                    const data = await response.json();
+                    showResponse(data, response.status);
+                } catch (error) {
+                    showResponse({ error: error.message }, 400);
+                } finally {
+                    setLoading(false);
+                }
+            };
+            
+            // Preset templates
+            const presetAlerts = {
+                cpu: {
+                    labels: {
+                        alertname: 'High CPU Usage',
+                        severity: 'critical',
+                        instance: 'server-01',
+                        job: 'node-exporter'
+                    },
+                    annotations: {
+                        description: 'CPU usage on server-01 has been above 90% for more than 5 minutes',
+                        summary: 'High CPU usage detected on production server'
+                    }
+                },
+                memory: {
+                    labels: {
+                        alertname: 'High Memory Usage',
+                        severity: 'warning',
+                        instance: 'server-02',
+                        job: 'node-exporter'
+                    },
+                    annotations: {
+                        description: 'Memory usage is above 85%',
+                        summary: 'High memory usage detected'
+                    }
+                },
+                disk: {
+                    labels: {
+                        alertname: 'Disk Space Low',
+                        severity: 'warning',
+                        instance: 'server-03',
+                        job: 'node-exporter',
+                        mountpoint: '/var/lib'
+                    },
+                    annotations: {
+                        description: 'Disk space on /var/lib is below 10%',
+                        summary: 'Low disk space warning'
+                    }
+                },
+                api: {
+                    labels: {
+                        alertname: 'API Response Time High',
+                        severity: 'critical',
+                        service: 'api-gateway',
+                        endpoint: '/api/v1/users'
+                    },
+                    annotations: {
+                        description: 'API response time is above 1000ms',
+                        summary: 'High API latency detected'
+                    }
+                }
+            };
+            
+            const applyPreset = (presetKey) => {
+                const preset = presetAlerts[presetKey];
+                const currentAlert = JSON.parse(grafanaPayload.customAlert);
+                
+                setGrafanaPayload(prev => ({
+                    ...prev,
+                    customAlert: JSON.stringify({
+                        ...currentAlert,
+                        labels: preset.labels,
+                        annotations: preset.annotations
+                    }, null, 2)
+                }));
+            };
+            
+            return (
+                <>
+                    <div className="endpoint-info">
+                        <span className="method-badge post">POST</span>
+                        <span>/api/webhooks/grafana</span>
+                        <span style={{ marginLeft: '10px', color: '#666', fontSize: '14px' }}>
+                            (使用 Basic Auth 认证)
+                        </span>
+                    </div>
+                    
+                    <div style={{ 
+                        background: '#e3f2fd', 
+                        padding: '15px', 
+                        borderRadius: '6px',
+                        marginBottom: '20px'
+                    }}>
+                        <h4 style={{ margin: '0 0 10px 0', color: '#1976d2' }}>
+                            📊 Grafana Alerting 集成
+                        </h4>
+                        <p style={{ margin: '0', color: '#666' }}>
+                            此端点接收 Grafana Alerting 的 webhook 通知，并转发到指定的通知渠道。
+                            使用 receiver 字段作为用户 ID，支持自定义告警内容和模板。
+                        </p>
+                    </div>
+                    
+                    <h3>认证配置</h3>
+                    <div className="form-row">
+                        <div className="form-group">
+                            <label htmlFor="grafanaUsername">用户名</label>
+                            <input 
+                                type="text" 
+                                id="grafanaUsername"
+                                value={grafanaAuth.username}
+                                onChange={(e) => updateAuth('username', e.target.value)}
+                                placeholder="grafana"
+                            />
+                        </div>
+                        <div className="form-group">
+                            <label htmlFor="grafanaPassword">密码</label>
+                            <input 
+                                type="password" 
+                                id="grafanaPassword"
+                                value={grafanaAuth.password}
+                                onChange={(e) => updateAuth('password', e.target.value)}
+                                placeholder="test-password"
+                            />
+                        </div>
+                    </div>
+                    
+                    <hr style={{ margin: '30px 0' }} />
+                    
+                    <h3>Webhook 配置</h3>
+                    <div className="form-row">
+                        <div className="form-group">
+                            <label htmlFor="grafanaReceiver">Receiver (用户 ID) *</label>
+                            <input 
+                                type="text" 
+                                id="grafanaReceiver"
+                                value={grafanaPayload.receiver}
+                                onChange={(e) => setGrafanaPayload(prev => ({ ...prev, receiver: e.target.value }))}
+                                placeholder="test-user"
+                            />
+                            <div className="quick-fill">
+                                <button onClick={() => setGrafanaPayload(prev => ({ ...prev, receiver: 'test-user' }))}>
+                                    测试用户
+                                </button>
+                                <button onClick={() => setGrafanaPayload(prev => ({ ...prev, receiver: 'ops-team' }))}>
+                                    运维团队
+                                </button>
+                                <button onClick={() => setGrafanaPayload(prev => ({ ...prev, receiver: 'dev-team' }))}>
+                                    开发团队
+                                </button>
+                            </div>
+                        </div>
+                        <div className="form-group">
+                            <label htmlFor="grafanaChannels">通知渠道 (X-Notification-Channels)</label>
+                            <input 
+                                type="text" 
+                                id="grafanaChannels"
+                                value={grafanaPayload.channels}
+                                onChange={(e) => setGrafanaPayload(prev => ({ ...prev, channels: e.target.value }))}
+                                placeholder="webhook,telegram,lark"
+                            />
+                            <div className="quick-fill">
+                                <button onClick={() => setGrafanaPayload(prev => ({ ...prev, channels: 'webhook' }))}>
+                                    Webhook
+                                </button>
+                                <button onClick={() => setGrafanaPayload(prev => ({ ...prev, channels: 'webhook,telegram' }))}>
+                                    Webhook + Telegram
+                                </button>
+                                <button onClick={() => setGrafanaPayload(prev => ({ ...prev, channels: 'webhook,lark,slack' }))}>
+                                    多渠道
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div className="form-row">
+                        <div className="form-group">
+                            <label htmlFor="grafanaStatus">告警状态</label>
+                            <select 
+                                id="grafanaStatus"
+                                value={grafanaPayload.alertStatus}
+                                onChange={(e) => setGrafanaPayload(prev => ({ ...prev, alertStatus: e.target.value }))}
+                            >
+                                <option value="firing">🔥 Firing (触发)</option>
+                                <option value="resolved">✅ Resolved (恢复)</option>
+                            </select>
+                        </div>
+                        <div className="form-group">
+                            <label>
+                                <input 
+                                    type="checkbox"
+                                    checked={grafanaPayload.useTemplate}
+                                    onChange={(e) => setGrafanaPayload(prev => ({ ...prev, useTemplate: e.target.checked }))}
+                                    style={{ width: 'auto', marginRight: '8px' }}
+                                />
+                                使用模板
+                            </label>
+                            {grafanaPayload.useTemplate && (
+                                <select 
+                                    value={grafanaPayload.templateKey}
+                                    onChange={(e) => setGrafanaPayload(prev => ({ ...prev, templateKey: e.target.value }))}
+                                    style={{ marginTop: '10px' }}
+                                >
+                                    <option value="grafana-alert">grafana-alert (默认)</option>
+                                    <option value="grafana-alert-critical">grafana-alert-critical (严重)</option>
+                                    <option value="custom">自定义模板 Key</option>
+                                </select>
+                            )}
+                        </div>
+                    </div>
+                    
+                    <div className="form-group">
+                        <label htmlFor="grafanaAlert">
+                            告警内容 (JSON)
+                            <span style={{ float: 'right', fontSize: '14px' }}>
+                                预设模板：
+                                {Object.keys(presetAlerts).map(key => (
+                                    <button 
+                                        key={key}
+                                        onClick={() => applyPreset(key)}
+                                        style={{
+                                            marginLeft: '10px',
+                                            padding: '2px 8px',
+                                            fontSize: '12px',
+                                            background: '#6c757d',
+                                            color: 'white',
+                                            border: 'none',
+                                            borderRadius: '4px',
+                                            cursor: 'pointer'
+                                        }}
+                                    >
+                                        {key.toUpperCase()}
+                                    </button>
+                                ))}
+                            </span>
+                        </label>
+                        <textarea 
+                            id="grafanaAlert"
+                            rows="15"
+                            value={grafanaPayload.customAlert}
+                            onChange={(e) => setGrafanaPayload(prev => ({ ...prev, customAlert: e.target.value }))}
+                            placeholder="输入 Grafana 告警 JSON"
+                            style={{ fontFamily: 'monospace', fontSize: '13px' }}
+                        />
+                    </div>
+                    
+                    <button 
+                        className="btn btn-primary" 
+                        onClick={sendGrafanaWebhook}
+                        disabled={loading || !grafanaPayload.receiver}
+                    >
+                        {loading ? (
+                            <>
+                                <span className="loader" style={{ marginRight: '5px' }}></span>
+                                发送中...
+                            </>
+                        ) : (
+                            '发送 Grafana Webhook'
+                        )}
+                    </button>
+                    
+                    <hr style={{ margin: '30px 0' }} />
+                    
+                    <h3>📖 使用说明</h3>
+                    <div style={{ background: '#f8f9fa', padding: '20px', borderRadius: '6px' }}>
+                        <h4>Grafana Contact Point 配置示例：</h4>
+                        <pre style={{ background: '#e9ecef', padding: '15px', borderRadius: '4px', overflow: 'auto' }}>
+{`name: Notification System
+type: webhook
+settings:
+  url: ${baseUrl}/api/webhooks/grafana
+  httpMethod: POST
+  username: ${grafanaAuth.username}
+  password: <YOUR_PASSWORD>
+  
+  # 自定义请求头
+  httpHeaderName1: X-Notification-Channels
+  httpHeaderValue1: webhook,telegram,lark`}
+                        </pre>
+                        
+                        <h4 style={{ marginTop: '20px' }}>Alert Rule 配置：</h4>
+                        <pre style={{ background: '#e9ecef', padding: '15px', borderRadius: '4px', overflow: 'auto' }}>
+{`# 在 Alert Rule 中设置 receiver
+# receiver 会作为通知系统的 user_id
+receiver: ops-team
+
+# 或者针对不同团队
+receiver: dev-team
+receiver: security-team`}
+                        </pre>
+                        
+                        <h4 style={{ marginTop: '20px' }}>支持的功能：</h4>
+                        <ul style={{ paddingLeft: '20px' }}>
+                            <li>✅ 多告警批量发送</li>
+                            <li>✅ Firing 和 Resolved 状态</li>
+                            <li>✅ 自定义模板支持</li>
+                            <li>✅ 多渠道同时发送</li>
+                            <li>✅ 富文本格式化</li>
+                            <li>✅ 告警分组和聚合</li>
+                        </ul>
+                    </div>
+                </>
+            );
+        }
+        
+        // Render the app
+        ReactDOM.render(<App />, document.getElementById('root'));
