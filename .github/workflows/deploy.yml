@@ -308,12 +308,42 @@ jobs:
           echo "version=$CURRENT_VERSION" >> $GITHUB_OUTPUT
           echo "Current SDK version: $CURRENT_VERSION"
           
+      - name: Check latest published version
+        id: latest_version
+        working-directory: ./sdk
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # Configure npm for GitHub Packages
+          echo "@caasxyz:registry=https://npm.pkg.github.com" > ~/.npmrc
+          echo "//npm.pkg.github.com/:_authToken=${{ secrets.GITHUB_TOKEN }}" >> ~/.npmrc
+          
+          # Try to get the latest published version from GitHub Packages
+          LATEST_VERSION=$(npm view @caasxyz/notification-sdk version 2>/dev/null || echo "0.0.0")
+          echo "latest_published=$LATEST_VERSION" >> $GITHUB_OUTPUT
+          echo "Latest published version: $LATEST_VERSION"
+          
       - name: Determine new version
         id: new_version
         run: |
           # 从当前版本中提取主版本号、次版本号和补丁号
           CURRENT_VERSION="${{ steps.current_version.outputs.version }}"
-          IFS='.' read -ra VERSION_PARTS <<< "$CURRENT_VERSION"
+          LATEST_PUBLISHED="${{ steps.latest_version.outputs.latest_published }}"
+          
+          # 比较当前版本和已发布版本，使用较大的那个作为基础
+          function version_gt() {
+            test "$(printf '%s\n' "$@" | sort -V | head -n 1)" != "$1"
+          }
+          
+          if version_gt "$LATEST_PUBLISHED" "$CURRENT_VERSION" || [ "$LATEST_PUBLISHED" = "$CURRENT_VERSION" ]; then
+            BASE_VERSION="$LATEST_PUBLISHED"
+            echo "Using latest published version as base: $BASE_VERSION"
+          else
+            BASE_VERSION="$CURRENT_VERSION"
+            echo "Using current package.json version as base: $BASE_VERSION"
+          fi
+          
+          IFS='.' read -ra VERSION_PARTS <<< "$BASE_VERSION"
           MAJOR=${VERSION_PARTS[0]}
           MINOR=${VERSION_PARTS[1]}
           PATCH=${VERSION_PARTS[2]}
