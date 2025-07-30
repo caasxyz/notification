@@ -4,7 +4,7 @@
  * 自动生成的文件，请勿手动编辑！
  * 如需修改，请编辑 src/ui/testUI.html 然后运行 npm run build:testui
  * 
- * Generated at: 2025-07-30T07:10:09.397Z
+ * Generated at: 2025-07-30T08:30:02.094Z
  */
 
 /**
@@ -16,38 +16,395 @@ export function getTestUIHTML(): string {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>通知系统测试 UI</title>
-    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
-    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <title>通知系统 API 测试工具 V2 - Modern UI</title>
+    
+    <!-- React and Babel from CDN -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    
+    <!-- Modern UI Libraries -->
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    
     <style>
-        .json-editor {
-            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
-            font-size: 12px;
-            line-height: 1.4;
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
         }
         
+        :root {
+            --primary: #6366f1;
+            --primary-dark: #4f46e5;
+            --primary-light: #818cf8;
+            --secondary: #8b5cf6;
+            --success: #10b981;
+            --danger: #ef4444;
+            --warning: #f59e0b;
+            --info: #3b82f6;
+            --dark: #1f2937;
+            --light: #f9fafb;
+            --border: #e5e7eb;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+            color: #1f2937;
+            line-height: 1.6;
+        }
+        
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 4px;
+        }
+        
+        ::-webkit-scrollbar-thumb {
+            background: #888;
+            border-radius: 4px;
+        }
+        
+        ::-webkit-scrollbar-thumb:hover {
+            background: #555;
+        }
+        
+        /* Glass morphism effect */
+        .glass {
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.15);
+        }
+        
+        .glass-dark {
+            background: rgba(31, 41, 55, 0.85);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.2);
+        }
+        
+        /* Animations */
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+        
+        .animate-slide-in {
+            animation: slideIn 0.3s ease-out;
+        }
+        
+        .animate-fade-in {
+            animation: fadeIn 0.3s ease-out;
+        }
+        
+        /* Modern button styles */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 12px 24px;
+            font-weight: 600;
+            font-size: 16px;
+            border-radius: 12px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            cursor: pointer;
+            border: none;
+            position: relative;
+            overflow: hidden;
+            gap: 8px;
+        }
+        
+        .btn-sm {
+            padding: 8px 16px;
+            font-size: 14px;
+            gap: 6px;
+        }
+        
+        .btn::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.5);
+            transform: translate(-50%, -50%);
+            transition: width 0.6s, height 0.6s;
+        }
+        
+        .btn:active::before {
+            width: 300px;
+            height: 300px;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            color: white;
+            box-shadow: 0 4px 15px 0 rgba(99, 102, 241, 0.3);
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px 0 rgba(99, 102, 241, 0.4);
+        }
+        
+        .btn-secondary {
+            background: white;
+            color: var(--dark);
+            border: 2px solid var(--border);
+        }
+        
+        .btn-secondary:hover {
+            background: var(--light);
+            border-color: var(--primary);
+            color: var(--primary);
+        }
+        
+        .btn-danger {
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+            color: white;
+        }
+        
+        .btn-success {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: white;
+        }
+        
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none !important;
+        }
+        
+        /* Modern input styles */
+        .input-group {
+            position: relative;
+            margin-bottom: 24px;
+        }
+        
+        .input-group label {
+            position: absolute;
+            top: -8px;
+            left: 16px;
+            background: white;
+            padding: 0 8px;
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--primary);
+            transition: all 0.3s;
+            z-index: 1;
+        }
+        
+        .input-group input,
+        .input-group select,
+        .input-group textarea {
+            width: 100%;
+            padding: 16px;
+            border: 2px solid var(--border);
+            border-radius: 12px;
+            font-size: 16px;
+            transition: all 0.3s;
+            background: white;
+        }
+        
+        .input-group input:focus,
+        .input-group select:focus,
+        .input-group textarea:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1);
+        }
+        
+        /* Modern card styles */
+        .card {
+            background: white;
+            border-radius: 20px;
+            padding: 32px;
+            box-shadow: 0 10px 40px -10px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s;
+            border: 1px solid rgba(0, 0, 0, 0.05);
+        }
+        
+        .card:hover {
+            box-shadow: 0 20px 60px -10px rgba(0, 0, 0, 0.15);
+            transform: translateY(-2px);
+        }
+        
+        /* Tab navigation */
+        .tab-nav {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 32px;
+            padding: 8px;
+            background: var(--light);
+            border-radius: 16px;
+            flex-wrap: wrap;
+        }
+        
+        .tab-btn {
+            padding: 12px 24px;
+            border-radius: 12px;
+            background: transparent;
+            border: none;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            color: #6b7280;
+            transition: all 0.3s;
+            position: relative;
+        }
+        
+        .tab-btn:hover {
+            color: var(--primary);
+        }
+        
+        .tab-btn.active {
+            background: white;
+            color: var(--primary);
+            box-shadow: 0 4px 12px -2px rgba(0, 0, 0, 0.1);
+        }
+        
+        /* Status badges */
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 6px 12px;
+            border-radius: 9999px;
+            font-size: 14px;
+            font-weight: 600;
+            gap: 6px;
+        }
+        
+        .badge-success {
+            background: rgba(16, 185, 129, 0.1);
+            color: #059669;
+        }
+        
+        .badge-error {
+            background: rgba(239, 68, 68, 0.1);
+            color: #dc2626;
+        }
+        
+        .badge-warning {
+            background: rgba(245, 158, 11, 0.1);
+            color: #d97706;
+        }
+        
+        .badge-info {
+            background: rgba(59, 130, 246, 0.1);
+            color: #2563eb;
+        }
+        
+        /* Floating action button */
+        .fab {
+            position: fixed;
+            bottom: 32px;
+            right: 32px;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 8px 24px -4px rgba(99, 102, 241, 0.4);
+            cursor: pointer;
+            transition: all 0.3s;
+            z-index: 1000;
+        }
+        
+        .fab:hover {
+            transform: scale(1.1);
+            box-shadow: 0 12px 32px -4px rgba(99, 102, 241, 0.5);
+        }
+        
+        /* Toast notifications */
         .toast {
             position: fixed;
-            bottom: 20px;
-            right: 20px;
+            bottom: 32px;
+            right: 32px;
             transform: translateX(400px);
-            transition: transform 0.3s ease-in-out;
-            z-index: 50;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            z-index: 9999;
+            max-width: 400px;
         }
         
         .toast.show {
             transform: translateX(0);
         }
         
+        .toast-content {
+            background: white;
+            border-radius: 12px;
+            padding: 16px 24px;
+            box-shadow: 0 10px 40px -10px rgba(0, 0, 0, 0.2);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            border-left: 4px solid var(--primary);
+        }
+        
+        .toast-success .toast-content {
+            border-left-color: var(--success);
+        }
+        
+        .toast-error .toast-content {
+            border-left-color: var(--danger);
+        }
+        
+        /* Loading spinner */
         .spinner {
-            border: 2px solid #f3f3f3;
-            border-top: 2px solid #3498db;
+            width: 40px;
+            height: 40px;
+            position: relative;
+        }
+        
+        .spinner::before,
+        .spinner::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
             border-radius: 50%;
-            width: 20px;
-            height: 20px;
+            border: 3px solid transparent;
+            border-top-color: var(--primary);
             animation: spin 1s linear infinite;
+        }
+        
+        .spinner::after {
+            border-top-color: var(--secondary);
+            animation-delay: 0.5s;
         }
         
         @keyframes spin {
@@ -55,418 +412,662 @@ export function getTestUIHTML(): string {
             100% { transform: rotate(360deg); }
         }
         
-        .tab-content {
-            animation: fadeIn 0.3s ease-in;
+        /* Skeleton loader */
+        .skeleton {
+            background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+            background-size: 200% 100%;
+            animation: loading 1.2s ease-in-out infinite;
         }
         
-        @keyframes fadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
-        }
-
-        /* 自定义滚动条 */
-        .custom-scrollbar::-webkit-scrollbar {
-            width: 8px;
-            height: 8px;
+        @keyframes loading {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
         }
         
-        .custom-scrollbar::-webkit-scrollbar-track {
-            background: #f1f1f1;
-            border-radius: 4px;
+        /* Toggle switch */
+        .toggle {
+            position: relative;
+            display: inline-block;
+            width: 60px;
+            height: 30px;
         }
         
-        .custom-scrollbar::-webkit-scrollbar-thumb {
-            background: #888;
-            border-radius: 4px;
+        .toggle input {
+            opacity: 0;
+            width: 0;
+            height: 0;
         }
         
-        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-            background: #555;
+        .toggle-slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: .4s;
+            border-radius: 30px;
         }
-
-        /* 代码高亮 */
-        .hljs-string { color: #0d9b55; }
-        .hljs-number { color: #0066cc; }
-        .hljs-boolean { color: #ff6b6b; }
-        .hljs-null { color: #868e96; }
-        .hljs-key { color: #5c2e91; }
+        
+        .toggle-slider:before {
+            position: absolute;
+            content: "";
+            height: 22px;
+            width: 22px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+        
+        .toggle input:checked + .toggle-slider {
+            background-color: var(--primary);
+        }
+        
+        .toggle input:checked + .toggle-slider:before {
+            transform: translateX(30px);
+        }
+        
+        /* Responsive */
+        @media (max-width: 768px) {
+            .container {
+                padding: 16px;
+            }
+            
+            .card {
+                padding: 24px;
+            }
+            
+            .tab-nav {
+                gap: 4px;
+                padding: 4px;
+            }
+            
+            .tab-btn {
+                padding: 8px 16px;
+                font-size: 14px;
+            }
+        }
     </style>
 </head>
 <body>
     <div id="root"></div>
+    
     <script type="text/babel">
         const { useState, useEffect, useCallback, useRef, useMemo } = React;
-
-        // ========== 通用组件 ==========
-        function Toast({ message, type, show, onClose }) {
+        
+        // API configuration
+        const PRODUCTION_URL = 'https://notification.caas.xyz';
+        
+        // Icons
+        const Icon = ({ name, className = '' }) => {
+            return <i className={\`fas fa-\${name} \${className}\`}></i>;
+        };
+        
+        // Toast Component
+        function Toast({ message, type = 'info', show, onClose }) {
             useEffect(() => {
                 if (show) {
-                    const timer = setTimeout(onClose, 3000);
+                    const timer = setTimeout(() => {
+                        onClose();
+                    }, 3000);
                     return () => clearTimeout(timer);
                 }
             }, [show, onClose]);
-
-            const bgColor = type === 'success' ? 'bg-green-500' : 
-                           type === 'error' ? 'bg-red-500' : 
-                           type === 'warning' ? 'bg-yellow-500' : 'bg-blue-500';
-
+            
             return (
-                <div className={\`toast \${show ? 'show' : ''} \${bgColor} text-white px-6 py-3 rounded-lg shadow-lg\`}>
-                    <div className="flex items-center">
+                <div className={\`toast \${show ? 'show' : ''} toast-\${type}\`}>
+                    <div className="toast-content">
+                        <Icon name={type === 'success' ? 'check-circle' : type === 'error' ? 'times-circle' : 'info-circle'} />
                         <span>{message}</span>
-                        <button
-                            onClick={onClose}
-                            className="ml-4 text-white hover:text-gray-200"
-                        >
-                            ×
-                        </button>
                     </div>
                 </div>
             );
         }
-
-        function JsonEditor({ value, onChange, height = '200px', readOnly = false }) {
-            const [internalValue, setInternalValue] = useState('');
-            const [error, setError] = useState('');
-
-            useEffect(() => {
-                try {
-                    const formatted = JSON.stringify(value, null, 2);
-                    setInternalValue(formatted);
-                    setError('');
-                } catch (e) {
-                    setInternalValue(String(value));
-                    setError('Invalid JSON');
-                }
-            }, [value]);
-
+        
+        // Loading Spinner Component
+        function LoadingSpinner({ size = 'default' }) {
+            return (
+                <div className={\`spinner \${size === 'small' ? 'w-6 h-6' : ''}\`}></div>
+            );
+        }
+        
+        // JSON Editor Component with Syntax Highlighting
+        function JsonEditor({ value, onChange, placeholder, rows = 6 }) {
+            const [isValid, setIsValid] = useState(true);
+            const [formatted, setFormatted] = useState(value);
+            
             const handleChange = (e) => {
                 const newValue = e.target.value;
-                setInternalValue(newValue);
-
+                setFormatted(newValue);
+                onChange(newValue);
+                
                 try {
-                    const parsed = JSON.parse(newValue);
-                    onChange(parsed);
-                    setError('');
-                } catch (e) {
-                    setError('Invalid JSON: ' + e.message);
+                    if (newValue.trim()) {
+                        JSON.parse(newValue);
+                        setIsValid(true);
+                    }
+                } catch {
+                    setIsValid(false);
                 }
             };
-
+            
+            const formatJson = () => {
+                try {
+                    const parsed = JSON.parse(formatted);
+                    const pretty = JSON.stringify(parsed, null, 2);
+                    setFormatted(pretty);
+                    onChange(pretty);
+                    setIsValid(true);
+                } catch {
+                    setIsValid(false);
+                }
+            };
+            
             return (
                 <div className="relative">
                     <textarea
-                        value={internalValue}
+                        value={formatted}
                         onChange={handleChange}
-                        readOnly={readOnly}
-                        className={\`json-editor w-full p-3 bg-gray-50 border rounded-lg custom-scrollbar \${
-                            error ? 'border-red-500' : 'border-gray-300'
-                        } \${readOnly ? 'bg-gray-100' : ''}\`}
-                        style={{ height }}
-                        spellCheck="false"
+                        placeholder={placeholder}
+                        rows={rows}
+                        className={\`w-full p-4 font-mono text-sm border-2 rounded-lg transition-all \${
+                            isValid ? 'border-gray-300 focus:border-indigo-500' : 'border-red-400'
+                        }\`}
+                        style={{ resize: 'vertical' }}
                     />
-                    {error && (
-                        <div className="absolute bottom-0 left-0 text-xs text-red-500 mt-1">
-                            {error}
-                        </div>
+                    <button
+                        type="button"
+                        onClick={formatJson}
+                        className="absolute top-2 right-2 px-3 py-1 text-xs bg-gray-100 hover:bg-gray-200 rounded-md transition-colors"
+                    >
+                        <Icon name="code" className="mr-1" />
+                        格式化
+                    </button>
+                    {!isValid && (
+                        <p className="mt-1 text-sm text-red-600">
+                            <Icon name="exclamation-circle" className="mr-1" />
+                            JSON 格式无效
+                        </p>
                     )}
                 </div>
             );
         }
-
-        function Select({ value, onChange, options, placeholder = '请选择...' }) {
+        
+        // Response Display Component
+        function ResponseDisplay({ data, status }) {
+            const [copied, setCopied] = useState(false);
+            
+            const handleCopy = async () => {
+                try {
+                    await navigator.clipboard.writeText(data || '');
+                    setCopied(true);
+                    setTimeout(() => setCopied(false), 2000);
+                } catch (err) {
+                    console.error('Failed to copy:', err);
+                }
+            };
+            
+            const formatJSON = (jsonString) => {
+                if (!jsonString) return '响应结果将在这里显示...';
+                
+                try {
+                    const obj = JSON.parse(jsonString);
+                    return JSON.stringify(obj, null, 2);
+                } catch {
+                    return jsonString;
+                }
+            };
+            
             return (
-                <select
-                    value={value}
-                    onChange={(e) => onChange(e.target.value)}
-                    className="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                >
-                    <option value="">{placeholder}</option>
-                    {options.map(option => (
-                        <option key={option.value} value={option.value}>
-                            {option.label}
-                        </option>
-                    ))}
-                </select>
-            );
-        }
-
-        function Card({ title, children, actions }) {
-            return (
-                <div className="bg-white rounded-lg shadow-md">
-                    <div className="px-6 py-4 border-b border-gray-200">
-                        <div className="flex justify-between items-center">
-                            <h3 className="text-lg font-semibold text-gray-800">{title}</h3>
-                            {actions && <div className="flex gap-2">{actions}</div>}
-                        </div>
+                <div className="relative">
+                    <div className="absolute top-4 right-4 flex gap-2">
+                        {status && (
+                            <span className={\`badge \${status >= 200 && status < 300 ? 'badge-success' : 'badge-error'}\`}>
+                                <Icon name={status >= 200 && status < 300 ? 'check' : 'times'} />
+                                {status}
+                            </span>
+                        )}
+                        {data && (
+                            <button
+                                onClick={handleCopy}
+                                className={\`btn btn-secondary py-2 px-4 text-sm \${copied ? 'bg-green-500 text-white' : ''}\`}
+                            >
+                                <Icon name={copied ? 'check' : 'copy'} />
+                                {copied ? '已复制' : '复制'}
+                            </button>
+                        )}
                     </div>
-                    <div className="p-6">{children}</div>
+                    <pre className="bg-gray-50 p-6 rounded-lg overflow-auto max-h-96 font-mono text-sm">
+                        {formatJSON(data)}
+                    </pre>
                 </div>
             );
         }
-
-        function Button({ onClick, children, variant = 'primary', size = 'md', disabled = false, loading = false }) {
-            const baseClasses = 'font-medium rounded-lg transition-colors duration-200 flex items-center justify-center';
+        
+        // Channel Selector Component
+        function ChannelSelector({ selectedChannels, onChange }) {
+            const channels = [
+                { id: 'webhook', name: 'Webhook', icon: 'link', color: 'text-blue-600' },
+                { id: 'telegram', name: 'Telegram', icon: 'paper-plane', color: 'text-sky-600' },
+                { id: 'lark', name: '飞书/Lark', icon: 'feather-alt', color: 'text-green-600' },
+                { id: 'slack', name: 'Slack', icon: 'hashtag', color: 'text-purple-600' }
+            ];
             
-            const sizeClasses = {
-                sm: 'px-3 py-1.5 text-sm',
-                md: 'px-4 py-2',
-                lg: 'px-6 py-3 text-lg'
-            };
-
-            const variantClasses = {
-                primary: 'bg-blue-500 text-white hover:bg-blue-600 disabled:bg-blue-300',
-                secondary: 'bg-gray-200 text-gray-800 hover:bg-gray-300 disabled:bg-gray-100',
-                danger: 'bg-red-500 text-white hover:bg-red-600 disabled:bg-red-300',
-                success: 'bg-green-500 text-white hover:bg-green-600 disabled:bg-green-300',
-                ghost: 'text-gray-600 hover:bg-gray-100'
-            };
-
             return (
-                <button
-                    onClick={onClick}
-                    disabled={disabled || loading}
-                    className={\`\${baseClasses} \${sizeClasses[size]} \${variantClasses[variant]} \${
-                        disabled || loading ? 'cursor-not-allowed opacity-60' : ''
-                    }\`}
-                >
-                    {loading && <div className="spinner mr-2" />}
-                    {children}
-                </button>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    {channels.map(channel => (
+                        <label
+                            key={channel.id}
+                            className={\`relative flex items-center justify-center p-4 rounded-xl border-2 cursor-pointer transition-all \${
+                                selectedChannels.includes(channel.id)
+                                    ? 'border-indigo-500 bg-indigo-50'
+                                    : 'border-gray-300 hover:border-gray-400'
+                            }\`}
+                        >
+                            <input
+                                type="checkbox"
+                                className="sr-only"
+                                checked={selectedChannels.includes(channel.id)}
+                                onChange={() => onChange(channel.id)}
+                            />
+                            <div className="text-center">
+                                <Icon name={channel.icon} className={\`text-2xl mb-2 \${channel.color}\`} />
+                                <span className="text-sm font-medium">{channel.name}</span>
+                            </div>
+                            {selectedChannels.includes(channel.id) && (
+                                <div className="absolute top-2 right-2">
+                                    <Icon name="check-circle" className="text-indigo-500" />
+                                </div>
+                            )}
+                        </label>
+                    ))}
+                </div>
             );
         }
-
-        // ========== API 配置 ==========
-        const API_CONFIG = {
-            getBaseUrl: () => {
-                const saved = localStorage.getItem('notification_api_url');
-                return saved || window.location.origin;
-            },
-            setBaseUrl: (url) => {
-                localStorage.setItem('notification_api_url', url);
-            },
-            getApiKey: () => {
-                return localStorage.getItem('notification_api_key') || '';
-            },
-            setApiKey: (key) => {
-                localStorage.setItem('notification_api_key', key);
-            }
-        };
-
-        // ========== API 客户端 ==========
-        class ApiClient {
-            constructor() {
-                this.baseUrl = API_CONFIG.getBaseUrl();
-                this.apiKey = API_CONFIG.getApiKey();
-            }
-
-            setCredentials(baseUrl, apiKey) {
-                this.baseUrl = baseUrl;
-                this.apiKey = apiKey;
-                API_CONFIG.setBaseUrl(baseUrl);
-                API_CONFIG.setApiKey(apiKey);
-            }
-
-            generateSignature(timestamp, payload) {
-                return CryptoJS.HmacSHA256(timestamp + payload, this.apiKey).toString();
-            }
-
-            async request(path, method = 'GET', body = null) {
-                const url = \`\${this.baseUrl}\${path}\`;
-                const timestamp = Date.now().toString();
-                
-                let payload = '';
-                if (method === 'GET' || method === 'DELETE') {
-                    const urlObj = new URL(url);
-                    payload = urlObj.pathname + urlObj.search;
-                } else if (body) {
-                    payload = JSON.stringify(body);
-                }
-
-                const headers = {
-                    'Content-Type': 'application/json',
-                    'X-Timestamp': timestamp,
-                    'X-Signature': this.generateSignature(timestamp, payload)
-                };
-
-                const options = {
-                    method,
-                    headers
-                };
-
-                if (body && method !== 'GET' && method !== 'DELETE') {
-                    options.body = JSON.stringify(body);
-                }
-
-                const response = await fetch(url, options);
-                const data = await response.json();
-
-                if (!response.ok) {
-                    throw new Error(data.error || \`HTTP \${response.status}\`);
-                }
-
-                return data;
-            }
-
-            // API 方法
-            async sendNotification(data) {
-                return this.request('/api/notifications/send', 'POST', data);
-            }
-
-            async getUserConfigs(userId) {
-                return this.request(\`/api/user-configs?user_id=\${encodeURIComponent(userId)}\`);
-            }
-
-            async setUserConfig(userId, channelType, config) {
-                return this.request('/api/user-configs', 'POST', {
-                    user_id: userId,
-                    channel_type: channelType,
-                    config_data: config,
-                    is_active: true
-                });
-            }
-
-            async getTemplates() {
-                return this.request('/api/templates');
-            }
-
-            async createTemplate(key, template) {
-                return this.request(\`/api/templates?key=\${encodeURIComponent(key)}\`, 'POST', template);
-            }
-
-            async deleteTemplate(key) {
-                return this.request(\`/api/templates?key=\${encodeURIComponent(key)}\`, 'DELETE');
-            }
-
-            async getNotificationLogs(params = {}) {
-                const queryParams = new URLSearchParams(params);
-                return this.request(\`/api/notification-logs?\${queryParams}\`);
-            }
-
-            async checkHealth() {
-                return this.request('/health');
-            }
+        
+        // Quick Fill Buttons Component
+        function QuickFillButtons({ options, onSelect }) {
+            return (
+                <div className="flex flex-wrap gap-2 mt-2">
+                    {options.map((option, index) => (
+                        <button
+                            key={index}
+                            type="button"
+                            onClick={() => onSelect(option.value)}
+                            className="px-3 py-1 text-sm bg-gray-100 hover:bg-gray-200 rounded-full transition-colors"
+                        >
+                            {option.label}
+                        </button>
+                    ))}
+                </div>
+            );
         }
-
-        // ========== 主应用 ==========
+        
+        // Main App Component
         function App() {
             const [activeTab, setActiveTab] = useState('send');
-            const [apiKey, setApiKey] = useState(API_CONFIG.getApiKey());
-            const [baseUrl, setBaseUrl] = useState(API_CONFIG.getBaseUrl());
-            const [toast, setToast] = useState({ show: false, message: '', type: 'info' });
-            const [isHealthy, setIsHealthy] = useState(false);
+            const [environment, setEnvironment] = useState(() => {
+                return localStorage.getItem('environment') || 'local';
+            });
+            const [apiSecret, setApiSecret] = useState(() => {
+                const currentEnv = localStorage.getItem('environment') || 'local';
+                if (currentEnv === 'production') {
+                    return localStorage.getItem('api_secret_production') || '';
+                } else {
+                    return localStorage.getItem('api_secret_local') || 'test-secret-key-for-development';
+                }
+            });
+            const [baseUrl, setBaseUrl] = useState(() => {
+                const currentEnv = localStorage.getItem('environment') || 'local';
+                return currentEnv === 'production' ? PRODUCTION_URL : window.location.origin;
+            });
+            const [response, setResponse] = useState({ data: null, status: null });
             const [loading, setLoading] = useState(false);
-
-            const apiClient = useRef(new ApiClient());
-
-            const showToast = useCallback((message, type = 'info') => {
+            const [toast, setToast] = useState({ show: false, message: '', type: 'info' });
+            
+            // Form states
+            const [userId, setUserId] = useState('test-user');
+            const [selectedChannels, setSelectedChannels] = useState(['webhook']);
+            const [sendMethod, setSendMethod] = useState('custom');
+            const [subject, setSubject] = useState('');
+            const [content, setContent] = useState('这是一条测试通知 🔔');
+            const [templateKey, setTemplateKey] = useState('');
+            const [variables, setVariables] = useState('{}');
+            const [idempotencyKey, setIdempotencyKey] = useState('');
+            const [templates, setTemplates] = useState([]);
+            const [templatesData, setTemplatesData] = useState({});
+            
+            // Show toast notification
+            const showToast = (message, type = 'info') => {
                 setToast({ show: true, message, type });
-            }, []);
-
-            const checkHealth = useCallback(async () => {
-                if (!apiKey || !baseUrl) return;
+            };
+            
+            // Handle environment change
+            const handleEnvironmentChange = (env) => {
+                if (env === 'production') {
+                    if (confirm('⚠️ 注意：您即将切换到正式环境！\\n\\n请确保：\\n1. 使用正确的正式环境 API 密钥\\n2. 谨慎操作，避免发送测试数据\\n\\n是否继续？')) {
+                        setEnvironment('production');
+                        localStorage.setItem('environment', 'production');
+                        setBaseUrl(PRODUCTION_URL);
+                        const prodSecret = localStorage.getItem('api_secret_production') || '';
+                        setApiSecret(prodSecret);
+                        showToast('已切换到正式环境', 'warning');
+                    }
+                } else {
+                    setEnvironment('local');
+                    localStorage.setItem('environment', 'local');
+                    setBaseUrl(window.location.origin);
+                    const localSecret = localStorage.getItem('api_secret_local') || 'test-secret-key-for-development';
+                    setApiSecret(localSecret);
+                    showToast('已切换到本地环境', 'success');
+                }
+            };
+            
+            // Generate signature
+            const generateSignature = async (timestamp, body, secretKey) => {
+                const encoder = new TextEncoder();
+                const key = await crypto.subtle.importKey(
+                    'raw',
+                    encoder.encode(secretKey),
+                    { name: 'HMAC', hash: 'SHA-256' },
+                    false,
+                    ['sign']
+                );
+                
+                const signature = await crypto.subtle.sign(
+                    'HMAC',
+                    key,
+                    encoder.encode(timestamp + body)
+                );
+                
+                return Array.from(new Uint8Array(signature))
+                    .map(b => b.toString(16).padStart(2, '0'))
+                    .join('');
+            };
+            
+            // Generate signature for GET/DELETE requests
+            const generateGetSignature = async (timestamp, url, secretKey) => {
+                const urlObj = new URL(url);
+                const pathAndQuery = urlObj.pathname + urlObj.search;
+                return generateSignature(timestamp, pathAndQuery, secretKey);
+            };
+            
+            // Show response
+            const showResponse = (data, status) => {
+                const envInfo = environment === 'production' ? 
+                    '⚠️ 正式环境响应\\n' + '━'.repeat(50) + '\\n' : 
+                    '✅ 本地环境响应\\n' + '━'.repeat(50) + '\\n';
+                
+                setResponse({
+                    data: envInfo + JSON.stringify(data, null, 2),
+                    status
+                });
+                
+                if (status >= 200 && status < 300) {
+                    showToast('请求成功', 'success');
+                } else {
+                    showToast('请求失败', 'error');
+                }
+            };
+            
+            // Load templates
+            const loadTemplates = useCallback(async () => {
+                if (selectedChannels.length === 0) {
+                    setTemplates([]);
+                    return;
+                }
                 
                 try {
-                    setLoading(true);
-                    apiClient.current.setCredentials(baseUrl, apiKey);
-                    const result = await apiClient.current.checkHealth();
-                    setIsHealthy(true);
-                    showToast('API 连接成功', 'success');
+                    const response = await fetch(baseUrl + '/api/templates');
+                    const data = await response.json();
+                    
+                    if (data.success && data.data) {
+                        const templatesMap = {};
+                        data.data.forEach(template => {
+                            templatesMap[template.template_key] = template;
+                        });
+                        setTemplatesData(templatesMap);
+                        
+                        // Filter templates that support all selected channels
+                        const availableTemplates = data.data.filter(template => 
+                            selectedChannels.every(channel => 
+                                template.supported_channels && template.supported_channels.includes(channel)
+                            )
+                        );
+                        
+                        setTemplates(availableTemplates);
+                        if (availableTemplates.length > 0) {
+                            setTemplateKey(availableTemplates[0].template_key);
+                        }
+                    }
                 } catch (error) {
-                    setIsHealthy(false);
-                    showToast('API 连接失败: ' + error.message, 'error');
+                    console.error('Failed to load templates:', error);
+                    setTemplates([]);
                 }
-                setLoading(false);
-            }, [apiKey, baseUrl, showToast]);
-
+            }, [selectedChannels, baseUrl]);
+            
+            // Send notification
+            const sendNotification = async () => {
+                setLoading(true);
+                try {
+                    const requestBody = {
+                        user_id: userId,
+                        channels: selectedChannels
+                    };
+                    
+                    if (sendMethod === 'custom') {
+                        requestBody.custom_content = {
+                            content: content
+                        };
+                        if (subject) {
+                            requestBody.custom_content.subject = subject;
+                        }
+                    } else {
+                        requestBody.template_key = templateKey;
+                        try {
+                            const vars = JSON.parse(variables);
+                            if (Object.keys(vars).length > 0) {
+                                requestBody.variables = vars;
+                            }
+                        } catch (e) {
+                            throw new Error('模板变量必须是有效的 JSON 格式');
+                        }
+                    }
+                    
+                    if (idempotencyKey) {
+                        requestBody.idempotency_key = idempotencyKey;
+                    }
+                    
+                    const timestamp = Date.now().toString();
+                    const body = JSON.stringify(requestBody);
+                    const signature = await generateSignature(timestamp, body, apiSecret);
+                    
+                    const response = await fetch(baseUrl + '/api/notifications/send', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-Timestamp': timestamp,
+                            'X-Signature': signature
+                        },
+                        body: body
+                    });
+                    
+                    const data = await response.json();
+                    showResponse(data, response.status);
+                } catch (error) {
+                    showResponse({ error: error.message }, 400);
+                } finally {
+                    setLoading(false);
+                }
+            };
+            
+            // Channel checkbox handler
+            const handleChannelChange = (channel) => {
+                setSelectedChannels(prev => {
+                    if (prev.includes(channel)) {
+                        return prev.filter(c => c !== channel);
+                    } else {
+                        return [...prev, channel];
+                    }
+                });
+            };
+            
+            // Load templates when channels change
             useEffect(() => {
-                if (apiKey && baseUrl) {
-                    checkHealth();
+                if (sendMethod === 'template') {
+                    loadTemplates();
                 }
-            }, []);
-
+            }, [selectedChannels, sendMethod, loadTemplates]);
+            
+            // Tab configuration
             const tabs = [
-                { id: 'send', label: '发送通知', icon: '📤' },
-                { id: 'config', label: '用户配置', icon: '⚙️' },
-                { id: 'template', label: '模板管理', icon: '📝' },
-                { id: 'logs', label: '通知日志', icon: '📊' },
-                { id: 'settings', label: '设置', icon: '🔧' }
+                { id: 'send', name: '发送通知', icon: 'paper-plane' },
+                { id: 'userconfig', name: '用户配置', icon: 'user-cog' },
+                { id: 'templates', name: '模板管理', icon: 'file-alt' },
+                { id: 'logs', name: '通知日志', icon: 'history' },
+                { id: 'queue', name: '队列管理', icon: 'tasks' },
+                { id: 'health', name: '健康检查', icon: 'heartbeat' },
+                { id: 'metrics', name: '系统指标', icon: 'chart-line' },
+                { id: 'grafana', name: 'Grafana', icon: 'chart-area' }
             ];
-
+            
+            // Tab components
+            const tabComponents = {
+                send: <SendNotificationTab 
+                    userId={userId}
+                    setUserId={setUserId}
+                    selectedChannels={selectedChannels}
+                    handleChannelChange={handleChannelChange}
+                    sendMethod={sendMethod}
+                    setSendMethod={setSendMethod}
+                    subject={subject}
+                    setSubject={setSubject}
+                    content={content}
+                    setContent={setContent}
+                    templateKey={templateKey}
+                    setTemplateKey={setTemplateKey}
+                    templates={templates}
+                    templatesData={templatesData}
+                    variables={variables}
+                    setVariables={setVariables}
+                    idempotencyKey={idempotencyKey}
+                    setIdempotencyKey={setIdempotencyKey}
+                    sendNotification={sendNotification}
+                    loading={loading}
+                />,
+                userconfig: <UserConfigTab baseUrl={baseUrl} showResponse={showResponse} apiSecret={apiSecret} generateGetSignature={generateGetSignature} generateSignature={generateSignature} showToast={showToast} />,
+                templates: <TemplatesTab baseUrl={baseUrl} showResponse={showResponse} apiSecret={apiSecret} generateGetSignature={generateGetSignature} generateSignature={generateSignature} showToast={showToast} />,
+                logs: <LogsTab baseUrl={baseUrl} showResponse={showResponse} apiSecret={apiSecret} generateGetSignature={generateGetSignature} generateSignature={generateSignature} showToast={showToast} />,
+                queue: <QueueManagementTab baseUrl={baseUrl} showResponse={showResponse} apiSecret={apiSecret} generateGetSignature={generateGetSignature} generateSignature={generateSignature} showToast={showToast} />,
+                health: <HealthTab baseUrl={baseUrl} showResponse={showResponse} showToast={showToast} />,
+                metrics: <MetricsTab baseUrl={baseUrl} showResponse={showResponse} apiSecret={apiSecret} generateGetSignature={generateGetSignature} showToast={showToast} />,
+                grafana: <GrafanaTab baseUrl={baseUrl} showResponse={showResponse} environment={environment} showToast={showToast} />
+            };
+            
             return (
-                <div className="min-h-screen bg-gray-50">
-                    {/* Header */}
-                    <header className="bg-white shadow-sm border-b">
-                        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                            <div className="flex justify-between items-center py-4">
-                                <div className="flex items-center">
-                                    <h1 className="text-2xl font-bold text-gray-900">通知系统测试 UI</h1>
-                                    <div className="ml-4">
-                                        {isHealthy ? (
-                                            <span className="text-green-500 text-sm">● 已连接</span>
-                                        ) : (
-                                            <span className="text-red-500 text-sm">● 未连接</span>
-                                        )}
-                                    </div>
+                <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-purple-50">
+                    <div className="container mx-auto px-4 py-8 max-w-7xl">
+                        {/* Header */}
+                        <div className={\`glass rounded-2xl p-8 mb-8 \${environment === 'production' ? 'border-red-300' : ''}\`}>
+                            <div className="flex items-center justify-between flex-wrap gap-4">
+                                <div>
+                                    <h1 className="text-3xl font-bold text-gray-800 flex items-center gap-3">
+                                        <Icon name="rocket" className="text-indigo-600" />
+                                        通知系统 API 测试工具
+                                        <span className="badge badge-info">V2</span>
+                                    </h1>
+                                    <p className="text-gray-600 mt-2">
+                                        {environment === 'production' ? 
+                                            '🚨 正式环境 - 请谨慎操作' : 
+                                            '🛠️ 开发环境 - 安全测试'
+                                        }
+                                    </p>
                                 </div>
-                                <Button onClick={checkHealth} variant="ghost" size="sm" loading={loading}>
-                                    刷新状态
-                                </Button>
+                                <div className="flex items-center gap-4">
+                                    <label className="toggle">
+                                        <input
+                                            type="checkbox"
+                                            checked={environment === 'production'}
+                                            onChange={(e) => handleEnvironmentChange(e.target.checked ? 'production' : 'local')}
+                                        />
+                                        <span className="toggle-slider"></span>
+                                    </label>
+                                    <span className="text-sm font-medium">
+                                        {environment === 'production' ? '正式环境' : '本地环境'}
+                                    </span>
+                                </div>
                             </div>
                         </div>
-                    </header>
-
-                    {/* Navigation */}
-                    <nav className="bg-white border-b">
-                        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                            <div className="flex space-x-8">
-                                {tabs.map(tab => (
-                                    <button
-                                        key={tab.id}
-                                        onClick={() => setActiveTab(tab.id)}
-                                        className={\`py-3 px-1 border-b-2 font-medium text-sm transition-colors \${
-                                            activeTab === tab.id
-                                                ? 'border-blue-500 text-blue-600'
-                                                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                                        }\`}
-                                    >
-                                        <span className="mr-2">{tab.icon}</span>
-                                        {tab.label}
-                                    </button>
-                                ))}
+                        
+                        {/* API Configuration */}
+                        <div className="card mb-8 animate-slide-in">
+                            <h2 className="text-xl font-bold mb-6 flex items-center gap-2">
+                                <Icon name="cog" className="text-gray-600" />
+                                API 配置
+                            </h2>
+                            <div className="grid md:grid-cols-2 gap-6">
+                                <div className="input-group">
+                                    <label>环境地址</label>
+                                    <input
+                                        type="text"
+                                        value={baseUrl}
+                                        readOnly
+                                        className="bg-gray-50"
+                                    />
+                                </div>
+                                <div className="input-group">
+                                    <label>API 密钥</label>
+                                    <input
+                                        type="password"
+                                        value={apiSecret}
+                                        onChange={(e) => {
+                                            const newSecret = e.target.value;
+                                            setApiSecret(newSecret);
+                                            if (environment === 'production') {
+                                                localStorage.setItem('api_secret_production', newSecret);
+                                            } else {
+                                                localStorage.setItem('api_secret_local', newSecret);
+                                            }
+                                        }}
+                                        placeholder={environment === 'production' ? '输入正式环境 API 密钥' : '输入 API 密钥'}
+                                    />
+                                </div>
                             </div>
                         </div>
-                    </nav>
-
-                    {/* Content */}
-                    <main className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
-                        <div className="tab-content">
-                            {activeTab === 'send' && (
-                                <SendNotification apiClient={apiClient.current} showToast={showToast} />
-                            )}
-                            {activeTab === 'config' && (
-                                <UserConfig apiClient={apiClient.current} showToast={showToast} />
-                            )}
-                            {activeTab === 'template' && (
-                                <TemplateManagement apiClient={apiClient.current} showToast={showToast} />
-                            )}
-                            {activeTab === 'logs' && (
-                                <NotificationLogs apiClient={apiClient.current} showToast={showToast} />
-                            )}
-                            {activeTab === 'settings' && (
-                                <Settings 
-                                    apiKey={apiKey} 
-                                    setApiKey={setApiKey}
-                                    baseUrl={baseUrl}
-                                    setBaseUrl={setBaseUrl}
-                                    onSave={checkHealth}
-                                    showToast={showToast}
-                                />
-                            )}
+                        
+                        {/* Tab Navigation */}
+                        <div className="tab-nav mb-8">
+                            {tabs.map(tab => (
+                                <button
+                                    key={tab.id}
+                                    className={\`tab-btn \${activeTab === tab.id ? 'active' : ''}\`}
+                                    onClick={() => setActiveTab(tab.id)}
+                                >
+                                    <Icon name={tab.icon} />
+                                    <span className="hidden md:inline">{tab.name}</span>
+                                </button>
+                            ))}
                         </div>
-                    </main>
-
-                    {/* Toast */}
+                        
+                        {/* Tab Content */}
+                        <div className="card mb-8 animate-fade-in">
+                            {tabComponents[activeTab]}
+                        </div>
+                        
+                        {/* Response Display */}
+                        <div className="card animate-slide-in">
+                            <h2 className="text-xl font-bold mb-6 flex items-center gap-2">
+                                <Icon name="code" className="text-gray-600" />
+                                响应结果
+                            </h2>
+                            <ResponseDisplay data={response.data} status={response.status} />
+                        </div>
+                    </div>
+                    
+                    {/* Toast Notification */}
                     <Toast
                         message={toast.message}
                         type={toast.type}
@@ -476,872 +1077,2191 @@ export function getTestUIHTML(): string {
                 </div>
             );
         }
-
-        // ========== 发送通知组件 ==========
-        function SendNotification({ apiClient, showToast }) {
-            const [userId, setUserId] = useState('test-user');
-            const [channels, setChannels] = useState(['lark']);
-            const [sendMode, setSendMode] = useState('custom'); // 'custom' or 'template'
-            const [templateKey, setTemplateKey] = useState('');
-            const [customContent, setCustomContent] = useState({
-                subject: '测试通知',
-                content: '这是一条测试通知消息'
-            });
-            const [variables, setVariables] = useState({});
-            const [idempotencyKey, setIdempotencyKey] = useState('');
-            const [loading, setLoading] = useState(false);
-            const [response, setResponse] = useState(null);
-            const [templates, setTemplates] = useState([]);
-
-            useEffect(() => {
-                loadTemplates();
-            }, []);
-
-            const loadTemplates = async () => {
-                try {
-                    const result = await apiClient.getTemplates();
-                    if (result.templates) {
-                        setTemplates(Object.keys(result.templates));
-                    }
-                } catch (error) {
-                    console.error('Failed to load templates:', error);
-                }
-            };
-
-            const handleSend = async () => {
-                try {
-                    setLoading(true);
-                    const payload = {
-                        user_id: userId,
-                        channels: channels
-                    };
-
-                    if (sendMode === 'template') {
-                        payload.template_key = templateKey;
-                        if (Object.keys(variables).length > 0) {
-                            payload.variables = variables;
-                        }
-                    } else {
-                        payload.custom_content = customContent;
-                    }
-
-                    if (idempotencyKey) {
-                        payload.idempotency_key = idempotencyKey;
-                    }
-
-                    const result = await apiClient.sendNotification(payload);
-                    setResponse(result);
-                    showToast('通知发送成功', 'success');
-                } catch (error) {
-                    showToast('发送失败: ' + error.message, 'error');
-                }
-                setLoading(false);
-            };
-
-            const channelOptions = [
-                { value: 'lark', label: '飞书 (Lark)' },
-                { value: 'telegram', label: 'Telegram' },
-                { value: 'webhook', label: 'Webhook' },
-                { value: 'slack', label: 'Slack' }
+        
+        // Send Notification Tab Component
+        function SendNotificationTab(props) {
+            const {
+                userId, setUserId, selectedChannels, handleChannelChange,
+                sendMethod, setSendMethod, subject, setSubject,
+                content, setContent, templateKey, setTemplateKey,
+                templates, templatesData, variables, setVariables,
+                idempotencyKey, setIdempotencyKey, sendNotification, loading
+            } = props;
+            
+            const userIdOptions = [
+                { label: '测试用户', value: 'test-user' },
+                { label: '演示用户', value: 'demo-user' },
+                { label: 'Rei (Lark)', value: 'rei' },
+                { label: '随机用户', value: 'user-' + Date.now() }
             ];
-
+            
             return (
                 <div className="space-y-6">
-                    <Card title="发送通知">
-                        <div className="space-y-4">
-                            {/* 用户 ID */}
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">
-                                    用户 ID
-                                </label>
+                    <div className="flex items-center gap-2 text-sm text-gray-600 mb-4">
+                        <span className="badge badge-success">POST</span>
+                        <code className="bg-gray-100 px-2 py-1 rounded">/api/notifications/send</code>
+                    </div>
+                    
+                    <div className="input-group">
+                        <label>用户 ID <span className="text-red-500">*</span></label>
+                        <input
+                            type="text"
+                            value={userId}
+                            onChange={(e) => setUserId(e.target.value)}
+                            placeholder="输入用户 ID"
+                            required
+                        />
+                        <QuickFillButtons options={userIdOptions} onSelect={setUserId} />
+                    </div>
+                    
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-3">
+                            通知渠道 <span className="text-red-500">*</span> <span className="text-gray-500">选择一个或多个渠道</span>
+                        </label>
+                        <ChannelSelector
+                            selectedChannels={selectedChannels}
+                            onChange={handleChannelChange}
+                        />
+                    </div>
+                    
+                    <div className="input-group">
+                        <label>发送方式</label>
+                        <select value={sendMethod} onChange={(e) => setSendMethod(e.target.value)}>
+                            <option value="custom">自定义内容</option>
+                            <option value="template">使用模板</option>
+                        </select>
+                    </div>
+                    
+                    {sendMethod === 'custom' ? (
+                        <>
+                            <div className="input-group">
+                                <label>主题（可选）</label>
                                 <input
                                     type="text"
-                                    value={userId}
-                                    onChange={(e) => setUserId(e.target.value)}
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                    placeholder="输入用户 ID"
+                                    placeholder="通知主题"
+                                    value={subject}
+                                    onChange={(e) => setSubject(e.target.value)}
                                 />
                             </div>
-
-                            {/* 通知渠道 */}
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">
-                                    通知渠道
-                                </label>
-                                <div className="space-y-2">
-                                    {channelOptions.map(option => (
-                                        <label key={option.value} className="flex items-center">
-                                            <input
-                                                type="checkbox"
-                                                value={option.value}
-                                                checked={channels.includes(option.value)}
-                                                onChange={(e) => {
-                                                    if (e.target.checked) {
-                                                        setChannels([...channels, option.value]);
-                                                    } else {
-                                                        setChannels(channels.filter(c => c !== option.value));
-                                                    }
-                                                }}
-                                                className="mr-2"
-                                            />
-                                            {option.label}
-                                        </label>
-                                    ))}
-                                </div>
-                            </div>
-
-                            {/* 发送模式 */}
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">
-                                    发送模式
-                                </label>
-                                <div className="flex space-x-4">
-                                    <label className="flex items-center">
-                                        <input
-                                            type="radio"
-                                            value="custom"
-                                            checked={sendMode === 'custom'}
-                                            onChange={(e) => setSendMode(e.target.value)}
-                                            className="mr-2"
-                                        />
-                                        自定义内容
-                                    </label>
-                                    <label className="flex items-center">
-                                        <input
-                                            type="radio"
-                                            value="template"
-                                            checked={sendMode === 'template'}
-                                            onChange={(e) => setSendMode(e.target.value)}
-                                            className="mr-2"
-                                        />
-                                        使用模板
-                                    </label>
-                                </div>
-                            </div>
-
-                            {/* 根据模式显示不同内容 */}
-                            {sendMode === 'custom' ? (
-                                <>
-                                    <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                                            主题
-                                        </label>
-                                        <input
-                                            type="text"
-                                            value={customContent.subject}
-                                            onChange={(e) => setCustomContent({
-                                                ...customContent,
-                                                subject: e.target.value
-                                            })}
-                                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                            placeholder="通知主题"
-                                        />
-                                    </div>
-                                    <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                                            内容
-                                        </label>
-                                        <textarea
-                                            value={customContent.content}
-                                            onChange={(e) => setCustomContent({
-                                                ...customContent,
-                                                content: e.target.value
-                                            })}
-                                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                            rows="4"
-                                            placeholder="通知内容"
-                                        />
-                                    </div>
-                                </>
-                            ) : (
-                                <>
-                                    <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                                            选择模板
-                                        </label>
-                                        <Select
-                                            value={templateKey}
-                                            onChange={setTemplateKey}
-                                            options={templates.map(t => ({ value: t, label: t }))}
-                                            placeholder="选择一个模板"
-                                        />
-                                    </div>
-                                    <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                                            模板变量 (JSON)
-                                        </label>
-                                        <JsonEditor
-                                            value={variables}
-                                            onChange={setVariables}
-                                            height="100px"
-                                        />
-                                    </div>
-                                </>
-                            )}
-
-                            {/* 幂等键 */}
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">
-                                    幂等键（可选）
-                                </label>
-                                <input
-                                    type="text"
-                                    value={idempotencyKey}
-                                    onChange={(e) => setIdempotencyKey(e.target.value)}
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                    placeholder="防止重复发送的唯一键"
+                            
+                            <div className="input-group">
+                                <label>内容 <span className="text-red-500">*</span></label>
+                                <textarea
+                                    placeholder="通知内容"
+                                    required
+                                    value={content}
+                                    onChange={(e) => setContent(e.target.value)}
+                                    rows="4"
                                 />
                             </div>
-
-                            {/* 发送按钮 */}
-                            <div className="flex justify-end">
-                                <Button 
-                                    onClick={handleSend} 
-                                    disabled={!userId || channels.length === 0}
-                                    loading={loading}
+                        </>
+                    ) : (
+                        <>
+                            <div className="input-group">
+                                <label>模板 Key</label>
+                                <select
+                                    value={templateKey}
+                                    onChange={(e) => setTemplateKey(e.target.value)}
+                                    disabled={templates.length === 0}
                                 >
-                                    发送通知
-                                </Button>
+                                    {templates.length === 0 ? (
+                                        <option value="">没有可用的模板</option>
+                                    ) : (
+                                        templates.map(template => (
+                                            <option key={template.template_key} value={template.template_key}>
+                                                {template.template_key} - {template.template_name}
+                                                {template.description && \` (\${template.description})\`}
+                                            </option>
+                                        ))
+                                    )}
+                                </select>
                             </div>
-                        </div>
-                    </Card>
-
-                    {/* 响应结果 */}
-                    {response && (
-                        <Card title="发送结果">
-                            <JsonEditor value={response} readOnly height="300px" />
-                        </Card>
+                            
+                            <div className="space-y-2">
+                                <label className="block text-sm font-medium text-gray-700">
+                                    模板变量（JSON）
+                                </label>
+                                <JsonEditor
+                                    value={variables}
+                                    onChange={setVariables}
+                                    placeholder='{"username": "张三", "date": "2024-01-01"}'
+                                />
+                                {templateKey && templatesData[templateKey]?.variables && Array.isArray(templatesData[templateKey].variables) && (
+                                    <div className="text-sm text-gray-600">
+                                        <Icon name="info-circle" className="mr-1" />
+                                        需要的变量: {templatesData[templateKey].variables.join(', ')}
+                                    </div>
+                                )}
+                            </div>
+                        </>
                     )}
+                    
+                    <div className="input-group">
+                        <label>幂等键（可选）</label>
+                        <input
+                            type="text"
+                            placeholder="用于防止重复发送"
+                            value={idempotencyKey}
+                            onChange={(e) => setIdempotencyKey(e.target.value)}
+                        />
+                    </div>
+                    
+                    <button
+                        className="btn btn-primary w-full md:w-auto"
+                        onClick={sendNotification}
+                        disabled={loading || selectedChannels.length === 0}
+                    >
+                        {loading ? (
+                            <>
+                                <LoadingSpinner size="small" />
+                                发送中...
+                            </>
+                        ) : (
+                            <>
+                                <Icon name="paper-plane" />
+                                发送通知
+                            </>
+                        )}
+                    </button>
                 </div>
             );
         }
-
-        // ========== 用户配置组件 ==========
-        function UserConfig({ apiClient, showToast }) {
-            const [userId, setUserId] = useState('test-user');
+        
+        // User Config Tab Component
+        function UserConfigTab({ baseUrl, showResponse, apiSecret, generateGetSignature, generateSignature, showToast }) {
+            const [userId, setUserId] = useState('');
             const [configs, setConfigs] = useState([]);
             const [loading, setLoading] = useState(false);
-            const [editingConfig, setEditingConfig] = useState(null);
             const [newConfig, setNewConfig] = useState({
-                channel_type: '',
-                config: {}
+                userId: '',
+                channelType: 'webhook',
+                configData: '{}'
             });
-
-            const loadConfigs = async () => {
-                if (!userId) return;
+            
+            const getUserConfigs = async () => {
+                setLoading(true);
+                try {
+                    const url = baseUrl + '/api/user-configs' + (userId ? \`?user_id=\${userId}\` : '');
+                    const timestamp = Date.now().toString();
+                    const signature = await generateGetSignature(timestamp, url, apiSecret);
+                    
+                    const response = await fetch(url, {
+                        headers: {
+                            'X-Timestamp': timestamp,
+                            'X-Signature': signature
+                        }
+                    });
+                    const data = await response.json();
+                    showResponse(data, response.status);
+                    
+                    if (data.success && data.data) {
+                        setConfigs(data.data);
+                        showToast('配置加载成功', 'success');
+                    }
+                } catch (error) {
+                    showResponse({ error: error.message }, 400);
+                    showToast('加载配置失败', 'error');
+                } finally {
+                    setLoading(false);
+                }
+            };
+            
+            const upsertUserConfig = async () => {
+                try {
+                    const configData = JSON.parse(newConfig.configData);
+                    const requestBody = {
+                        user_id: newConfig.userId,
+                        channel_type: newConfig.channelType,
+                        config_data: configData
+                    };
+                    
+                    const timestamp = Date.now().toString();
+                    const body = JSON.stringify(requestBody);
+                    const signature = await generateSignature(timestamp, body, apiSecret);
+                    
+                    const response = await fetch(baseUrl + '/api/user-configs', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-Timestamp': timestamp,
+                            'X-Signature': signature
+                        },
+                        body: body
+                    });
+                    
+                    const data = await response.json();
+                    showResponse(data, response.status);
+                    
+                    if (response.ok) {
+                        getUserConfigs();
+                        showToast('配置保存成功', 'success');
+                    }
+                } catch (error) {
+                    showResponse({ error: error.message }, 400);
+                    showToast('保存配置失败', 'error');
+                }
+            };
+            
+            const deleteUserConfig = async (userId, channelType) => {
+                if (!confirm('确定要删除这个配置吗？')) return;
                 
                 try {
-                    setLoading(true);
-                    const result = await apiClient.getUserConfigs(userId);
-                    setConfigs(result.configs || []);
+                    const timestamp = Date.now().toString();
+                    const body = JSON.stringify({ user_id: userId, channel_type: channelType });
+                    const signature = await generateSignature(timestamp, body, apiSecret);
+                    
+                    const response = await fetch(baseUrl + '/api/user-configs', {
+                        method: 'DELETE',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-Timestamp': timestamp,
+                            'X-Signature': signature
+                        },
+                        body: body
+                    });
+                    
+                    const data = await response.json();
+                    showResponse(data, response.status);
+                    
+                    if (response.ok) {
+                        getUserConfigs();
+                        showToast('配置删除成功', 'success');
+                    }
                 } catch (error) {
-                    showToast('加载配置失败: ' + error.message, 'error');
-                }
-                setLoading(false);
-            };
-
-            const saveConfig = async (channelType, config) => {
-                try {
-                    await apiClient.setUserConfig(userId, channelType, config);
-                    showToast('配置保存成功', 'success');
-                    loadConfigs();
-                    setEditingConfig(null);
-                } catch (error) {
-                    showToast('保存失败: ' + error.message, 'error');
+                    showResponse({ error: error.message }, 400);
+                    showToast('删除配置失败', 'error');
                 }
             };
-
-            const getConfigTemplate = (channelType) => {
+            
+            const setConfigTemplate = (type) => {
                 const templates = {
-                    lark: {
-                        webhook_url: 'https://open.feishu.cn/open-apis/bot/v2/hook/xxx',
-                        secret: 'your-secret',
-                        msg_type: 'text'
+                    webhook: {
+                        webhook_url: "https://webhook.site/your-webhook-url"
                     },
                     telegram: {
-                        bot_token: 'your-bot-token',
-                        chat_id: 'your-chat-id'
+                        bot_token: "YOUR_BOT_TOKEN",
+                        chat_id: "YOUR_CHAT_ID"
                     },
-                    webhook: {
-                        webhook_url: 'https://your-webhook-url.com',
-                        method: 'POST',
-                        headers: {}
+                    lark: {
+                        webhook_url: "https://open.feishu.cn/open-apis/bot/v2/hook/xxx",
+                        secret: "YOUR_SECRET_KEY"
                     },
                     slack: {
-                        webhook_url: 'https://hooks.slack.com/services/xxx'
+                        webhook_url: "https://hooks.slack.com/services/xxx/xxx/xxx"
                     }
                 };
-                return templates[channelType] || {};
+                
+                setNewConfig(prev => ({
+                    ...prev,
+                    channelType: type,
+                    configData: JSON.stringify(templates[type], null, 2)
+                }));
             };
-
+            
             return (
-                <div className="space-y-6">
-                    <Card title="用户配置管理">
-                        <div className="space-y-4">
-                            <div className="flex gap-4">
+                <div className="space-y-8">
+                    {/* Query Section */}
+                    <div>
+                        <h3 className="text-lg font-bold mb-4 flex items-center gap-2">
+                            <Icon name="search" />
+                            查询用户配置
+                        </h3>
+                        <div className="flex gap-4">
+                            <div className="flex-1 input-group">
+                                <label>用户 ID（可选）</label>
                                 <input
                                     type="text"
+                                    placeholder="留空查询所有"
                                     value={userId}
                                     onChange={(e) => setUserId(e.target.value)}
-                                    className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                    placeholder="输入用户 ID"
                                 />
-                                <Button onClick={loadConfigs} loading={loading}>
-                                    加载配置
-                                </Button>
                             </div>
-
-                            {configs.length > 0 && (
-                                <div className="space-y-4">
-                                    <h4 className="font-medium text-gray-700">现有配置</h4>
-                                    {configs.map(config => (
-                                        <div key={config.channel_type} className="bg-gray-50 p-4 rounded-lg">
-                                            <div className="flex justify-between items-start">
-                                                <div className="flex-1">
-                                                    <h5 className="font-medium">{config.channel_type}</h5>
-                                                    <p className="text-sm text-gray-500">
-                                                        状态: {config.is_active ? '✅ 启用' : '❌ 禁用'}
-                                                    </p>
-                                                    {editingConfig === config.channel_type ? (
-                                                        <div className="mt-2">
-                                                            <JsonEditor
-                                                                value={config.config}
-                                                                onChange={(newConfig) => {
-                                                                    const updated = configs.map(c => 
-                                                                        c.channel_type === config.channel_type
-                                                                            ? { ...c, config: newConfig }
-                                                                            : c
-                                                                    );
-                                                                    setConfigs(updated);
-                                                                }}
-                                                                height="150px"
-                                                            />
-                                                            <div className="mt-2 flex gap-2">
-                                                                <Button
-                                                                    size="sm"
-                                                                    onClick={() => saveConfig(config.channel_type, config.config)}
-                                                                >
-                                                                    保存
-                                                                </Button>
-                                                                <Button
-                                                                    size="sm"
-                                                                    variant="secondary"
-                                                                    onClick={() => setEditingConfig(null)}
-                                                                >
-                                                                    取消
-                                                                </Button>
-                                                            </div>
-                                                        </div>
-                                                    ) : (
-                                                        <div className="mt-2">
-                                                            <pre className="text-xs bg-white p-2 rounded">
-                                                                {JSON.stringify(config.config, null, 2)}
-                                                            </pre>
-                                                            <Button
-                                                                size="sm"
-                                                                variant="ghost"
-                                                                onClick={() => setEditingConfig(config.channel_type)}
-                                                            >
-                                                                编辑
-                                                            </Button>
-                                                        </div>
-                                                    )}
-                                                </div>
-                                            </div>
-                                        </div>
+                            <button
+                                className="btn btn-primary self-end mb-5"
+                                onClick={getUserConfigs}
+                                disabled={loading}
+                            >
+                                {loading ? <LoadingSpinner size="small" /> : <Icon name="search" />}
+                                查询配置
+                            </button>
+                        </div>
+                    </div>
+                    
+                    {/* Results Table */}
+                    {configs.length > 0 && (
+                        <div className="overflow-x-auto">
+                            <table className="w-full">
+                                <thead>
+                                    <tr className="border-b bg-gray-50">
+                                        <th className="text-left py-3 px-4 font-semibold text-gray-700">用户 ID</th>
+                                        <th className="text-left py-3 px-4 font-semibold text-gray-700">渠道类型</th>
+                                        <th className="text-left py-3 px-4 font-semibold text-gray-700">配置数据</th>
+                                        <th className="text-center py-3 px-4 font-semibold text-gray-700">状态</th>
+                                        <th className="text-center py-3 px-4 font-semibold text-gray-700">操作</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {configs.map((config, index) => (
+                                        <tr key={index} className="border-b hover:bg-gray-50">
+                                            <td className="py-3 px-4">{config.user_id}</td>
+                                            <td className="py-3 px-4">
+                                                <span className="badge badge-info">{config.channel_type}</span>
+                                            </td>
+                                            <td className="py-3 px-4">
+                                                <pre className="text-xs bg-gray-100 p-2 rounded max-w-xs overflow-auto">
+                                                    {JSON.stringify(config.config_data, null, 2)}
+                                                </pre>
+                                            </td>
+                                            <td className="py-3 px-4 text-center">
+                                                <span className={\`badge \${config.is_active ? 'badge-success' : 'badge-error'}\`}>
+                                                    {config.is_active ? '激活' : '禁用'}
+                                                </span>
+                                            </td>
+                                            <td className="py-3 px-4 text-center">
+                                                <button
+                                                    className="btn btn-danger btn-sm"
+                                                    onClick={() => deleteUserConfig(config.user_id, config.channel_type)}
+                                                >
+                                                    <Icon name="trash" />
+                                                    删除
+                                                </button>
+                                            </td>
+                                        </tr>
                                     ))}
-                                </div>
-                            )}
-
-                            <div>
-                                <h4 className="font-medium text-gray-700 mb-2">添加新配置</h4>
-                                <div className="space-y-3">
-                                    <Select
-                                        value={newConfig.channel_type}
-                                        onChange={(value) => {
-                                            setNewConfig({
-                                                channel_type: value,
-                                                config: getConfigTemplate(value)
-                                            });
-                                        }}
-                                        options={[
-                                            { value: 'lark', label: '飞书 (Lark)' },
-                                            { value: 'telegram', label: 'Telegram' },
-                                            { value: 'webhook', label: 'Webhook' },
-                                            { value: 'slack', label: 'Slack' }
-                                        ]}
-                                    />
-                                    {newConfig.channel_type && (
-                                        <>
-                                            <JsonEditor
-                                                value={newConfig.config}
-                                                onChange={(config) => setNewConfig({ ...newConfig, config })}
-                                                height="200px"
-                                            />
-                                            <Button
-                                                onClick={() => saveConfig(newConfig.channel_type, newConfig.config)}
-                                            >
-                                                添加配置
-                                            </Button>
-                                        </>
-                                    )}
-                                </div>
+                                </tbody>
+                            </table>
+                        </div>
+                    )}
+                    
+                    {/* Create/Update Section */}
+                    <div>
+                        <h3 className="text-lg font-bold mb-4 flex items-center gap-2">
+                            <Icon name="plus-circle" />
+                            创建/更新配置
+                        </h3>
+                        <div className="grid md:grid-cols-2 gap-4 mb-4">
+                            <div className="input-group">
+                                <label>用户 ID</label>
+                                <input
+                                    type="text"
+                                    placeholder="test-user"
+                                    value={newConfig.userId}
+                                    onChange={(e) => setNewConfig(prev => ({ ...prev, userId: e.target.value }))}
+                                />
+                            </div>
+                            <div className="input-group">
+                                <label>渠道类型</label>
+                                <select
+                                    value={newConfig.channelType}
+                                    onChange={(e) => setNewConfig(prev => ({ ...prev, channelType: e.target.value }))}
+                                >
+                                    <option value="webhook">Webhook</option>
+                                    <option value="telegram">Telegram</option>
+                                    <option value="lark">Lark</option>
+                                    <option value="slack">Slack</option>
+                                </select>
                             </div>
                         </div>
-                    </Card>
+                        
+                        <div className="space-y-2">
+                            <label className="block text-sm font-medium text-gray-700">
+                                配置数据（JSON）
+                            </label>
+                            <JsonEditor
+                                value={newConfig.configData}
+                                onChange={(value) => setNewConfig(prev => ({ ...prev, configData: value }))}
+                                placeholder='{"key": "value"}'
+                                rows={8}
+                            />
+                            <div className="flex gap-2">
+                                <button
+                                    type="button"
+                                    onClick={() => setConfigTemplate('webhook')}
+                                    className="text-sm text-indigo-600 hover:text-indigo-700"
+                                >
+                                    Webhook 模板
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={() => setConfigTemplate('telegram')}
+                                    className="text-sm text-indigo-600 hover:text-indigo-700"
+                                >
+                                    Telegram 模板
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={() => setConfigTemplate('lark')}
+                                    className="text-sm text-indigo-600 hover:text-indigo-700"
+                                >
+                                    Lark 模板
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={() => setConfigTemplate('slack')}
+                                    className="text-sm text-indigo-600 hover:text-indigo-700"
+                                >
+                                    Slack 模板
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <button
+                            className="btn btn-primary mt-4"
+                            onClick={upsertUserConfig}
+                        >
+                            <Icon name="save" />
+                            保存配置
+                        </button>
+                    </div>
                 </div>
             );
         }
-
-        // ========== 模板管理组件 ==========
-        function TemplateManagement({ apiClient, showToast }) {
-            const [templates, setTemplates] = useState({});
+        
+        // Templates Tab Component
+        function TemplatesTab({ baseUrl, showResponse, apiSecret, generateGetSignature, generateSignature, showToast }) {
+            const [templates, setTemplates] = useState([]);
             const [loading, setLoading] = useState(false);
-            const [editingTemplate, setEditingTemplate] = useState(null);
             const [newTemplate, setNewTemplate] = useState({
-                key: '',
-                name: '',
+                templateKey: '',
+                templateName: '',
                 description: '',
-                variables: [],
-                contents: {}
+                variables: '',
+                channels: []
             });
-
-            useEffect(() => {
-                loadTemplates();
-            }, []);
-
-            const loadTemplates = async () => {
+            
+            const getTemplates = async () => {
+                setLoading(true);
                 try {
-                    setLoading(true);
-                    const result = await apiClient.getTemplates();
-                    setTemplates(result.templates || {});
-                } catch (error) {
-                    showToast('加载模板失败: ' + error.message, 'error');
-                }
-                setLoading(false);
-            };
-
-            const saveTemplate = async (key, template) => {
-                try {
-                    await apiClient.createTemplate(key, template);
-                    showToast('模板保存成功', 'success');
-                    loadTemplates();
-                    setEditingTemplate(null);
-                    setNewTemplate({
-                        key: '',
-                        name: '',
-                        description: '',
-                        variables: [],
-                        contents: {}
+                    const url = baseUrl + '/api/templates';
+                    const timestamp = Date.now().toString();
+                    const signature = await generateGetSignature(timestamp, url, apiSecret);
+                    
+                    const response = await fetch(url, {
+                        headers: {
+                            'X-Timestamp': timestamp,
+                            'X-Signature': signature
+                        }
                     });
+                    const data = await response.json();
+                    showResponse(data, response.status);
+                    
+                    if (data.success && data.data) {
+                        setTemplates(data.data);
+                        showToast('模板加载成功', 'success');
+                    }
                 } catch (error) {
-                    showToast('保存失败: ' + error.message, 'error');
+                    showResponse({ error: error.message }, 400);
+                    showToast('加载模板失败', 'error');
+                } finally {
+                    setLoading(false);
                 }
             };
-
-            const deleteTemplate = async (key) => {
+            
+            const addTemplateChannel = () => {
+                setNewTemplate(prev => ({
+                    ...prev,
+                    channels: [...prev.channels, {
+                        channelType: 'webhook',
+                        contentType: 'text',
+                        subjectTemplate: '',
+                        contentTemplate: ''
+                    }]
+                }));
+            };
+            
+            const removeTemplateChannel = (index) => {
+                setNewTemplate(prev => ({
+                    ...prev,
+                    channels: prev.channels.filter((_, i) => i !== index)
+                }));
+            };
+            
+            const updateTemplateChannel = (index, field, value) => {
+                setNewTemplate(prev => ({
+                    ...prev,
+                    channels: prev.channels.map((ch, i) => 
+                        i === index ? { ...ch, [field]: value } : ch
+                    )
+                }));
+            };
+            
+            const upsertTemplate = async () => {
+                try {
+                    const variables = newTemplate.variables ? 
+                        newTemplate.variables.split(',').map(v => v.trim()).filter(v => v) : [];
+                    
+                    const requestBody = {
+                        template_key: newTemplate.templateKey,
+                        template_name: newTemplate.templateName,
+                        description: newTemplate.description || undefined,
+                        variables: variables.length > 0 ? variables : undefined,
+                        channels: newTemplate.channels.map(ch => ({
+                            channel_type: ch.channelType,
+                            content_type: ch.contentType,
+                            subject_template: ch.subjectTemplate || undefined,
+                            content_template: ch.contentTemplate
+                        }))
+                    };
+                    
+                    const timestamp = Date.now().toString();
+                    const body = JSON.stringify(requestBody);
+                    const signature = await generateSignature(timestamp, body, apiSecret);
+                    
+                    const response = await fetch(baseUrl + '/api/templates', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-Timestamp': timestamp,
+                            'X-Signature': signature
+                        },
+                        body: body
+                    });
+                    
+                    const data = await response.json();
+                    showResponse(data, response.status);
+                    
+                    if (response.ok) {
+                        setNewTemplate({
+                            templateKey: '',
+                            templateName: '',
+                            description: '',
+                            variables: '',
+                            channels: []
+                        });
+                        getTemplates();
+                        showToast('模板保存成功', 'success');
+                    }
+                } catch (error) {
+                    showResponse({ error: error.message }, 400);
+                    showToast('保存模板失败', 'error');
+                }
+            };
+            
+            const deleteTemplate = async (templateKey) => {
                 if (!confirm('确定要删除这个模板吗？')) return;
                 
                 try {
-                    await apiClient.deleteTemplate(key);
-                    showToast('模板删除成功', 'success');
-                    loadTemplates();
-                } catch (error) {
-                    showToast('删除失败: ' + error.message, 'error');
-                }
-            };
-
-            return (
-                <div className="space-y-6">
-                    <Card 
-                        title="模板管理" 
-                        actions={
-                            <Button onClick={loadTemplates} variant="ghost" size="sm" loading={loading}>
-                                刷新
-                            </Button>
+                    const url = baseUrl + '/api/templates?key=' + encodeURIComponent(templateKey);
+                    const timestamp = Date.now().toString();
+                    const signature = await generateGetSignature(timestamp, url, apiSecret);
+                    
+                    const response = await fetch(url, {
+                        method: 'DELETE',
+                        headers: {
+                            'X-Timestamp': timestamp,
+                            'X-Signature': signature
                         }
-                    >
-                        <div className="space-y-4">
-                            {Object.entries(templates).map(([key, template]) => (
-                                <div key={key} className="bg-gray-50 p-4 rounded-lg">
-                                    <div className="flex justify-between items-start">
-                                        <div className="flex-1">
-                                            <h4 className="font-medium">{template.name || key}</h4>
-                                            <p className="text-sm text-gray-500">{template.description}</p>
-                                            <p className="text-xs text-gray-400 mt-1">
-                                                键名: {key} | 变量: {template.variables?.join(', ') || '无'}
-                                            </p>
-                                            {editingTemplate === key ? (
-                                                <div className="mt-3">
-                                                    <JsonEditor
-                                                        value={template}
-                                                        onChange={(updated) => {
-                                                            setTemplates({
-                                                                ...templates,
-                                                                [key]: updated
-                                                            });
-                                                        }}
-                                                        height="300px"
-                                                    />
-                                                    <div className="mt-2 flex gap-2">
-                                                        <Button
-                                                            size="sm"
-                                                            onClick={() => saveTemplate(key, templates[key])}
-                                                        >
-                                                            保存
-                                                        </Button>
-                                                        <Button
-                                                            size="sm"
-                                                            variant="secondary"
-                                                            onClick={() => {
-                                                                setEditingTemplate(null);
-                                                                loadTemplates();
-                                                            }}
-                                                        >
-                                                            取消
-                                                        </Button>
-                                                    </div>
-                                                </div>
-                                            ) : (
-                                                <div className="mt-2 flex gap-2">
-                                                    <Button
-                                                        size="sm"
-                                                        variant="ghost"
-                                                        onClick={() => setEditingTemplate(key)}
-                                                    >
-                                                        编辑
-                                                    </Button>
-                                                    <Button
-                                                        size="sm"
-                                                        variant="danger"
-                                                        onClick={() => deleteTemplate(key)}
-                                                    >
-                                                        删除
-                                                    </Button>
-                                                </div>
-                                            )}
-                                        </div>
-                                    </div>
-                                </div>
-                            ))}
-
-                            <div className="mt-6">
-                                <h4 className="font-medium text-gray-700 mb-3">创建新模板</h4>
-                                <div className="space-y-3">
-                                    <input
-                                        type="text"
-                                        value={newTemplate.key}
-                                        onChange={(e) => setNewTemplate({ ...newTemplate, key: e.target.value })}
-                                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                        placeholder="模板键名（唯一标识）"
-                                    />
-                                    <input
-                                        type="text"
-                                        value={newTemplate.name}
-                                        onChange={(e) => setNewTemplate({ ...newTemplate, name: e.target.value })}
-                                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                        placeholder="模板名称"
-                                    />
-                                    <textarea
-                                        value={newTemplate.description}
-                                        onChange={(e) => setNewTemplate({ ...newTemplate, description: e.target.value })}
-                                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                        placeholder="模板描述"
-                                        rows="2"
-                                    />
-                                    <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                                            模板内容 (JSON)
-                                        </label>
-                                        <JsonEditor
-                                            value={newTemplate}
-                                            onChange={setNewTemplate}
-                                            height="300px"
-                                        />
-                                    </div>
-                                    <Button
-                                        onClick={() => saveTemplate(newTemplate.key, newTemplate)}
-                                        disabled={!newTemplate.key || !newTemplate.name}
-                                    >
-                                        创建模板
-                                    </Button>
-                                </div>
-                            </div>
-                        </div>
-                    </Card>
-                </div>
-            );
-        }
-
-        // ========== 通知日志组件 ==========
-        function NotificationLogs({ apiClient, showToast }) {
-            const [logs, setLogs] = useState([]);
-            const [loading, setLoading] = useState(false);
-            const [filters, setFilters] = useState({
-                user_id: '',
-                status: '',
-                channel_type: '',
-                limit: 20
-            });
-
-            const loadLogs = async () => {
-                try {
-                    setLoading(true);
-                    const params = {};
-                    Object.entries(filters).forEach(([key, value]) => {
-                        if (value) params[key] = value;
                     });
                     
-                    const result = await apiClient.getNotificationLogs(params);
-                    setLogs(result.logs || []);
+                    const data = await response.json();
+                    showResponse(data, response.status);
+                    
+                    if (response.ok) {
+                        getTemplates();
+                        showToast('模板删除成功', 'success');
+                    }
                 } catch (error) {
-                    showToast('加载日志失败: ' + error.message, 'error');
+                    showResponse({ error: error.message }, 400);
+                    showToast('删除模板失败', 'error');
                 }
-                setLoading(false);
             };
-
+            
             useEffect(() => {
-                loadLogs();
+                getTemplates();
             }, []);
-
-            const formatDate = (dateString) => {
-                return new Date(dateString).toLocaleString('zh-CN');
-            };
-
-            const getStatusBadge = (status) => {
-                const statusMap = {
-                    'sent': { label: '已发送', class: 'bg-green-100 text-green-800' },
-                    'failed': { label: '失败', class: 'bg-red-100 text-red-800' },
-                    'pending': { label: '待发送', class: 'bg-yellow-100 text-yellow-800' },
-                    'retry': { label: '重试中', class: 'bg-blue-100 text-blue-800' }
-                };
-                const config = statusMap[status] || { label: status, class: 'bg-gray-100 text-gray-800' };
-                return (
-                    <span className={\`px-2 py-1 text-xs rounded-full \${config.class}\`}>
-                        {config.label}
-                    </span>
-                );
-            };
-
+            
             return (
-                <div className="space-y-6">
-                    <Card title="通知日志">
-                        <div className="space-y-4">
-                            {/* 筛选器 */}
-                            <div className="grid grid-cols-4 gap-4">
-                                <input
-                                    type="text"
-                                    value={filters.user_id}
-                                    onChange={(e) => setFilters({ ...filters, user_id: e.target.value })}
-                                    className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                    placeholder="用户 ID"
-                                />
-                                <Select
-                                    value={filters.status}
-                                    onChange={(value) => setFilters({ ...filters, status: value })}
-                                    options={[
-                                        { value: 'sent', label: '已发送' },
-                                        { value: 'failed', label: '失败' },
-                                        { value: 'pending', label: '待发送' },
-                                        { value: 'retry', label: '重试中' }
-                                    ]}
-                                    placeholder="状态"
-                                />
-                                <Select
-                                    value={filters.channel_type}
-                                    onChange={(value) => setFilters({ ...filters, channel_type: value })}
-                                    options={[
-                                        { value: 'lark', label: '飞书' },
-                                        { value: 'telegram', label: 'Telegram' },
-                                        { value: 'webhook', label: 'Webhook' },
-                                        { value: 'slack', label: 'Slack' }
-                                    ]}
-                                    placeholder="渠道"
-                                />
-                                <Button onClick={loadLogs} loading={loading}>
-                                    查询
-                                </Button>
-                            </div>
-
-                            {/* 日志表格 */}
+                <div className="space-y-8">
+                    {/* Templates List */}
+                    <div>
+                        <div className="flex items-center justify-between mb-4">
+                            <h3 className="text-lg font-bold flex items-center gap-2">
+                                <Icon name="list" />
+                                模板列表
+                            </h3>
+                            <button
+                                className="btn btn-primary"
+                                onClick={getTemplates}
+                                disabled={loading}
+                            >
+                                {loading ? <LoadingSpinner size="small" /> : <Icon name="sync" />}
+                                刷新
+                            </button>
+                        </div>
+                        
+                        {templates.length > 0 ? (
                             <div className="overflow-x-auto">
-                                <table className="min-w-full divide-y divide-gray-200">
-                                    <thead className="bg-gray-50">
-                                        <tr>
-                                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                                时间
-                                            </th>
-                                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                                用户
-                                            </th>
-                                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                                渠道
-                                            </th>
-                                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                                状态
-                                            </th>
-                                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                                消息 ID
-                                            </th>
+                                <table className="w-full">
+                                    <thead>
+                                        <tr className="border-b bg-gray-50">
+                                            <th className="text-left py-3 px-4 font-semibold text-gray-700">模板 Key</th>
+                                            <th className="text-left py-3 px-4 font-semibold text-gray-700">模板名称</th>
+                                            <th className="text-left py-3 px-4 font-semibold text-gray-700">描述</th>
+                                            <th className="text-left py-3 px-4 font-semibold text-gray-700">变量</th>
+                                            <th className="text-left py-3 px-4 font-semibold text-gray-700">支持渠道</th>
+                                            <th className="text-center py-3 px-4 font-semibold text-gray-700">操作</th>
                                         </tr>
                                     </thead>
-                                    <tbody className="bg-white divide-y divide-gray-200">
-                                        {logs.map((log) => (
-                                            <tr key={log.id} className="hover:bg-gray-50">
-                                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                                    {formatDate(log.created_at)}
+                                    <tbody>
+                                        {templates.map(template => (
+                                            <tr key={template.template_key} className="border-b hover:bg-gray-50">
+                                                <td className="py-3 px-4 font-mono text-sm">{template.template_key}</td>
+                                                <td className="py-3 px-4">{template.template_name}</td>
+                                                <td className="py-3 px-4 text-gray-600">{template.description || '-'}</td>
+                                                <td className="py-3 px-4">
+                                                    {Array.isArray(template.variables) && template.variables.length > 0 ? (
+                                                        <div className="flex flex-wrap gap-1">
+                                                            {template.variables.map(v => (
+                                                                <span key={v} className="badge badge-info text-xs">
+                                                                    {v}
+                                                                </span>
+                                                            ))}
+                                                        </div>
+                                                    ) : '-'}
                                                 </td>
-                                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                                    {log.user_id}
+                                                <td className="py-3 px-4">
+                                                    {Array.isArray(template.supported_channels) && template.supported_channels.length > 0 ? (
+                                                        <div className="flex flex-wrap gap-1">
+                                                            {template.supported_channels.map(ch => (
+                                                                <span key={ch} className="badge badge-success text-xs">
+                                                                    {ch}
+                                                                </span>
+                                                            ))}
+                                                        </div>
+                                                    ) : '-'}
                                                 </td>
-                                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                                    {log.channel_type}
-                                                </td>
-                                                <td className="px-6 py-4 whitespace-nowrap">
-                                                    {getStatusBadge(log.status)}
-                                                </td>
-                                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                                    {log.message_id || '-'}
+                                                <td className="py-3 px-4 text-center">
+                                                    <button
+                                                        className="btn btn-danger btn-sm"
+                                                        onClick={() => deleteTemplate(template.template_key)}
+                                                    >
+                                                        <Icon name="trash" />
+                                                        删除
+                                                    </button>
                                                 </td>
                                             </tr>
                                         ))}
                                     </tbody>
                                 </table>
                             </div>
-
-                            {logs.length === 0 && (
-                                <div className="text-center py-8 text-gray-500">
-                                    暂无日志记录
-                                </div>
-                            )}
-                        </div>
-                    </Card>
-                </div>
-            );
-        }
-
-        // ========== 设置组件 ==========
-        function Settings({ apiKey, setApiKey, baseUrl, setBaseUrl, onSave, showToast }) {
-            const [tempApiKey, setTempApiKey] = useState(apiKey);
-            const [tempBaseUrl, setTempBaseUrl] = useState(baseUrl);
-            const [showApiKey, setShowApiKey] = useState(false);
-
-            const handleSave = () => {
-                setApiKey(tempApiKey);
-                setBaseUrl(tempBaseUrl);
-                API_CONFIG.setApiKey(tempApiKey);
-                API_CONFIG.setBaseUrl(tempBaseUrl);
-                showToast('设置已保存', 'success');
-                onSave();
-            };
-
-            return (
-                <div className="space-y-6">
-                    <Card title="API 设置">
-                        <div className="space-y-4">
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">
-                                    API 地址
-                                </label>
+                        ) : (
+                            <div className="text-center py-8 text-gray-500">
+                                <Icon name="inbox" className="text-4xl mb-2" />
+                                <p>暂无模板</p>
+                            </div>
+                        )}
+                    </div>
+                    
+                    {/* Create/Update Template */}
+                    <div>
+                        <h3 className="text-lg font-bold mb-4 flex items-center gap-2">
+                            <Icon name="plus-circle" />
+                            创建/更新模板
+                        </h3>
+                        
+                        <div className="grid md:grid-cols-2 gap-4 mb-4">
+                            <div className="input-group">
+                                <label>模板 Key</label>
                                 <input
                                     type="text"
-                                    value={tempBaseUrl}
-                                    onChange={(e) => setTempBaseUrl(e.target.value)}
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                    placeholder="https://api.example.com"
+                                    placeholder="welcome_email"
+                                    value={newTemplate.templateKey}
+                                    onChange={(e) => setNewTemplate(prev => ({ ...prev, templateKey: e.target.value }))}
                                 />
-                                <p className="mt-1 text-sm text-gray-500">
-                                    通知系统 API 的基础 URL
-                                </p>
                             </div>
-
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">
-                                    API 密钥
-                                </label>
-                                <div className="relative">
-                                    <input
-                                        type={showApiKey ? 'text' : 'password'}
-                                        value={tempApiKey}
-                                        onChange={(e) => setTempApiKey(e.target.value)}
-                                        className="w-full px-3 py-2 pr-10 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                        placeholder="输入 API 密钥"
-                                    />
-                                    <button
-                                        type="button"
-                                        onClick={() => setShowApiKey(!showApiKey)}
-                                        className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-500 hover:text-gray-700"
-                                    >
-                                        {showApiKey ? '🙈' : '👁️'}
-                                    </button>
-                                </div>
-                                <p className="mt-1 text-sm text-gray-500">
-                                    用于 HMAC-SHA256 签名验证的密钥
-                                </p>
-                            </div>
-
-                            <div className="flex justify-end">
-                                <Button onClick={handleSave}>
-                                    保存设置
-                                </Button>
+                            <div className="input-group">
+                                <label>模板名称</label>
+                                <input
+                                    type="text"
+                                    placeholder="欢迎邮件"
+                                    value={newTemplate.templateName}
+                                    onChange={(e) => setNewTemplate(prev => ({ ...prev, templateName: e.target.value }))}
+                                />
                             </div>
                         </div>
-                    </Card>
-
-                    <Card title="使用说明">
-                        <div className="prose prose-sm max-w-none">
-                            <h4 className="text-base font-medium mb-2">快速开始</h4>
-                            <ol className="list-decimal list-inside space-y-2 text-sm text-gray-700">
-                                <li>在"设置"页面配置 API 地址和密钥</li>
-                                <li>在"用户配置"页面为用户添加通知渠道配置</li>
-                                <li>在"模板管理"页面创建通知模板（可选）</li>
-                                <li>在"发送通知"页面测试发送通知</li>
-                                <li>在"通知日志"页面查看发送记录</li>
-                            </ol>
-
-                            <h4 className="text-base font-medium mt-4 mb-2">支持的通知渠道</h4>
-                            <ul className="list-disc list-inside space-y-1 text-sm text-gray-700">
-                                <li><strong>飞书 (Lark)</strong>: 需要配置 webhook URL 和密钥</li>
-                                <li><strong>Telegram</strong>: 需要配置 bot token 和 chat ID</li>
-                                <li><strong>Webhook</strong>: 支持任意 HTTP webhook</li>
-                                <li><strong>Slack</strong>: 需要配置 webhook URL</li>
-                            </ul>
-
-                            <h4 className="text-base font-medium mt-4 mb-2">API 签名说明</h4>
-                            <p className="text-sm text-gray-700">
-                                所有 API 请求都需要使用 HMAC-SHA256 签名验证。签名生成规则：
-                            </p>
-                            <pre className="mt-2 p-3 bg-gray-100 rounded text-xs overflow-x-auto">
-{\`// 1. 获取当前时间戳（毫秒）
-const timestamp = Date.now().toString();
-
-// 2. 构造签名内容
-// GET/DELETE: path + query
-// POST/PUT: request body
-const payload = method === 'GET' || method === 'DELETE'
-  ? pathname + search
-  : JSON.stringify(body);
-
-// 3. 生成签名
-const signature = HMAC-SHA256(timestamp + payload, apiKey);
-
-// 4. 添加请求头
-headers['X-Timestamp'] = timestamp;
-headers['X-Signature'] = signature;\`}
-                            </pre>
+                        
+                        <div className="grid md:grid-cols-2 gap-4 mb-4">
+                            <div className="input-group">
+                                <label>描述（可选）</label>
+                                <input
+                                    type="text"
+                                    placeholder="新用户注册欢迎邮件模板"
+                                    value={newTemplate.description}
+                                    onChange={(e) => setNewTemplate(prev => ({ ...prev, description: e.target.value }))}
+                                />
+                            </div>
+                            <div className="input-group">
+                                <label>模板变量（逗号分隔）</label>
+                                <input
+                                    type="text"
+                                    placeholder="username, email, date"
+                                    value={newTemplate.variables}
+                                    onChange={(e) => setNewTemplate(prev => ({ ...prev, variables: e.target.value }))}
+                                />
+                            </div>
                         </div>
-                    </Card>
+                        
+                        <div className="mb-4">
+                            <div className="flex items-center justify-between mb-2">
+                                <label className="text-sm font-medium text-gray-700">渠道配置</label>
+                                <button
+                                    type="button"
+                                    onClick={addTemplateChannel}
+                                    className="btn btn-secondary btn-sm"
+                                >
+                                    <Icon name="plus" />
+                                    添加渠道
+                                </button>
+                            </div>
+                            
+                            <div className="space-y-4">
+                                {newTemplate.channels.map((channel, index) => (
+                                    <div key={index} className="card p-4 bg-gray-50">
+                                        <div className="flex items-center justify-between mb-4">
+                                            <h4 className="font-medium">渠道 #{index + 1}</h4>
+                                            <button
+                                                type="button"
+                                                onClick={() => removeTemplateChannel(index)}
+                                                className="text-red-600 hover:text-red-700"
+                                            >
+                                                <Icon name="times" />
+                                            </button>
+                                        </div>
+                                        
+                                        <div className="grid md:grid-cols-2 gap-4 mb-4">
+                                            <div className="input-group">
+                                                <label>渠道类型</label>
+                                                <select
+                                                    value={channel.channelType}
+                                                    onChange={(e) => updateTemplateChannel(index, 'channelType', e.target.value)}
+                                                >
+                                                    <option value="webhook">Webhook</option>
+                                                    <option value="telegram">Telegram</option>
+                                                    <option value="lark">Lark</option>
+                                                    <option value="slack">Slack</option>
+                                                    <option value="email">Email</option>
+                                                </select>
+                                            </div>
+                                            <div className="input-group">
+                                                <label>内容类型</label>
+                                                <select
+                                                    value={channel.contentType}
+                                                    onChange={(e) => updateTemplateChannel(index, 'contentType', e.target.value)}
+                                                >
+                                                    <option value="text">Text</option>
+                                                    <option value="html">HTML</option>
+                                                    <option value="markdown">Markdown</option>
+                                                    <option value="json">JSON</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                        
+                                        <div className="input-group">
+                                            <label>主题模板（Email 渠道可用）</label>
+                                            <input
+                                                type="text"
+                                                placeholder="Welcome {{username}}!"
+                                                value={channel.subjectTemplate}
+                                                onChange={(e) => updateTemplateChannel(index, 'subjectTemplate', e.target.value)}
+                                            />
+                                        </div>
+                                        
+                                        <div className="input-group">
+                                            <label>内容模板 <span className="text-red-500">*</span></label>
+                                            <textarea
+                                                placeholder="使用 {{变量名}} 作为占位符"
+                                                required
+                                                rows="4"
+                                                value={channel.contentTemplate}
+                                                onChange={(e) => updateTemplateChannel(index, 'contentTemplate', e.target.value)}
+                                            />
+                                        </div>
+                                    </div>
+                                ))}
+                                
+                                {newTemplate.channels.length === 0 && (
+                                    <div className="text-center py-8 text-gray-500 bg-gray-50 rounded-lg">
+                                        <Icon name="info-circle" className="text-2xl mb-2" />
+                                        <p>请添加至少一个渠道配置</p>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                        
+                        <button
+                            className="btn btn-primary"
+                            onClick={upsertTemplate}
+                            disabled={!newTemplate.templateKey || !newTemplate.templateName || newTemplate.channels.length === 0}
+                        >
+                            <Icon name="save" />
+                            保存模板
+                        </button>
+                    </div>
                 </div>
             );
         }
+        
+        // Logs Tab Component
+        function LogsTab({ baseUrl, showResponse, apiSecret, generateGetSignature, generateSignature, showToast }) {
+            const [filters, setFilters] = useState({
+                userId: '',
+                status: '',
+                limit: '20',
+                offset: '0'
+            });
+            const [cleanupDays, setCleanupDays] = useState('7');
+            const [loading, setLoading] = useState(false);
+            const [logs, setLogs] = useState([]);
+            const [totalCount, setTotalCount] = useState(0);
+            const [currentPage, setCurrentPage] = useState(1);
+            
+            useEffect(() => {
+                const page = Math.floor(parseInt(filters.offset) / parseInt(filters.limit)) + 1;
+                setCurrentPage(page);
+            }, [filters.offset, filters.limit]);
+            
+            const getNotificationLogs = async () => {
+                setLoading(true);
+                try {
+                    const params = new URLSearchParams();
+                    if (filters.userId) params.append('user_id', filters.userId);
+                    if (filters.status) params.append('status', filters.status);
+                    params.append('limit', filters.limit);
+                    params.append('offset', filters.offset);
+                    
+                    const url = baseUrl + '/api/notification-logs?' + params;
+                    const timestamp = Date.now().toString();
+                    const signature = await generateGetSignature(timestamp, url, apiSecret);
+                    
+                    const response = await fetch(url, {
+                        headers: {
+                            'X-Timestamp': timestamp,
+                            'X-Signature': signature
+                        }
+                    });
+                    const data = await response.json();
+                    showResponse(data, response.status);
+                    
+                    if (response.ok && data.success) {
+                        setLogs(data.data.logs || []);
+                        setTotalCount(data.data.total || 0);
+                        showToast(\`查询成功，共 \${data.data.total || 0} 条记录\`, 'success');
+                    } else {
+                        setLogs([]);
+                        setTotalCount(0);
+                    }
+                } catch (error) {
+                    showResponse({ error: error.message }, 400);
+                    showToast('查询日志失败', 'error');
+                } finally {
+                    setLoading(false);
+                }
+            };
+            
+            const cleanupLogs = async () => {
+                if (!confirm(\`确定要删除 \${cleanupDays} 天前的日志吗？\`)) return;
+                
+                try {
+                    const timestamp = Date.now().toString();
+                    const body = JSON.stringify({ days: parseInt(cleanupDays) });
+                    const signature = await generateSignature(timestamp, body, apiSecret);
+                    
+                    const response = await fetch(baseUrl + '/api/notification-logs/cleanup', {
+                        method: 'DELETE',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-Timestamp': timestamp,
+                            'X-Signature': signature
+                        },
+                        body: body
+                    });
+                    
+                    const data = await response.json();
+                    showResponse(data, response.status);
+                    
+                    if (response.ok) {
+                        showToast('日志清理成功', 'success');
+                    }
+                } catch (error) {
+                    showResponse({ error: error.message }, 400);
+                    showToast('清理日志失败', 'error');
+                }
+            };
+            
+            const triggerRetry = async () => {
+                if (!confirm('确定要立即触发重试吗？')) return;
+                
+                try {
+                    const timestamp = Date.now().toString();
+                    const body = JSON.stringify({});
+                    const signature = await generateSignature(timestamp, body, apiSecret);
+                    
+                    const response = await fetch(baseUrl + '/api/notifications/retry', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-Timestamp': timestamp,
+                            'X-Signature': signature
+                        },
+                        body: body
+                    });
+                    
+                    const data = await response.json();
+                    showResponse(data, response.status);
+                    
+                    if (response.ok) {
+                        showToast('重试触发成功', 'success');
+                    }
+                } catch (error) {
+                    showResponse({ error: error.message }, 400);
+                    showToast('触发重试失败', 'error');
+                }
+            };
+            
+            return (
+                <div className="space-y-8">
+                    {/* Query Section */}
+                    <div>
+                        <h3 className="text-lg font-bold mb-4 flex items-center gap-2">
+                            <Icon name="search" />
+                            查询通知日志
+                        </h3>
+                        
+                        <div className="grid md:grid-cols-2 gap-4 mb-4">
+                            <div className="input-group">
+                                <label>用户 ID（可选）</label>
+                                <input
+                                    type="text"
+                                    placeholder="留空查询所有"
+                                    value={filters.userId}
+                                    onChange={(e) => setFilters(prev => ({ ...prev, userId: e.target.value }))}
+                                />
+                            </div>
+                            <div className="input-group">
+                                <label>状态（可选）</label>
+                                <select
+                                    value={filters.status}
+                                    onChange={(e) => setFilters(prev => ({ ...prev, status: e.target.value }))}
+                                >
+                                    <option value="">全部</option>
+                                    <option value="pending">待发送</option>
+                                    <option value="sent">成功</option>
+                                    <option value="failed">失败</option>
+                                    <option value="retry">重试中</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div className="grid md:grid-cols-2 gap-4 mb-4">
+                            <div className="input-group">
+                                <label>每页数量</label>
+                                <input
+                                    type="number"
+                                    min="1"
+                                    max="100"
+                                    value={filters.limit}
+                                    onChange={(e) => setFilters(prev => ({ ...prev, limit: e.target.value }))}
+                                />
+                            </div>
+                            <div className="input-group">
+                                <label>偏移量</label>
+                                <input
+                                    type="number"
+                                    min="0"
+                                    value={filters.offset}
+                                    onChange={(e) => setFilters(prev => ({ ...prev, offset: e.target.value }))}
+                                />
+                            </div>
+                        </div>
+                        
+                        <button
+                            className="btn btn-primary"
+                            onClick={getNotificationLogs}
+                            disabled={loading}
+                        >
+                            {loading ? <LoadingSpinner size="small" /> : <Icon name="search" />}
+                            查询日志
+                        </button>
+                    </div>
+                    
+                    {/* Logs Table */}
+                    {logs.length > 0 && (
+                        <div>
+                            <div className="flex items-center justify-between mb-4">
+                                <h3 className="text-lg font-bold flex items-center gap-2">
+                                    <Icon name="list" />
+                                    查询结果
+                                    <span className="badge badge-info">{totalCount} 条</span>
+                                </h3>
+                                {totalCount > parseInt(filters.limit) && (
+                                    <div className="flex items-center gap-2 text-sm text-gray-600">
+                                        <button
+                                            className="btn btn-secondary btn-sm"
+                                            onClick={() => {
+                                                const newOffset = Math.max(0, parseInt(filters.offset) - parseInt(filters.limit));
+                                                setFilters(prev => ({ ...prev, offset: newOffset.toString() }));
+                                                setTimeout(() => getNotificationLogs(), 0);
+                                            }}
+                                            disabled={parseInt(filters.offset) === 0}
+                                        >
+                                            <Icon name="chevron-left" />
+                                            上一页
+                                        </button>
+                                        <span>
+                                            第 {Math.floor(parseInt(filters.offset) / parseInt(filters.limit)) + 1} 页
+                                        </span>
+                                        <button
+                                            className="btn btn-secondary btn-sm"
+                                            onClick={() => {
+                                                const newOffset = parseInt(filters.offset) + parseInt(filters.limit);
+                                                setFilters(prev => ({ ...prev, offset: newOffset.toString() }));
+                                                setTimeout(() => getNotificationLogs(), 0);
+                                            }}
+                                            disabled={parseInt(filters.offset) + parseInt(filters.limit) >= totalCount}
+                                        >
+                                            下一页
+                                            <Icon name="chevron-right" />
+                                        </button>
+                                    </div>
+                                )}
+                            </div>
+                            
+                            <div className="overflow-x-auto">
+                                <table className="w-full">
+                                    <thead>
+                                        <tr className="border-b bg-gray-50">
+                                            <th className="text-left py-3 px-4 font-semibold text-gray-700">时间</th>
+                                            <th className="text-left py-3 px-4 font-semibold text-gray-700">用户</th>
+                                            <th className="text-left py-3 px-4 font-semibold text-gray-700">渠道</th>
+                                            <th className="text-center py-3 px-4 font-semibold text-gray-700">状态</th>
+                                            <th className="text-left py-3 px-4 font-semibold text-gray-700">模板</th>
+                                            <th className="text-center py-3 px-4 font-semibold text-gray-700">重试</th>
+                                            <th className="text-left py-3 px-4 font-semibold text-gray-700">错误信息</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {logs.map((log, index) => (
+                                            <tr key={log.id || index} className="border-b hover:bg-gray-50">
+                                                <td className="py-3 px-4 text-sm">
+                                                    {new Date(log.created_at).toLocaleString('zh-CN')}
+                                                </td>
+                                                <td className="py-3 px-4">
+                                                    <span className="font-mono text-sm">{log.user_id}</span>
+                                                </td>
+                                                <td className="py-3 px-4">
+                                                    <span className="badge badge-info">{log.channel}</span>
+                                                </td>
+                                                <td className="py-3 px-4 text-center">
+                                                    <span className={\`badge \${
+                                                        log.status === 'sent' ? 'badge-success' : 
+                                                        log.status === 'failed' ? 'badge-error' : 
+                                                        log.status === 'retry' ? 'badge-warning' : 
+                                                        'badge-info'
+                                                    }\`}>
+                                                        {log.status === 'sent' ? '成功' : 
+                                                         log.status === 'failed' ? '失败' : 
+                                                         log.status === 'retry' ? '重试中' : 
+                                                         log.status}
+                                                    </span>
+                                                </td>
+                                                <td className="py-3 px-4">
+                                                    {log.template_key ? (
+                                                        <span className="font-mono text-sm">{log.template_key}</span>
+                                                    ) : (
+                                                        <span className="text-gray-400">-</span>
+                                                    )}
+                                                </td>
+                                                <td className="py-3 px-4 text-center">
+                                                    <span className="badge badge-warning">
+                                                        {log.retry_count || 0}
+                                                    </span>
+                                                </td>
+                                                <td className="py-3 px-4">
+                                                    {log.error_message ? (
+                                                        <span className="text-sm text-red-600" title={log.error_message}>
+                                                            {log.error_message.length > 50 
+                                                                ? log.error_message.substring(0, 50) + '...' 
+                                                                : log.error_message}
+                                                        </span>
+                                                    ) : (
+                                                        <span className="text-gray-400">-</span>
+                                                    )}
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    )}
+                    
+                    {/* Management Section */}
+                    <div>
+                        <h3 className="text-lg font-bold mb-4 flex items-center gap-2">
+                            <Icon name="cog" />
+                            日志管理
+                        </h3>
+                        
+                        <div className="grid md:grid-cols-2 gap-6">
+                            <div className="card p-6 bg-gray-50">
+                                <h4 className="font-medium mb-4 flex items-center gap-2">
+                                    <Icon name="trash" className="text-red-600" />
+                                    清理日志
+                                </h4>
+                                <p className="text-sm text-gray-600 mb-4">
+                                    删除指定天数之前的日志记录
+                                </p>
+                                <div className="flex gap-2">
+                                    <input
+                                        type="number"
+                                        min="1"
+                                        className="flex-1 px-4 py-2 border-2 border-gray-300 rounded-lg"
+                                        placeholder="天数"
+                                        value={cleanupDays}
+                                        onChange={(e) => setCleanupDays(e.target.value)}
+                                    />
+                                    <button
+                                        className="btn btn-danger"
+                                        onClick={cleanupLogs}
+                                    >
+                                        <Icon name="trash" />
+                                        清理日志
+                                    </button>
+                                </div>
+                            </div>
+                            
+                            <div className="card p-6 bg-gray-50">
+                                <h4 className="font-medium mb-4 flex items-center gap-2">
+                                    <Icon name="redo" className="text-blue-600" />
+                                    触发重试
+                                </h4>
+                                <p className="text-sm text-gray-600 mb-4">
+                                    立即触发失败通知的重试（通常由定时任务自动执行）
+                                </p>
+                                <button
+                                    className="btn btn-primary"
+                                    onClick={triggerRetry}
+                                >
+                                    <Icon name="redo" />
+                                    立即重试
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            );
+        }
+        
+        // Health Tab Component
+        function HealthTab({ baseUrl, showResponse, showToast }) {
+            const [healthStatus, setHealthStatus] = useState(null);
+            const [loading, setLoading] = useState(false);
+            const [scheduledTasksStatus, setScheduledTasksStatus] = useState(null);
+            
+            const testHealth = async () => {
+                setLoading(true);
+                try {
+                    const response = await fetch(baseUrl + '/health');
+                    const data = await response.json();
+                    showResponse(data, response.status);
+                    setHealthStatus(data);
+                    
+                    if (data.status === 'healthy') {
+                        showToast('系统运行正常', 'success');
+                    } else {
+                        showToast('系统存在异常', 'error');
+                    }
+                } catch (error) {
+                    showResponse({ error: error.message }, 400);
+                    showToast('健康检查失败', 'error');
+                } finally {
+                    setLoading(false);
+                }
+            };
+            
+            const checkScheduledTasksHealth = async () => {
+                try {
+                    const response = await fetch(baseUrl + '/health/scheduled-tasks');
+                    const data = await response.json();
+                    showResponse(data, response.status);
+                    setScheduledTasksStatus(data);
+                    showToast('定时任务状态获取成功', 'success');
+                } catch (error) {
+                    showResponse({ error: error.message }, 400);
+                    showToast('获取定时任务状态失败', 'error');
+                }
+            };
+            
+            useEffect(() => {
+                testHealth();
+            }, []);
+            
+            return (
+                <div className="space-y-8">
+                    {/* System Health */}
+                    <div>
+                        <div className="flex items-center justify-between mb-4">
+                            <h3 className="text-lg font-bold flex items-center gap-2">
+                                <Icon name="heartbeat" />
+                                系统健康状态
+                            </h3>
+                            <button
+                                className="btn btn-primary"
+                                onClick={testHealth}
+                                disabled={loading}
+                            >
+                                {loading ? <LoadingSpinner size="small" /> : <Icon name="sync" />}
+                                检查健康状态
+                            </button>
+                        </div>
+                        
+                        {healthStatus && (
+                            <div className="grid md:grid-cols-2 gap-6">
+                                <div className="card p-6">
+                                    <h4 className="font-medium mb-4 flex items-center gap-2">
+                                        系统状态
+                                        <span className={\`badge \${healthStatus.status === 'healthy' ? 'badge-success' : 'badge-error'}\`}>
+                                            {healthStatus.status === 'healthy' ? '健康' : '异常'}
+                                        </span>
+                                    </h4>
+                                    <dl className="space-y-2">
+                                        <div className="flex justify-between">
+                                            <dt className="text-gray-600">环境</dt>
+                                            <dd className="font-medium">{healthStatus.environment || 'production'}</dd>
+                                        </div>
+                                        <div className="flex justify-between">
+                                            <dt className="text-gray-600">检查时间</dt>
+                                            <dd className="font-medium">
+                                                {new Date(healthStatus.timestamp).toLocaleString('zh-CN')}
+                                            </dd>
+                                        </div>
+                                        {healthStatus.version && (
+                                            <div className="flex justify-between">
+                                                <dt className="text-gray-600">版本</dt>
+                                                <dd className="font-medium">{healthStatus.version}</dd>
+                                            </div>
+                                        )}
+                                    </dl>
+                                </div>
+                                
+                                {healthStatus.services && (
+                                    <div className="card p-6">
+                                        <h4 className="font-medium mb-4">服务状态</h4>
+                                        <div className="space-y-2">
+                                            {Object.entries(healthStatus.services).map(([service, status]) => (
+                                                <div key={service} className="flex items-center justify-between">
+                                                    <span className="capitalize">{service}</span>
+                                                    <span className={\`badge \${status ? 'badge-success' : 'badge-error'}\`}>
+                                                        {status ? '正常' : '异常'}
+                                                    </span>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+                        )}
+                    </div>
+                    
+                    {/* Scheduled Tasks */}
+                    <div>
+                        <div className="flex items-center justify-between mb-4">
+                            <h3 className="text-lg font-bold flex items-center gap-2">
+                                <Icon name="clock" />
+                                定时任务健康状态
+                            </h3>
+                            <button
+                                className="btn btn-primary"
+                                onClick={checkScheduledTasksHealth}
+                            >
+                                <Icon name="sync" />
+                                检查定时任务
+                            </button>
+                        </div>
+                        
+                        {scheduledTasksStatus && scheduledTasksStatus.tasks && (
+                            <div className="overflow-x-auto">
+                                <table className="w-full">
+                                    <thead>
+                                        <tr className="border-b">
+                                            <th className="text-left py-3 px-4">任务名称</th>
+                                            <th className="text-left py-3 px-4">最后运行</th>
+                                            <th className="text-left py-3 px-4">下次运行</th>
+                                            <th className="text-left py-3 px-4">状态</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {Object.entries(scheduledTasksStatus.tasks).map(([taskName, taskInfo]) => (
+                                            <tr key={taskName} className="border-b hover:bg-gray-50">
+                                                <td className="py-3 px-4 font-medium">
+                                                    {taskName.replace(/_/g, ' ').toUpperCase()}
+                                                </td>
+                                                <td className="py-3 px-4">
+                                                    {taskInfo.lastRun ? 
+                                                        new Date(taskInfo.lastRun).toLocaleString('zh-CN') : 
+                                                        '未运行'
+                                                    }
+                                                </td>
+                                                <td className="py-3 px-4">
+                                                    {taskInfo.nextRun ? 
+                                                        new Date(taskInfo.nextRun).toLocaleString('zh-CN') : 
+                                                        '-'
+                                                    }
+                                                </td>
+                                                <td className="py-3 px-4">
+                                                    <span className={\`badge \${taskInfo.isRunning ? 'badge-warning' : 'badge-success'}\`}>
+                                                        {taskInfo.isRunning ? '运行中' : '空闲'}
+                                                    </span>
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
+                        )}
+                    </div>
+                </div>
+            );
+        }
+        
+        // Metrics Tab Component
+        function MetricsTab({ baseUrl, showResponse, apiSecret, generateGetSignature, showToast }) {
+            const getMetrics = async () => {
+                try {
+                    const url = baseUrl + '/metrics';
+                    const timestamp = Date.now().toString();
+                    const signature = await generateGetSignature(timestamp, url, apiSecret);
+                    
+                    const response = await fetch(url, {
+                        headers: {
+                            'X-Timestamp': timestamp,
+                            'X-Signature': signature
+                        }
+                    });
+                    const data = await response.json();
+                    showResponse(data, response.status);
+                    
+                    if (response.ok) {
+                        showToast('指标获取成功', 'success');
+                    }
+                } catch (error) {
+                    showResponse({ error: error.message }, 400);
+                    showToast('获取指标失败', 'error');
+                }
+            };
+            
+            return (
+                <div className="space-y-6">
+                    <div className="flex items-center justify-between mb-4">
+                        <h3 className="text-lg font-bold flex items-center gap-2">
+                            <Icon name="chart-line" />
+                            系统指标
+                        </h3>
+                        <button
+                            className="btn btn-primary"
+                            onClick={getMetrics}
+                        >
+                            <Icon name="sync" />
+                            获取系统指标
+                        </button>
+                    </div>
+                    
+                    <div className="card p-6 bg-gradient-to-r from-indigo-50 to-purple-50">
+                        <h4 className="font-medium mb-4">系统指标包括</h4>
+                        <div className="grid md:grid-cols-2 gap-4">
+                            <div className="flex items-start gap-3">
+                                <Icon name="chart-bar" className="text-indigo-600 mt-1" />
+                                <div>
+                                    <h5 className="font-medium">通知统计</h5>
+                                    <p className="text-sm text-gray-600">总通知数量、成功/失败统计</p>
+                                </div>
+                            </div>
+                            <div className="flex items-start gap-3">
+                                <Icon name="share-alt" className="text-purple-600 mt-1" />
+                                <div>
+                                    <h5 className="font-medium">渠道使用</h5>
+                                    <p className="text-sm text-gray-600">各渠道使用情况统计</p>
+                                </div>
+                            </div>
+                            <div className="flex items-start gap-3">
+                                <Icon name="file-alt" className="text-blue-600 mt-1" />
+                                <div>
+                                    <h5 className="font-medium">模板使用</h5>
+                                    <p className="text-sm text-gray-600">模板使用频率和效果</p>
+                                </div>
+                            </div>
+                            <div className="flex items-start gap-3">
+                                <Icon name="tachometer-alt" className="text-green-600 mt-1" />
+                                <div>
+                                    <h5 className="font-medium">性能指标</h5>
+                                    <p className="text-sm text-gray-600">响应时间和系统资源使用</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            );
+        }
+        
+        // Grafana Tab Component
+        function GrafanaTab({ baseUrl, showResponse, environment, showToast }) {
+            const [grafanaAuth, setGrafanaAuth] = useState(() => {
+                const envPrefix = environment === 'production' ? 'prod_' : 'local_';
+                return {
+                    username: localStorage.getItem(\`\${envPrefix}grafana_username\`) || 'grafana',
+                    password: localStorage.getItem(\`\${envPrefix}grafana_password\`) || 'test-password'
+                };
+            });
+            
+            const [grafanaPayload, setGrafanaPayload] = useState({
+                receiver: 'test-user',
+                channels: 'webhook',
+                alertStatus: 'firing',
+                useTemplate: false,
+                templateKey: 'grafana-alert',
+                customAlert: JSON.stringify({
+                    status: 'firing',
+                    labels: {
+                        alertname: 'High CPU Usage',
+                        severity: 'critical',
+                        instance: 'server-01'
+                    },
+                    annotations: {
+                        description: 'CPU usage is above 90%',
+                        summary: 'High CPU usage detected'
+                    },
+                    startsAt: new Date(Date.now() - 10 * 60 * 1000).toISOString(),
+                    endsAt: '0001-01-01T00:00:00Z',
+                    generatorURL: 'http://grafana.example.com/alert',
+                    fingerprint: '123456789'
+                }, null, 2)
+            });
+            
+            const [loading, setLoading] = useState(false);
+            
+            // Save auth to localStorage when changed
+            const updateAuth = (field, value) => {
+                const newAuth = { ...grafanaAuth, [field]: value };
+                setGrafanaAuth(newAuth);
+                const envPrefix = environment === 'production' ? 'prod_' : 'local_';
+                localStorage.setItem(\`\${envPrefix}grafana_\${field}\`, value);
+            };
+            
+            // Generate Grafana webhook payload
+            const generatePayload = () => {
+                const basePayload = {
+                    receiver: grafanaPayload.receiver,
+                    status: grafanaPayload.alertStatus,
+                    alerts: [],
+                    groupLabels: {},
+                    commonLabels: {},
+                    commonAnnotations: {},
+                    externalURL: 'http://alertmanager.example.com',
+                    version: '4',
+                    groupKey: '{}:{}'
+                };
+                
+                try {
+                    const customAlert = JSON.parse(grafanaPayload.customAlert);
+                    customAlert.status = grafanaPayload.alertStatus;
+                    
+                    if (grafanaPayload.alertStatus === 'resolved' && customAlert.endsAt === '0001-01-01T00:00:00Z') {
+                        customAlert.endsAt = new Date().toISOString();
+                    }
+                    
+                    basePayload.alerts = [customAlert];
+                    basePayload.groupLabels = { alertname: customAlert.labels.alertname };
+                    basePayload.commonLabels = customAlert.labels;
+                    basePayload.commonAnnotations = customAlert.annotations;
+                    
+                    // Add template key to labels if using template
+                    if (grafanaPayload.useTemplate) {
+                        basePayload.commonLabels.notification_template = grafanaPayload.templateKey;
+                    }
+                    
+                    return basePayload;
+                } catch (error) {
+                    console.error('Invalid alert JSON:', error);
+                    return basePayload;
+                }
+            };
+            
+            // Send Grafana webhook
+            const sendGrafanaWebhook = async () => {
+                setLoading(true);
+                try {
+                    const payload = generatePayload();
+                    const authString = btoa(\`\${grafanaAuth.username}:\${grafanaAuth.password}\`);
+                    
+                    const response = await fetch(baseUrl + '/api/webhooks/grafana', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': \`Basic \${authString}\`,
+                            'X-Notification-Channels': grafanaPayload.channels
+                        },
+                        body: JSON.stringify(payload)
+                    });
+                    
+                    const data = await response.json();
+                    showResponse(data, response.status);
+                    
+                    if (response.ok) {
+                        showToast('Grafana webhook 发送成功', 'success');
+                    } else {
+                        showToast('Grafana webhook 发送失败', 'error');
+                    }
+                } catch (error) {
+                    showResponse({ error: error.message }, 400);
+                    showToast('发送失败', 'error');
+                } finally {
+                    setLoading(false);
+                }
+            };
+            
+            // Preset templates
+            const presetAlerts = {
+                cpu: {
+                    name: 'CPU 使用率',
+                    icon: 'microchip',
+                    color: 'text-red-600',
+                    labels: {
+                        alertname: 'High CPU Usage',
+                        severity: 'critical',
+                        instance: 'server-01',
+                        job: 'node-exporter'
+                    },
+                    annotations: {
+                        description: 'CPU usage on server-01 has been above 90% for more than 5 minutes',
+                        summary: 'High CPU usage detected on production server'
+                    }
+                },
+                memory: {
+                    name: '内存使用',
+                    icon: 'memory',
+                    color: 'text-orange-600',
+                    labels: {
+                        alertname: 'High Memory Usage',
+                        severity: 'warning',
+                        instance: 'server-02',
+                        job: 'node-exporter'
+                    },
+                    annotations: {
+                        description: 'Memory usage is above 85%',
+                        summary: 'High memory usage detected'
+                    }
+                },
+                disk: {
+                    name: '磁盘空间',
+                    icon: 'hdd',
+                    color: 'text-yellow-600',
+                    labels: {
+                        alertname: 'Disk Space Low',
+                        severity: 'warning',
+                        instance: 'server-03',
+                        job: 'node-exporter',
+                        mountpoint: '/var/lib'
+                    },
+                    annotations: {
+                        description: 'Disk space on /var/lib is below 10%',
+                        summary: 'Low disk space warning'
+                    }
+                },
+                api: {
+                    name: 'API 延迟',
+                    icon: 'network-wired',
+                    color: 'text-purple-600',
+                    labels: {
+                        alertname: 'API Response Time High',
+                        severity: 'critical',
+                        service: 'api-gateway',
+                        endpoint: '/api/v1/users'
+                    },
+                    annotations: {
+                        description: 'API response time is above 1000ms',
+                        summary: 'High API latency detected'
+                    }
+                }
+            };
+            
+            const applyPreset = (presetKey) => {
+                const preset = presetAlerts[presetKey];
+                const currentAlert = JSON.parse(grafanaPayload.customAlert);
+                
+                setGrafanaPayload(prev => ({
+                    ...prev,
+                    customAlert: JSON.stringify({
+                        ...currentAlert,
+                        labels: preset.labels,
+                        annotations: preset.annotations
+                    }, null, 2)
+                }));
+                
+                showToast(\`已应用 \${preset.name} 模板\`, 'success');
+            };
+            
+            return (
+                <div className="space-y-6">
+                    <div className="card p-6 bg-gradient-to-r from-blue-50 to-indigo-50">
+                        <h3 className="text-lg font-bold mb-4 flex items-center gap-2">
+                            <Icon name="chart-area" />
+                            Grafana Alerting 集成
+                        </h3>
+                        <p className="text-gray-600">
+                            此端点接收 Grafana Alerting 的 webhook 通知，并转发到指定的通知渠道。
+                            使用 receiver 字段作为用户 ID，支持自定义告警内容和模板。
+                        </p>
+                    </div>
+                    
+                    {/* Authentication */}
+                    <div>
+                        <h4 className="font-medium mb-4">认证配置</h4>
+                        <div className="grid md:grid-cols-2 gap-4">
+                            <div className="input-group">
+                                <label>用户名</label>
+                                <input
+                                    type="text"
+                                    value={grafanaAuth.username}
+                                    onChange={(e) => updateAuth('username', e.target.value)}
+                                    placeholder="grafana"
+                                />
+                            </div>
+                            <div className="input-group">
+                                <label>密码</label>
+                                <input
+                                    type="password"
+                                    value={grafanaAuth.password}
+                                    onChange={(e) => updateAuth('password', e.target.value)}
+                                    placeholder="test-password"
+                                />
+                            </div>
+                        </div>
+                    </div>
+                    
+                    {/* Webhook Configuration */}
+                    <div>
+                        <h4 className="font-medium mb-4">Webhook 配置</h4>
+                        <div className="grid md:grid-cols-2 gap-4 mb-4">
+                            <div className="input-group">
+                                <label>Receiver (用户 ID) *</label>
+                                <input
+                                    type="text"
+                                    value={grafanaPayload.receiver}
+                                    onChange={(e) => setGrafanaPayload(prev => ({ ...prev, receiver: e.target.value }))}
+                                    placeholder="test-user"
+                                />
+                                <QuickFillButtons
+                                    options={[
+                                        { label: '测试用户', value: 'test-user' },
+                                        { label: '运维团队', value: 'ops-team' },
+                                        { label: '开发团队', value: 'dev-team' }
+                                    ]}
+                                    onSelect={(value) => setGrafanaPayload(prev => ({ ...prev, receiver: value }))}
+                                />
+                            </div>
+                            <div className="input-group">
+                                <label>通知渠道 (X-Notification-Channels)</label>
+                                <input
+                                    type="text"
+                                    value={grafanaPayload.channels}
+                                    onChange={(e) => setGrafanaPayload(prev => ({ ...prev, channels: e.target.value }))}
+                                    placeholder="webhook,telegram,lark"
+                                />
+                                <QuickFillButtons
+                                    options={[
+                                        { label: 'Webhook', value: 'webhook' },
+                                        { label: 'Webhook + Telegram', value: 'webhook,telegram' },
+                                        { label: '多渠道', value: 'webhook,lark,slack' }
+                                    ]}
+                                    onSelect={(value) => setGrafanaPayload(prev => ({ ...prev, channels: value }))}
+                                />
+                            </div>
+                        </div>
+                        
+                        <div className="grid md:grid-cols-2 gap-4 mb-4">
+                            <div className="input-group">
+                                <label>告警状态</label>
+                                <select
+                                    value={grafanaPayload.alertStatus}
+                                    onChange={(e) => setGrafanaPayload(prev => ({ ...prev, alertStatus: e.target.value }))}
+                                >
+                                    <option value="firing">🔥 Firing (触发)</option>
+                                    <option value="resolved">✅ Resolved (恢复)</option>
+                                </select>
+                            </div>
+                            <div className="flex items-center gap-4">
+                                <label className="flex items-center gap-2 cursor-pointer">
+                                    <input
+                                        type="checkbox"
+                                        checked={grafanaPayload.useTemplate}
+                                        onChange={(e) => setGrafanaPayload(prev => ({ ...prev, useTemplate: e.target.checked }))}
+                                        className="w-4 h-4"
+                                    />
+                                    <span>使用模板</span>
+                                </label>
+                                {grafanaPayload.useTemplate && (
+                                    <select
+                                        className="flex-1 px-4 py-2 border-2 border-gray-300 rounded-lg"
+                                        value={grafanaPayload.templateKey}
+                                        onChange={(e) => setGrafanaPayload(prev => ({ ...prev, templateKey: e.target.value }))}
+                                    >
+                                        <option value="grafana-alert">grafana-alert (默认)</option>
+                                        <option value="grafana-alert-critical">grafana-alert-critical (严重)</option>
+                                        <option value="custom">自定义模板 Key</option>
+                                    </select>
+                                )}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    {/* Alert Content */}
+                    <div>
+                        <div className="flex items-center justify-between mb-2">
+                            <label className="text-sm font-medium text-gray-700">
+                                告警内容 (JSON)
+                            </label>
+                            <div className="flex gap-2">
+                                {Object.entries(presetAlerts).map(([key, preset]) => (
+                                    <button
+                                        key={key}
+                                        onClick={() => applyPreset(key)}
+                                        className="px-3 py-1 text-sm bg-gray-100 hover:bg-gray-200 rounded-full transition-colors flex items-center gap-1"
+                                    >
+                                        <Icon name={preset.icon} className={preset.color} />
+                                        {preset.name}
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+                        <JsonEditor
+                            value={grafanaPayload.customAlert}
+                            onChange={(value) => setGrafanaPayload(prev => ({ ...prev, customAlert: value }))}
+                            placeholder="输入 Grafana 告警 JSON"
+                            rows={15}
+                        />
+                    </div>
+                    
+                    <button
+                        className="btn btn-primary w-full md:w-auto"
+                        onClick={sendGrafanaWebhook}
+                        disabled={loading || !grafanaPayload.receiver}
+                    >
+                        {loading ? (
+                            <>
+                                <LoadingSpinner size="small" />
+                                发送中...
+                            </>
+                        ) : (
+                            <>
+                                <Icon name="paper-plane" />
+                                发送 Grafana Webhook
+                            </>
+                        )}
+                    </button>
+                    
+                    {/* Usage Instructions */}
+                    <div className="card p-6 bg-gray-50">
+                        <h4 className="font-medium mb-4 flex items-center gap-2">
+                            <Icon name="book" />
+                            使用说明
+                        </h4>
+                        
+                        <div className="space-y-4">
+                            <div>
+                                <h5 className="font-medium mb-2">Grafana Contact Point 配置示例</h5>
+                                <pre className="bg-white p-4 rounded-lg text-sm overflow-auto">
+{\`name: Notification System
+type: webhook
+settings:
+  url: \${baseUrl}/api/webhooks/grafana
+  httpMethod: POST
+  username: \${grafanaAuth.username}
+  password: <YOUR_PASSWORD>
+  
+  # 自定义请求头
+  httpHeaderName1: X-Notification-Channels
+  httpHeaderValue1: webhook,telegram,lark\`}
+                                </pre>
+                            </div>
+                            
+                            <div>
+                                <h5 className="font-medium mb-2">Alert Rule 配置</h5>
+                                <pre className="bg-white p-4 rounded-lg text-sm overflow-auto">
+{\`# 在 Alert Rule 中设置 receiver
+# receiver 会作为通知系统的 user_id
+receiver: ops-team
 
-        // 加载 CryptoJS
-        const script = document.createElement('script');
-        script.src = 'https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js';
-        script.onload = () => {
-            ReactDOM.render(<App />, document.getElementById('root'));
-        };
-        document.head.appendChild(script);
+# 或者针对不同团队
+receiver: dev-team
+receiver: security-team\`}
+                                </pre>
+                            </div>
+                            
+                            <div>
+                                <h5 className="font-medium mb-2">支持的功能</h5>
+                                <div className="grid md:grid-cols-2 gap-2">
+                                    <div className="flex items-center gap-2">
+                                        <Icon name="check-circle" className="text-green-600" />
+                                        <span>多告警批量发送</span>
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                        <Icon name="check-circle" className="text-green-600" />
+                                        <span>Firing 和 Resolved 状态</span>
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                        <Icon name="check-circle" className="text-green-600" />
+                                        <span>自定义模板支持</span>
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                        <Icon name="check-circle" className="text-green-600" />
+                                        <span>多渠道同时发送</span>
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                        <Icon name="check-circle" className="text-green-600" />
+                                        <span>富文本格式化</span>
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                        <Icon name="check-circle" className="text-green-600" />
+                                        <span>告警分组和聚合</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            );
+        }
+        
+        // Queue Management Tab Component
+        function QueueManagementTab({ baseUrl, showResponse, apiSecret, generateGetSignature, generateSignature, showToast }) {
+            const [queueStatus, setQueueStatus] = useState(null);
+            const [loading, setLoading] = useState(false);
+            const [selectedRetries, setSelectedRetries] = useState([]);
+            const [testUserIds, setTestUserIds] = useState(['test-user', 'demo-user']);
+            const [customTestUserId, setCustomTestUserId] = useState('');
+            
+            const getQueueStatus = async () => {
+                setLoading(true);
+                try {
+                    const url = baseUrl + '/api/queue/status';
+                    const timestamp = Date.now().toString();
+                    const signature = await generateGetSignature(timestamp, url, apiSecret);
+                    
+                    const response = await fetch(url, {
+                        headers: {
+                            'X-Timestamp': timestamp,
+                            'X-Signature': signature
+                        }
+                    });
+                    const data = await response.json();
+                    showResponse(data, response.status);
+                    
+                    if (response.ok && data.success) {
+                        setQueueStatus(data.data);
+                        showToast('队列状态加载成功', 'success');
+                    }
+                } catch (error) {
+                    showResponse({ error: error.message }, 400);
+                    showToast('加载队列状态失败', 'error');
+                } finally {
+                    setLoading(false);
+                }
+            };
+            
+            const clearRetryTasks = async (markAsFailed = true) => {
+                const taskIds = selectedRetries.length > 0 ? selectedRetries : undefined;
+                const message = taskIds 
+                    ? \`确定要清理选中的 \${taskIds.length} 个重试任务吗？\` 
+                    : '确定要清理所有重试任务吗？';
+                    
+                if (!confirm(message)) return;
+                
+                try {
+                    const timestamp = Date.now().toString();
+                    const body = JSON.stringify({
+                        taskIds,
+                        markAsFailed
+                    });
+                    const signature = await generateSignature(timestamp, body, apiSecret);
+                    
+                    const response = await fetch(baseUrl + '/api/queue/clear-retries', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-Timestamp': timestamp,
+                            'X-Signature': signature
+                        },
+                        body: body
+                    });
+                    
+                    const data = await response.json();
+                    showResponse(data, response.status);
+                    
+                    if (response.ok) {
+                        showToast('重试任务已清理', 'success');
+                        setSelectedRetries([]);
+                        getQueueStatus(); // Refresh
+                    }
+                } catch (error) {
+                    showResponse({ error: error.message }, 400);
+                    showToast('清理重试任务失败', 'error');
+                }
+            };
+            
+            const purgeTestData = async (dryRun = false) => {
+                const allTestUserIds = [...testUserIds];
+                if (customTestUserId.trim()) {
+                    allTestUserIds.push(customTestUserId.trim());
+                }
+                
+                const message = dryRun 
+                    ? \`检查将要删除的测试数据（用户: \${allTestUserIds.join(', ')}）\` 
+                    : \`确定要永久删除这些测试用户的所有数据吗？\\n用户: \${allTestUserIds.join(', ')}\`;
+                    
+                if (!dryRun && !confirm(message)) return;
+                
+                try {
+                    const timestamp = Date.now().toString();
+                    const body = JSON.stringify({
+                        testUserIds: allTestUserIds,
+                        dryRun
+                    });
+                    const signature = await generateSignature(timestamp, body, apiSecret);
+                    
+                    const response = await fetch(baseUrl + '/api/queue/purge-test-data', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-Timestamp': timestamp,
+                            'X-Signature': signature
+                        },
+                        body: body
+                    });
+                    
+                    const data = await response.json();
+                    showResponse(data, response.status);
+                    
+                    if (response.ok) {
+                        showToast(
+                            dryRun ? '预检查完成' : '测试数据已清理',
+                            'success'
+                        );
+                    }
+                } catch (error) {
+                    showResponse({ error: error.message }, 400);
+                    showToast('操作失败', 'error');
+                }
+            };
+            
+            useEffect(() => {
+                getQueueStatus();
+            }, []);
+            
+            return (
+                <div className="space-y-8">
+                    {/* Queue Status */}
+                    <div>
+                        <div className="flex items-center justify-between mb-4">
+                            <h3 className="text-lg font-bold flex items-center gap-2">
+                                <Icon name="tasks" />
+                                队列状态
+                            </h3>
+                            <button
+                                className="btn btn-primary"
+                                onClick={getQueueStatus}
+                                disabled={loading}
+                            >
+                                {loading ? <LoadingSpinner size="small" /> : <Icon name="sync" />}
+                                刷新状态
+                            </button>
+                        </div>
+                        
+                        {queueStatus && (
+                            <div className="grid md:grid-cols-2 gap-6">
+                                {/* Queue Info */}
+                                <div className="card p-6">
+                                    <h4 className="font-medium mb-4 flex items-center gap-2">
+                                        <Icon name="server" />
+                                        队列信息
+                                    </h4>
+                                    {queueStatus.queues.map(queue => (
+                                        <div key={queue.name} className="mb-3 p-3 bg-gray-50 rounded">
+                                            <div className="flex items-center justify-between">
+                                                <span className="font-medium">{queue.name}</span>
+                                                <span className="badge badge-info">
+                                                    {queue.size >= 0 ? \`\${queue.size} 条消息\` : '未知'}
+                                                </span>
+                                            </div>
+                                        </div>
+                                    ))}
+                                    <p className="text-sm text-gray-500 mt-4">
+                                        <Icon name="info-circle" className="mr-1" />
+                                        {queueStatus.note}
+                                    </p>
+                                </div>
+                                
+                                {/* Pending Retries */}
+                                <div className="card p-6">
+                                    <h4 className="font-medium mb-4 flex items-center gap-2">
+                                        <Icon name="redo" />
+                                        待重试任务
+                                        <span className="badge badge-warning">
+                                            {queueStatus.pendingRetries.count}
+                                        </span>
+                                    </h4>
+                                    {queueStatus.pendingRetries.count > 0 ? (
+                                        <div className="max-h-60 overflow-y-auto">
+                                            {queueStatus.pendingRetries.items.map(item => (
+                                                <div key={item.id} className="mb-2 p-2 bg-gray-50 rounded text-sm">
+                                                    <label className="flex items-center gap-2 cursor-pointer">
+                                                        <input
+                                                            type="checkbox"
+                                                            checked={selectedRetries.includes(item.id)}
+                                                            onChange={(e) => {
+                                                                if (e.target.checked) {
+                                                                    setSelectedRetries([...selectedRetries, item.id]);
+                                                                } else {
+                                                                    setSelectedRetries(selectedRetries.filter(id => id !== item.id));
+                                                                }
+                                                            }}
+                                                        />
+                                                        <div className="flex-1">
+                                                            <div className="flex items-center gap-2">
+                                                                <span className="font-mono">{item.user_id}</span>
+                                                                <span className="badge badge-info text-xs">{item.channel}</span>
+                                                                <span className="badge badge-warning text-xs">
+                                                                    重试 {item.retry_count}
+                                                                </span>
+                                                            </div>
+                                                            <div className="text-xs text-gray-500">
+                                                                {new Date(item.created_at).toLocaleString('zh-CN')}
+                                                            </div>
+                                                        </div>
+                                                    </label>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    ) : (
+                                        <p className="text-gray-500">暂无待重试任务</p>
+                                    )}
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                    
+                    {/* Queue Operations */}
+                    <div>
+                        <h3 className="text-lg font-bold mb-4 flex items-center gap-2">
+                            <Icon name="tools" />
+                            队列操作
+                        </h3>
+                        
+                        <div className="grid md:grid-cols-2 gap-6">
+                            {/* Clear Retry Tasks */}
+                            <div className="card p-6 bg-orange-50">
+                                <h4 className="font-medium mb-4 flex items-center gap-2">
+                                    <Icon name="times-circle" className="text-orange-600" />
+                                    清理重试任务
+                                </h4>
+                                <p className="text-sm text-gray-600 mb-4">
+                                    清理待重试任务，可以标记为失败或取消
+                                </p>
+                                <div className="space-y-2">
+                                    <button
+                                        className="btn btn-danger w-full"
+                                        onClick={() => clearRetryTasks(true)}
+                                    >
+                                        <Icon name="times" />
+                                        {selectedRetries.length > 0 
+                                            ? \`标记选中的 \${selectedRetries.length} 个任务为失败\` 
+                                            : '标记所有重试任务为失败'}
+                                    </button>
+                                    <button
+                                        className="btn btn-secondary w-full"
+                                        onClick={() => clearRetryTasks(false)}
+                                    >
+                                        <Icon name="ban" />
+                                        {selectedRetries.length > 0 
+                                            ? \`取消选中的 \${selectedRetries.length} 个任务\` 
+                                            : '取消所有重试任务'}
+                                    </button>
+                                </div>
+                            </div>
+                            
+                            {/* Purge Test Data */}
+                            <div className="card p-6 bg-red-50">
+                                <h4 className="font-medium mb-4 flex items-center gap-2">
+                                    <Icon name="trash-alt" className="text-red-600" />
+                                    清理测试数据
+                                </h4>
+                                <p className="text-sm text-gray-600 mb-4">
+                                    永久删除测试用户的所有通知记录
+                                </p>
+                                <div className="mb-4">
+                                    <label className="text-sm font-medium text-gray-700">测试用户 ID</label>
+                                    <div className="space-y-2 mt-2">
+                                        {testUserIds.map((id, index) => (
+                                            <div key={index} className="flex items-center gap-2">
+                                                <input
+                                                    type="text"
+                                                    value={id}
+                                                    onChange={(e) => {
+                                                        const newIds = [...testUserIds];
+                                                        newIds[index] = e.target.value;
+                                                        setTestUserIds(newIds);
+                                                    }}
+                                                    className="flex-1 px-3 py-2 border-2 border-gray-300 rounded-lg text-sm"
+                                                />
+                                                <button
+                                                    onClick={() => {
+                                                        setTestUserIds(testUserIds.filter((_, i) => i !== index));
+                                                    }}
+                                                    className="text-red-600 hover:text-red-700"
+                                                >
+                                                    <Icon name="times" />
+                                                </button>
+                                            </div>
+                                        ))}
+                                        <input
+                                            type="text"
+                                            placeholder="添加更多测试用户 ID..."
+                                            value={customTestUserId}
+                                            onChange={(e) => setCustomTestUserId(e.target.value)}
+                                            onKeyPress={(e) => {
+                                                if (e.key === 'Enter' && customTestUserId.trim()) {
+                                                    setTestUserIds([...testUserIds, customTestUserId.trim()]);
+                                                    setCustomTestUserId('');
+                                                }
+                                            }}
+                                            className="w-full px-3 py-2 border-2 border-gray-300 rounded-lg text-sm"
+                                        />
+                                    </div>
+                                </div>
+                                <div className="space-y-2">
+                                    <button
+                                        className="btn btn-secondary w-full"
+                                        onClick={() => purgeTestData(true)}
+                                    >
+                                        <Icon name="search" />
+                                        预检查（显示将删除的数据量）
+                                    </button>
+                                    <button
+                                        className="btn btn-danger w-full"
+                                        onClick={() => purgeTestData(false)}
+                                    >
+                                        <Icon name="trash" />
+                                        永久删除测试数据
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            );
+        }
+        
+        // Render the app
+        ReactDOM.render(<App />, document.getElementById('root'));
     </script>
 </body>
 </html>`;

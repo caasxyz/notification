@@ -42,6 +42,9 @@ const PROTECTED_PATHS = [
   '/api/notifications/send',
   '/api/notifications/retry',
   '/api/notification-logs/cleanup',
+  '/api/queue/status',
+  '/api/queue/clear-retries',
+  '/api/queue/purge-test-data',
   '/metrics',
 ];
 
@@ -140,6 +143,22 @@ export async function handleApiRequest(
     if (path === '/api/notifications/retry' && method === 'POST') {
       const { triggerRetryHandler } = await import('./handlers/triggerRetry');
       return withCORS(await triggerRetryHandler(request, env));
+    }
+    
+    // Queue management endpoints
+    if (path === '/api/queue/status' && method === 'GET') {
+      const { getQueueStatusHandler } = await import('./handlers/queueManagement');
+      return withCORS(await getQueueStatusHandler(request, env));
+    }
+    
+    if (path === '/api/queue/clear-retries' && method === 'POST') {
+      const { clearRetryTasksHandler } = await import('./handlers/queueManagement');
+      return withCORS(await clearRetryTasksHandler(request, env));
+    }
+    
+    if (path === '/api/queue/purge-test-data' && method === 'POST') {
+      const { purgeTestDataHandler } = await import('./handlers/queueManagement');
+      return withCORS(await purgeTestDataHandler(request, env));
     }
 
     // Database migration endpoints
