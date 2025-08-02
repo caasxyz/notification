@@ -83,8 +83,15 @@ export async function handleApiRequest(
   try {
     // Webhook bridge endpoint (no auth required)
     const webhookBridgeMatch = path.match(/^\/web_hook\/bridge\/([^\/]+)\/([^\/]+)$/);
+    logger.info('Checking webhook bridge match', {
+      path,
+      method,
+      match: webhookBridgeMatch ? true : false,
+      matchGroups: webhookBridgeMatch,
+    });
     if (webhookBridgeMatch && method === 'POST') {
       const [, user_id, channel_type] = webhookBridgeMatch;
+      logger.info('Webhook bridge matched, calling handler', { user_id, channel_type });
       return withCORS(await webhookBridgeHandler(request, env, { user_id, channel_type }));
     }
     

@@ -11,6 +11,13 @@ export async function webhookBridgeHandler(
 ): Promise<Response> {
   const startTime = Date.now();
   
+  logger.info('Webhook bridge request received', {
+    method: request.method,
+    url: request.url,
+    params,
+    headers: Object.fromEntries(request.headers.entries()),
+  });
+  
   try {
     const { user_id, channel_type } = params;
     
