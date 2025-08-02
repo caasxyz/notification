@@ -1,7 +1,6 @@
 import { Env } from '../../types';
 import { Logger } from '../../utils/logger';
 import { NotificationDispatcherV2 } from '../../services/NotificationDispatcherV2';
-import { v4 as uuidv4 } from 'uuid';
 
 const logger = Logger.getInstance();
 
@@ -104,7 +103,7 @@ export async function webhookBridgeHandler(
         body: content,
       },
       // Generate unique idempotency key for this webhook
-      idempotency_key: `webhook-bridge-${uuidv4()}`,
+      idempotency_key: `webhook-bridge-${crypto.randomUUID()}`,
       // Include original webhook data as metadata
       metadata: {
         source: 'webhook_bridge',
