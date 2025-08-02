@@ -36,70 +36,66 @@ export async function webhookBridgeHandler(
       );
     }
     
-    // Get request body
-    let body: any;
+    // Get raw request body
+    const rawBody = await request.text();
+    let body: any = rawBody;
     const contentType = request.headers.get('content-type');
     
+    logger.info('Received webhook body', {
+      contentType,
+      bodyLength: rawBody.length,
+      bodyPreview: rawBody.substring(0, 200),
+    });
+    
+    // Try to parse as JSON if content-type suggests it
     if (contentType?.includes('application/json')) {
       try {
-        body = await request.json();
-      } catch {
-        return new Response(
-          JSON.stringify({
-            success: false,
-            error: 'Invalid JSON body',
-          }),
-          {
-            status: 400,
-            headers: { 'Content-Type': 'application/json' },
-          },
-        );
+        body = JSON.parse(rawBody);
+      } catch (error) {
+        logger.warn('Failed to parse JSON, using raw body', { error });
+        body = rawBody;
       }
-    } else if (contentType?.includes('text/plain')) {
-      body = { message: await request.text() };
-    } else if (contentType?.includes('application/x-www-form-urlencoded')) {
-      const formData = await request.formData();
-      body = Object.fromEntries(formData);
-    } else {
-      // Default to text
-      body = { message: await request.text() };
     }
     
-    // Extract content from webhook payload
-    // Support common webhook formats
+    // Extract content and subject from webhook payload
     let content = '';
-    let subject = '';
+    let subject = 'Webhook Notification';
     
     if (typeof body === 'string') {
+      // If body is string, use it directly as content
       content = body;
-    } else if (body.text) {
-      content = body.text;
-    } else if (body.message) {
-      content = body.message;
-    } else if (body.content) {
-      content = body.content;
-    } else if (body.payload) {
-      // Handle nested payload
-      if (typeof body.payload === 'string') {
-        content = body.payload;
+    } else if (typeof body === 'object' && body !== null) {
+      // If body is object, try to extract common fields
+      // Extract subject from common fields
+      subject = body.subject || body.title || body.summary || body.alertname || 'Webhook Notification';
+      
+      // Extract content - prefer specific fields but fall back to full JSON
+      if (body.text) {
+        content = body.text;
+      } else if (body.message) {
+        content = body.message;
+      } else if (body.content) {
+        content = body.content;
+      } else if (body.description) {
+        content = body.description;
+      } else if (body.payload) {
+        content = typeof body.payload === 'string' ? body.payload : JSON.stringify(body.payload, null, 2);
       } else {
-        content = JSON.stringify(body.payload, null, 2);
+        // Use the entire body as content
+        content = JSON.stringify(body, null, 2);
       }
     } else {
-      // Fallback to full JSON
-      content = JSON.stringify(body, null, 2);
+      // Fallback for any other type
+      content = String(body);
     }
     
-    // Extract subject if available
-    if (body.subject) {
-      subject = body.subject;
-    } else if (body.title) {
-      subject = body.title;
-    } else if (body.summary) {
-      subject = body.summary;
-    } else {
-      subject = 'Webhook Notification';
-    }
+    // Log extracted content
+    logger.info('Extracted content', {
+      subject,
+      content_length: content.length,
+      content_preview: content.substring(0, 100),
+      body_type: typeof body,
+    });
     
     // Create notification request
     const notificationRequest = {
