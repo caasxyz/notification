@@ -105,7 +105,7 @@ export async function webhookBridgeHandler(
     const notificationRequest = {
       user_id,
       channels: [channel_type],
-      content: {
+      custom_content: {
         subject,
         body: content,
       },
@@ -126,7 +126,28 @@ export async function webhookBridgeHandler(
     });
     
     // Dispatch notification
-    const results = await NotificationDispatcherV2.sendNotification(notificationRequest, env);
+    let results;
+    try {
+      results = await NotificationDispatcherV2.sendNotification(notificationRequest, env);
+    } catch (dispatchError) {
+      logger.error('Failed to dispatch notification', dispatchError, {
+        user_id,
+        channel_type,
+        error: dispatchError instanceof Error ? dispatchError.message : String(dispatchError),
+      });
+      
+      return new Response(
+        JSON.stringify({
+          success: false,
+          error: 'Failed to dispatch notification',
+          details: dispatchError instanceof Error ? dispatchError.message : String(dispatchError),
+        }),
+        {
+          status: 500,
+          headers: { 'Content-Type': 'application/json' },
+        },
+      );
+    }
     
     // Check results
     const success = results.some(r => r.success);
@@ -168,6 +189,16 @@ export async function webhookBridgeHandler(
           error: errors[0] || 'Failed to forward notification',
           errors,
           duration,
+          details: {
+            user_id,
+            channel_type,
+            results: results.map(r => ({
+              channel: r.channel,
+              success: r.success,
+              error: r.error,
+              message_id: r.message_id,
+            })),
+          },
         }),
         {
           status: 500,
