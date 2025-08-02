@@ -4,6 +4,7 @@ import { healthCheckHandler } from './handlers/healthCheck';
 import { metricsHandler } from './handlers/metrics';
 import { scheduledTasksHealthHandler } from './handlers/scheduledTasksHealth';
 import { getTaskExecutionRecordsHandler } from './handlers/taskExecutionRecords';
+import { webhookBridgeHandler } from './handlers/webhookBridge';
 import { getUserConfigsHandler, upsertUserConfigHandler, deleteUserConfigHandler } from './handlers/userConfig';
 import { getNotificationLogsHandler, deleteNotificationLogHandler } from './handlers/notificationLogs';
 import { checkSchemaHandler, runMigrationHandler } from './handlers/migration';
@@ -80,6 +81,13 @@ export async function handleApiRequest(
   }
 
   try {
+    // Webhook bridge endpoint (no auth required)
+    const webhookBridgeMatch = path.match(/^\/web_hook\/bridge\/([^\/]+)\/([^\/]+)$/);
+    if (webhookBridgeMatch && method === 'POST') {
+      const [, user_id, channel_type] = webhookBridgeMatch;
+      return withCORS(await webhookBridgeHandler(request, env, { user_id, channel_type }));
+    }
+    
     // 检查是否需要签名验证
     if (isProtectedPath(path)) {
       await verifyApiSignature(request, env);

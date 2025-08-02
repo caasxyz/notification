@@ -24,6 +24,7 @@
     "test:performance": "tsx scripts/testing/performance-test.ts",
     "test:perf": "tsx scripts/testing/performance-test.ts",
     "test:grafana": "tsx scripts/testing/test-grafana-webhook.ts",
+    "test:webhook-bridge": "tsx scripts/test-webhook-bridge.ts",
     "test:integration-sdk": "cd sdk && npm run build && cd .. && tsx scripts/testing/integration-test-sdk-v2.ts",
     "test:integration-sdk-enhanced": "cd sdk && npm run build && cd .. && tsx scripts/testing/integration-test-sdk-enhanced.ts",
     "test:production": "cd sdk && npm run build && cd .. && tsx scripts/testing/production-sdk-test.ts",
