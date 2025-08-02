@@ -126,8 +126,7 @@ export async function webhookBridgeHandler(
     });
     
     // Dispatch notification
-    const dispatcher = new NotificationDispatcherV2(env);
-    const results = await dispatcher.sendNotificationV2(notificationRequest);
+    const results = await NotificationDispatcherV2.sendNotification(notificationRequest, env);
     
     // Check results
     const success = results.some(r => r.success);
