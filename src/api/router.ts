@@ -3,8 +3,9 @@ import { sendNotificationHandler } from './handlers/sendNotification';
 import { healthCheckHandler } from './handlers/healthCheck';
 import { metricsHandler } from './handlers/metrics';
 import { scheduledTasksHealthHandler } from './handlers/scheduledTasksHealth';
+import { getTaskExecutionRecordsHandler } from './handlers/taskExecutionRecords';
 import { getUserConfigsHandler, upsertUserConfigHandler, deleteUserConfigHandler } from './handlers/userConfig';
-import { getNotificationLogsHandler } from './handlers/notificationLogs';
+import { getNotificationLogsHandler, deleteNotificationLogHandler } from './handlers/notificationLogs';
 import { checkSchemaHandler, runMigrationHandler } from './handlers/migration';
 import { CryptoUtils } from '../utils/crypto';
 import { Logger } from '../utils/logger';
@@ -94,6 +95,10 @@ export async function handleApiRequest(
     if (path === '/health/scheduled-tasks' && method === 'GET') {
       return withCORS(await scheduledTasksHealthHandler(request, env));
     }
+    
+    if (path === '/api/task-execution-records' && method === 'GET') {
+      return withCORS(await getTaskExecutionRecordsHandler(request, env));
+    }
 
     // Test UI route (development only) - React version
     if (path === '/test-ui' && method === 'GET') {
@@ -133,6 +138,12 @@ export async function handleApiRequest(
     // Notification logs API
     if (path === '/api/notification-logs' && method === 'GET') {
       return withCORS(await getNotificationLogsHandler(request, env));
+    }
+    
+    // Delete single notification log
+    if (path.match(/^\/api\/notification-logs\/\d+$/) && method === 'DELETE') {
+      const logId = path.split('/').pop() || '';
+      return withCORS(await deleteNotificationLogHandler(request, env, logId));
     }
     
     // Cleanup logs API (development only)

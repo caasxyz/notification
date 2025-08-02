@@ -182,8 +182,8 @@ export class AutoMigrate {
               task_name TEXT NOT NULL,
               execution_time TEXT NOT NULL,
               status TEXT NOT NULL,
-              details TEXT,
               error TEXT,
+              duration_ms INTEGER,
               created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
             )
           `);
@@ -215,6 +215,39 @@ export class AutoMigrate {
             // 2. Copy data from old table
             // 3. Drop old table
             // 4. Rename new table
+          }
+        },
+      },
+      {
+        name: '003_fix_task_execution_records',
+        up: async (env: Env) => {
+          const db = getDb(env);
+          
+          // Add missing duration_ms column to task_execution_records table
+          // SQLite doesn't support ALTER TABLE ADD COLUMN IF NOT EXISTS
+          // So we need to check if the column exists first
+          try {
+            // Try to query the column
+            await db.run(sql`SELECT duration_ms FROM task_execution_records LIMIT 0`);
+            // If we get here, the column exists
+            logger.info('Column duration_ms already exists in task_execution_records');
+          } catch (error) {
+            // Column doesn't exist, add it
+            logger.info('Adding duration_ms column to task_execution_records');
+            await db.run(sql`ALTER TABLE task_execution_records ADD COLUMN duration_ms INTEGER`);
+          }
+          
+          // Also remove the unused 'details' column if it exists and migrate data to 'error' column
+          try {
+            const hasDetails = await db.run(sql`SELECT details FROM task_execution_records LIMIT 0`);
+            // If we have details column, migrate data to error column
+            logger.info('Migrating details column data to error column');
+            await db.run(sql`UPDATE task_execution_records SET error = details WHERE error IS NULL AND details IS NOT NULL`);
+            // Note: SQLite doesn't support DROP COLUMN in older versions
+            // The details column will remain but unused
+          } catch (error) {
+            // Details column doesn't exist, which is fine
+            logger.info('Details column does not exist, skipping migration');
           }
         },
       },

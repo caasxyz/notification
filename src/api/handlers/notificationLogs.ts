@@ -176,3 +176,76 @@ export async function getNotificationLogByIdHandler(
     );
   }
 }
+
+export async function deleteNotificationLogHandler(
+  _request: Request,
+  env: Env,
+  logId: string,
+): Promise<Response> {
+  try {
+    // Validate log ID
+    const logIdNum = ValidationUtils.validatePositiveInteger(logId, 'logId');
+
+    // Use Drizzle ORM for the deletion
+    const db = getDb(env);
+    
+    // First check if the log exists
+    const existing = await db
+      .select()
+      .from(notificationLogs)
+      .where(eq(notificationLogs.id, logIdNum))
+      .limit(1);
+
+    if (!existing || existing.length === 0) {
+      return new Response(
+        JSON.stringify({
+          success: false,
+          error: 'Log not found',
+        }),
+        {
+          status: 404,
+          headers: { 'Content-Type': 'application/json' },
+        },
+      );
+    }
+
+    // Delete the log
+    await db
+      .delete(notificationLogs)
+      .where(eq(notificationLogs.id, logIdNum));
+
+    logger.info('Deleted notification log', {
+      logId: logIdNum,
+      userId: existing[0].user_id,
+      channel: existing[0].channel_type,
+    });
+
+    return new Response(
+      JSON.stringify({
+        success: true,
+        message: 'Log deleted successfully',
+        deletedLog: {
+          id: logIdNum,
+          user_id: existing[0].user_id,
+          created_at: existing[0].created_at,
+        },
+      }),
+      {
+        headers: { 'Content-Type': 'application/json' },
+      },
+    );
+  } catch (error) {
+    logger.error('Failed to delete notification log', error, { logId });
+
+    return new Response(
+      JSON.stringify({
+        success: false,
+        error: error instanceof Error ? error.message : 'Failed to delete log',
+      }),
+      {
+        status: 500,
+        headers: { 'Content-Type': 'application/json' },
+      },
+    );
+  }
+}
