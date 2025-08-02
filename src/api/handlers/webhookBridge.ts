@@ -97,13 +97,28 @@ export async function webhookBridgeHandler(
       body_type: typeof body,
     });
     
+    // Ensure content is not empty
+    if (!content || content.trim() === '') {
+      return new Response(
+        JSON.stringify({
+          success: false,
+          error: 'No content to send',
+          details: 'Unable to extract content from webhook payload',
+        }),
+        {
+          status: 400,
+          headers: { 'Content-Type': 'application/json' },
+        },
+      );
+    }
+    
     // Create notification request
     const notificationRequest = {
       user_id,
       channels: [channel_type],
       custom_content: {
         subject,
-        body: content,
+        content: content,  // 注意：这里应该是 content 而不是 body
       },
       // Generate unique idempotency key for this webhook
       idempotency_key: `webhook-bridge-${crypto.randomUUID()}`,
@@ -111,7 +126,7 @@ export async function webhookBridgeHandler(
       metadata: {
         source: 'webhook_bridge',
         original_headers: Object.fromEntries(request.headers.entries()),
-        original_body: body,
+        original_body: typeof body === 'string' ? body.substring(0, 1000) : body, // Limit size
       },
     };
     
