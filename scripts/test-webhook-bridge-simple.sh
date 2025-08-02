@@ -14,7 +14,8 @@ echo "Sending test notification..."
 curl -X POST "$BASE_URL/web_hook/bridge/$USER_ID/$CHANNEL" \
   -H "Content-Type: application/json" \
   -d '{
-    "subject": "Test from webhook bridge",
+    "title": "Test Title from webhook bridge",
+    "subject": "Test Subject from webhook bridge",
     "message": "This is a test notification at '"$(date)"'"
   }' \
   -v

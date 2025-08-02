@@ -95,6 +95,7 @@ export async function webhookBridgeHandler(
       content_length: content.length,
       content_preview: content.substring(0, 100),
       body_type: typeof body,
+      original_fields: typeof body === 'object' ? Object.keys(body) : 'string',
     });
     
     // Ensure content is not empty
@@ -134,6 +135,13 @@ export async function webhookBridgeHandler(
       user_id,
       channel_type,
       content_length: content.length,
+      subject,
+      notification_request: {
+        channels: notificationRequest.channels,
+        has_custom_content: !!notificationRequest.custom_content,
+        custom_content_subject: notificationRequest.custom_content?.subject,
+        custom_content_content_length: notificationRequest.custom_content?.content?.length,
+      },
     });
     
     // Dispatch notification
@@ -161,8 +169,8 @@ export async function webhookBridgeHandler(
     }
     
     // Check results
-    const success = results.some(r => r.success);
-    const errors = results.filter(r => !r.success).map(r => r.error);
+    const success = results.some(r => r.status === 'sent' || r.status === 'success');
+    const errors = results.filter(r => r.status === 'failed' || r.error).map(r => r.error || 'Unknown error');
     
     const duration = Date.now() - startTime;
     
@@ -178,7 +186,7 @@ export async function webhookBridgeHandler(
         JSON.stringify({
           success: true,
           message: 'Notification forwarded successfully',
-          message_id: results[0]?.message_id,
+          message_id: results[0]?.messageId,
           duration,
         }),
         {
@@ -204,10 +212,10 @@ export async function webhookBridgeHandler(
             user_id,
             channel_type,
             results: results.map(r => ({
-              channel: r.channel,
-              success: r.success,
+              channel: r.channelType,
+              success: r.status === 'sent',
               error: r.error,
-              message_id: r.message_id,
+              message_id: r.messageId,
             })),
           },
         }),
